@@ -9,14 +9,11 @@ import pe.edu.pucp.vetcitas.common.enums.CanalRecordatorio;
 import pe.edu.pucp.vetcitas.common.enums.EstadoCita;
 import pe.edu.pucp.vetcitas.common.enums.EstadoSeguimiento;
 import pe.edu.pucp.vetcitas.common.enums.Rol;
-import pe.edu.pucp.vetcitas.common.enums.TipoReporte;
 import pe.edu.pucp.vetcitas.common.enums.TipoServicio;
 import pe.edu.pucp.vetcitas.configuracion.model.Configuracion;
-import pe.edu.pucp.vetcitas.reporte.model.Reporte;
 import pe.edu.pucp.vetcitas.servicio.model.Servicio;
 import pe.edu.pucp.vetcitas.usuario.model.Administrador;
 import pe.edu.pucp.vetcitas.usuario.model.Permiso;
-import pe.edu.pucp.vetcitas.usuario.model.Usuario;
 import pe.edu.pucp.vetcitas.usuario.model.Veterinario;
 
 import java.time.LocalDate;
@@ -185,20 +182,7 @@ public class Principal {
         System.out.println("Canal del recordatorio: " + recordatorio.getCanal());
         System.out.println("Estado del recordatorio: " + recordatorio.getEstadoSeguimiento());
 
-        // 10. Crear reporte
-        Reporte reporte = new Reporte(
-                1,
-                TipoReporte.CITAS,
-                LocalDateTime.of(2026, 5, 1, 0, 0),
-                LocalDateTime.of(2026, 5, 31, 23, 59),
-                LocalDateTime.now(),
-                "Reporte mensual de citas",
-                "PDF"
-        );
 
-        System.out.println("Reporte creado con ID: " + reporte.getId());
-        System.out.println("Tipo de reporte: " + reporte.getTipo());
-        System.out.println("Formato del reporte: " + reporte.getFormato());
 
         // 11. Probar constructor copia
         Servicio copiaServicio = new Servicio(servicio);
@@ -207,7 +191,6 @@ public class Principal {
         Cita copiaCita = new Cita(cita);
         Atencion copiaAtencion = new Atencion(atencion);
         Recordatorio copiaRecordatorio = new Recordatorio(recordatorio);
-        Reporte copiaReporte = new Reporte(reporte);
         Administrador copiaAdmin = new Administrador(admin);
         Veterinario copiaVet = new Veterinario(vet);
 
@@ -218,7 +201,6 @@ public class Principal {
         System.out.println("Copia cita ID: " + copiaCita.getId());
         System.out.println("Copia atención ID: " + copiaAtencion.getId());
         System.out.println("Copia recordatorio ID: " + copiaRecordatorio.getId());
-        System.out.println("Copia reporte formato: " + copiaReporte.getFormato());
         System.out.println("Copia administrador usuario: " + copiaAdmin.getUsername());
         System.out.println("Copia veterinario usuario: " + copiaVet.getUsername());
 

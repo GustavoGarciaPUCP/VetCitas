@@ -1,7 +1,6 @@
 package pe.edu.pucp.vetcitas.usuario.model;
 
 import pe.edu.pucp.vetcitas.common.enums.Rol;
-import pe.edu.pucp.vetcitas.reporte.model.Reporte;
 
 import java.time.LocalDateTime;
 import java.util.List;
