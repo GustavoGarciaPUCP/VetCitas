@@ -2,6 +2,7 @@ package pe.edu.pucp.vetcitas.cliente.model;
 
 import pe.edu.pucp.vetcitas.cita.model.Atencion;
 import pe.edu.pucp.vetcitas.common.model.EntidadAuditable;
+import pe.edu.pucp.vetcitas.usuario.model.Usuario;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -12,34 +13,41 @@ public class Mascota extends EntidadAuditable {
     private int id;
     private String nombre;
     private String especie;
+    private String raza;
     private LocalDate fechaNacimiento;
+    private boolean esterilizado;
+    private boolean activo;
     private Cliente cliente;
     private List<Atencion> atenciones;
-    private String raza;
 
     public Mascota() {
         super();
         this.id = 0;
         this.nombre = "";
         this.especie = "";
+        this.raza = "";
         this.fechaNacimiento = null;
+        this.esterilizado = false;
+        this.activo = true;
         this.cliente = null;
         this.atenciones = new ArrayList<>();
-        this.raza = "";
     }
 
-    public Mascota(int id, String nombre, String especie, LocalDate fechaNacimiento,
-                   Cliente cliente, List<Atencion> atenciones, String raza,
+    public Mascota(int id, String nombre, String especie, String raza,
+                   LocalDate fechaNacimiento, boolean esterilizado, boolean activo,
+                   Cliente cliente, List<Atencion> atenciones,
                    LocalDateTime createdOn, LocalDateTime modifiedOn,
-                   pe.edu.pucp.vetcitas.usuario.model.Usuario modifiedBy) {
+                   Usuario modifiedBy) {
         super(createdOn, modifiedOn, modifiedBy);
         this.id = id;
         this.nombre = nombre;
         this.especie = especie;
+        this.raza = raza;
         this.fechaNacimiento = fechaNacimiento;
+        this.esterilizado = esterilizado;
+        this.activo = activo;
         this.cliente = (cliente == null) ? null : new Cliente(cliente);
         this.atenciones = new ArrayList<>();
-        this.raza = raza;
 
         if (atenciones != null) {
             for (Atencion atencion : atenciones) {
@@ -53,10 +61,12 @@ public class Mascota extends EntidadAuditable {
         this.id = otra.id;
         this.nombre = otra.nombre;
         this.especie = otra.especie;
+        this.raza = otra.raza;
         this.fechaNacimiento = otra.fechaNacimiento;
+        this.esterilizado = otra.esterilizado;
+        this.activo = otra.activo;
         this.cliente = (otra.cliente == null) ? null : new Cliente(otra.cliente);
         this.atenciones = new ArrayList<>();
-        this.raza = otra.raza;
 
         if (otra.atenciones != null) {
             for (Atencion atencion : otra.atenciones) {
@@ -89,12 +99,36 @@ public class Mascota extends EntidadAuditable {
         this.especie = especie;
     }
 
+    public String getRaza() {
+        return this.raza;
+    }
+
+    public void setRaza(String raza) {
+        this.raza = raza;
+    }
+
     public LocalDate getFechaNacimiento() {
         return this.fechaNacimiento;
     }
 
     public void setFechaNacimiento(LocalDate fechaNacimiento) {
         this.fechaNacimiento = fechaNacimiento;
+    }
+
+    public boolean isEsterilizado() {
+        return this.esterilizado;
+    }
+
+    public void setEsterilizado(boolean esterilizado) {
+        this.esterilizado = esterilizado;
+    }
+
+    public boolean isActivo() {
+        return this.activo;
+    }
+
+    public void setActivo(boolean activo) {
+        this.activo = activo;
     }
 
     public Cliente getCliente() {
@@ -123,14 +157,6 @@ public class Mascota extends EntidadAuditable {
                 this.atenciones.add(new Atencion(atencion));
             }
         }
-    }
-
-    public String getRaza() {
-        return this.raza;
-    }
-
-    public void setRaza(String raza) {
-        this.raza = raza;
     }
 
     public void agregarAtencion(Atencion atencion) {
