@@ -45,11 +45,11 @@ public class Administrador extends Usuario{
         throw new UnsupportedOperationException("Metodo no implementado aun.");
     }
 
-    public Reporte generarReporteCitas(LocalDateTime desde, LocalDateTime hasta) {
+    public void generarReporteCitas(LocalDateTime desde, LocalDateTime hasta) {
         throw new UnsupportedOperationException("Metodo no implementado aun.");
     }
 
-    public Reporte generarReporteFrecuenciaServicios(LocalDateTime desde, LocalDateTime hasta) {
+    public void generarReporteFrecuenciaServicios(LocalDateTime desde, LocalDateTime hasta) {
         throw new UnsupportedOperationException("Metodo no implementado aun.");
     }
 
