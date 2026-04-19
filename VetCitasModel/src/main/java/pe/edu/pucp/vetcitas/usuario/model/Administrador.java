@@ -15,8 +15,10 @@ public class Administrador extends Usuario{
 
     public Administrador(int id, String username, String contrasenaHash, String nombres,
                          String apellidos, boolean activo, Rol rol, String telefono,
-                         List<Permiso> permisos, String area) {
-        super(id, username, contrasenaHash, nombres, apellidos, activo, rol, telefono, permisos);
+                         List<Permiso> permisos, String area,LocalDateTime createdOn, LocalDateTime modifiedOn,
+                         Usuario modifiedBy) {
+        super(id, username, contrasenaHash, nombres, apellidos, activo, rol, telefono,
+                permisos, createdOn, modifiedOn, modifiedBy);
         this.area = area;
     }
 

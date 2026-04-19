@@ -1,10 +1,13 @@
 package pe.edu.pucp.vetcitas.usuario.model;
 
 import pe.edu.pucp.vetcitas.common.enums.Rol;
+import pe.edu.pucp.vetcitas.common.model.EntidadAuditable;
+
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Usuario {
+public class Usuario extends EntidadAuditable {
     private int id;
     private String username;
     private String contrasenaHash;
@@ -29,7 +32,9 @@ public class Usuario {
 
     public Usuario(int id, String username, String contrasenaHash, String nombres,
                    String apellidos, boolean activo, Rol rol, String telefono,
-                   List<Permiso> permisos) {
+                   List<Permiso> permisos, LocalDateTime createdOn,
+                   LocalDateTime modifiedOn, Usuario modifiedBy) {
+        super(createdOn, modifiedOn, modifiedBy);
         this.id = id;
         this.username = username;
         this.contrasenaHash = contrasenaHash;
@@ -48,6 +53,7 @@ public class Usuario {
     }
 
     public Usuario(Usuario otro) {
+        super(otro);
         this.id = otro.id;
         this.username = otro.username;
         this.contrasenaHash = otro.contrasenaHash;

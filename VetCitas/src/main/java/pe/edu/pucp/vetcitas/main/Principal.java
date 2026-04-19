@@ -48,7 +48,10 @@ public class Principal {
                 Rol.ADMINISTRADOR,
                 "999111222",
                 permisosAdmin,
-                "Administración"
+                "Administración",
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                null
         );
 
         Veterinario vet = new Veterinario(
@@ -62,7 +65,10 @@ public class Principal {
                 "988777666",
                 permisosVet,
                 "CMPV-12345",
-                "Cirugía"
+                "Cirugía",
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                null
         );
 
         System.out.println("Administrador creado: " + admin.getNombres() + " " + admin.getApellidos());
