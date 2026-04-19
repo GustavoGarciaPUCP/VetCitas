@@ -15,8 +15,10 @@ public class Administrador extends Usuario{
 
     public Administrador(int id, String username, String contrasenaHash, String nombres,
                          String apellidos, boolean activo, Rol rol, String telefono,
-                         List<Permiso> permisos, String area) {
-        super(id, username, contrasenaHash, nombres, apellidos, activo, rol, telefono, permisos);
+                         List<Permiso> permisos, String area,LocalDateTime createdOn, LocalDateTime modifiedOn,
+                         Usuario modifiedBy) {
+        super(id, username, contrasenaHash, nombres, apellidos, activo, rol, telefono,
+                permisos, createdOn, modifiedOn, modifiedBy);
         this.area = area;
     }
 
@@ -45,11 +47,11 @@ public class Administrador extends Usuario{
         throw new UnsupportedOperationException("Metodo no implementado aun.");
     }
 
-    public Reporte generarReporteCitas(LocalDateTime desde, LocalDateTime hasta) {
+    public void generarReporteCitas(LocalDateTime desde, LocalDateTime hasta) {
         throw new UnsupportedOperationException("Metodo no implementado aun.");
     }
 
-    public Reporte generarReporteFrecuenciaServicios(LocalDateTime desde, LocalDateTime hasta) {
+    public void generarReporteFrecuenciaServicios(LocalDateTime desde, LocalDateTime hasta) {
         throw new UnsupportedOperationException("Metodo no implementado aun.");
     }
 

@@ -10,7 +10,7 @@ import pe.edu.pucp.vetcitas.servicio.model.Servicio;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public class Veterinario extends Usuario {
+public class Veterinario extends Usuario{
     private String cmpv;
     private String especialidad;
 
@@ -22,8 +22,11 @@ public class Veterinario extends Usuario {
 
     public Veterinario(int id, String username, String contrasenaHash, String nombres,
                        String apellidos, boolean activo, Rol rol, String telefono,
-                       List<Permiso> permisos, String cmpv, String especialidad) {
-        super(id, username, contrasenaHash, nombres, apellidos, activo, rol, telefono, permisos);
+                       List<Permiso> permisos, String cmpv, String especialidad,LocalDateTime createdOn,
+                       LocalDateTime modifiedOn,
+                       Usuario modifiedBy) {
+        super(id, username, contrasenaHash, nombres, apellidos, activo, rol, telefono,
+                permisos, createdOn, modifiedOn, modifiedBy);
         this.cmpv = cmpv;
         this.especialidad = especialidad;
     }
