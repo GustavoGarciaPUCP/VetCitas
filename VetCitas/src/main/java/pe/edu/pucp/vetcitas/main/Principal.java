@@ -4,7 +4,9 @@ import pe.edu.pucp.vetcitas.cita.dao.IRecordatorioDAO;
 import pe.edu.pucp.vetcitas.cita.impl.RecordatorioImpl;
 import pe.edu.pucp.vetcitas.cita.model.Cita;
 import pe.edu.pucp.vetcitas.cita.model.Recordatorio;
+import pe.edu.pucp.vetcitas.cliente.dao.ClienteDAO;
 import pe.edu.pucp.vetcitas.cliente.dao.MascotaDAO;
+import pe.edu.pucp.vetcitas.cliente.impl.ClienteImpl;
 import pe.edu.pucp.vetcitas.cliente.impl.MascotaImpl;
 import pe.edu.pucp.vetcitas.cliente.model.Cliente;
 import pe.edu.pucp.vetcitas.cliente.model.Mascota;
@@ -13,6 +15,7 @@ import pe.edu.pucp.vetcitas.common.enums.EstadoSeguimiento;
 import pe.edu.pucp.vetcitas.common.enums.Rol;
 import pe.edu.pucp.vetcitas.usuario.dao.IVeterinarioDAO;
 import pe.edu.pucp.vetcitas.usuario.impl.VeterinarioImpl;
+import pe.edu.pucp.vetcitas.usuario.model.Administrador;
 import pe.edu.pucp.vetcitas.usuario.model.Veterinario;
 
 import java.time.LocalDate;
@@ -23,49 +26,69 @@ public class Principal {
     public static void main(String[] args) {
         System.out.println("=== INICIO DE PRUEBAS DEL MODELO VETCITAS ===");
 
-        System.out.println("\n=== INICIANDO PRUEBA CERO: DAO MASCOTA ===");
+        // Sufijo unico para evitar conflictos con UNIQUE constraints al re-ejecutar
+        String sufijo = String.valueOf(System.currentTimeMillis() % 100000);
 
-        //Estos datos los puse manuales pq no había Cliente aún
-        //cuando crees cliente el id es autimatico por la base de datos
-        // 1. Preparamos los "Padres" falsos (Solo nos importa que tengan el ID 1)
-        Cliente clientePrueba = new Cliente();
-        clientePrueba.setId(1); // Este es el que metimos por SQL
+        // ============================================================
+        // PRUEBA CLIENTE: Insertar cliente para asociar a mascota
+        // ============================================================
+        System.out.println("\n=== PRUEBA CLIENTE: INSERTAR CLIENTE ===");
+        ClienteDAO clienteDAO = new ClienteImpl();
 
-        pe.edu.pucp.vetcitas.usuario.model.Administrador adminPrueba = new pe.edu.pucp.vetcitas.usuario.model.Administrador();
-        adminPrueba.setId(1); // Este es el que metimos por SQL
+        Cliente clienteNuevo = new Cliente();
+        clienteNuevo.setNombres("Juan");
+        clienteNuevo.setApellidos("Martinez Silva");
+        clienteNuevo.setTelefono("951753852");
+        clienteNuevo.setObservaciones("Cliente de prueba");
+        clienteNuevo.setActivo(true);
+        clienteNuevo.setCreatedOn(LocalDateTime.now());
+        clienteNuevo.setModifiedOn(LocalDateTime.now());
 
-        // 2. Preparamos tu Mascota
+        int idCliente = clienteDAO.insertar(clienteNuevo);
+        if (idCliente > 0) {
+            System.out.println("Cliente insertado con ID: " + clienteNuevo.getId());
+        } else {
+            System.out.println("Fallo la insercion del cliente.");
+        }
+
+        // Listar clientes
+        System.out.println("\nListando clientes activos:");
+        List<Cliente> listaClientes = clienteDAO.listarTodas();
+        if (listaClientes != null && !listaClientes.isEmpty()) {
+            for (Cliente c : listaClientes) {
+                System.out.println("ID: " + c.getId() + " | " + c.getNombres()
+                        + " " + c.getApellidos() + " | Tel: " + c.getTelefono());
+            }
+        } else {
+            System.out.println("No se encontraron clientes.");
+        }
+
+        // ============================================================
+        // PRUEBA MASCOTA: Ahora usando el cliente recien creado
+        // ============================================================
+        System.out.println("\n=== PRUEBA MASCOTA: INSERTAR MASCOTA ===");
+        MascotaDAO mascotaDAO = new MascotaImpl();
+
         Mascota mascotaPrueba = new Mascota();
-        // NO asignamos ID a la mascota, MySQL lo generara
         mascotaPrueba.setNombre("Oreo");
         mascotaPrueba.setEspecie("Gato");
         mascotaPrueba.setRaza("Carey");
         mascotaPrueba.setFechaNacimiento(LocalDate.of(2023, 2, 14));
         mascotaPrueba.setEsterilizado(true);
         mascotaPrueba.setActivo(true);
-
-        // Enlazamos los padres
-        mascotaPrueba.setCliente(clientePrueba);
+        mascotaPrueba.setCliente(clienteNuevo); // Asociado al cliente recien insertado
         mascotaPrueba.setCreatedOn(LocalDateTime.now());
         mascotaPrueba.setModifiedOn(LocalDateTime.now());
-        mascotaPrueba.setModifiedBy(adminPrueba);
 
-        // 3. Ejecutamos tu DAO
-        MascotaDAO mascotaDAO = new MascotaImpl();
-
-        System.out.println("Intentando insertar mascota 'Oreo' en la base de datos AWS...");
         int resultadoInsertar = mascotaDAO.insertar(mascotaPrueba);
-
         if (resultadoInsertar > 0) {
-            System.out.println("Exito: Mascota insertada. Tu DAO funciona perfectamente.");
+            System.out.println("Mascota insertada. ID generado: " + mascotaPrueba.getId());
         } else {
-            System.out.println("Fallo la insercion. Revisa el texto de error en la consola.");
+            System.out.println("Fallo la insercion de la mascota.");
         }
 
-        // 4. Comprobamos leyendo la base de datos
         System.out.println("\nListando mascotas desde la BD:");
         List<Mascota> listaBD = mascotaDAO.listarTodas();
-
         if (listaBD != null && !listaBD.isEmpty()) {
             for (Mascota m : listaBD) {
                 System.out.println("ID BD: " + m.getId() + " | Nombre: " + m.getNombre() + " | Especie: " + m.getEspecie());
@@ -73,8 +96,6 @@ public class Principal {
         } else {
             System.out.println("La lista esta vacia.");
         }
-        //Probando si el id generado en SQL fue asignado en mi mascota
-        System.out.println(mascotaPrueba.getId());
 
         // ============================================================
         // PRUEBA 1: DAO VETERINARIO
@@ -83,13 +104,13 @@ public class Principal {
         IVeterinarioDAO vetDAO = new VeterinarioImpl();
 
         Veterinario vet = new Veterinario();
-        vet.setUsername("drperez");
+        vet.setUsername("drperez" + sufijo);
         vet.setContrasenaHash("hash123");
         vet.setNombres("Carlos");
         vet.setApellidos("Perez Lopez");
         vet.setTelefono("987654321");
         vet.setRol(Rol.VETERINARIO);
-        vet.setCmpv("CMPV-001");
+        vet.setCmpv("CMPV-" + sufijo);
         vet.setEspecialidad("Cirugia");
 
         int idVet = vetDAO.insertar(vet);
@@ -101,13 +122,13 @@ public class Principal {
 
         // Insertar un segundo veterinario para tener mas datos
         Veterinario vet2 = new Veterinario();
-        vet2.setUsername("dragomez");
+        vet2.setUsername("dragomez" + sufijo);
         vet2.setContrasenaHash("hash456");
         vet2.setNombres("Ana");
         vet2.setApellidos("Gomez Ruiz");
         vet2.setTelefono("912345678");
         vet2.setRol(Rol.VETERINARIO);
-        vet2.setCmpv("CMPV-002");
+        vet2.setCmpv("CMPV2-" + sufijo);
         vet2.setEspecialidad("Dermatologia");
 
         int idVet2 = vetDAO.insertar(vet2);
