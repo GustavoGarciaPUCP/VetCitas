@@ -3,6 +3,8 @@ package pe.edu.pucp.vetcitas.main;
 import pe.edu.pucp.vetcitas.cita.model.Atencion;
 import pe.edu.pucp.vetcitas.cita.model.Cita;
 import pe.edu.pucp.vetcitas.cita.model.Recordatorio;
+import pe.edu.pucp.vetcitas.cliente.dao.MascotaDAO;
+import pe.edu.pucp.vetcitas.cliente.impl.MascotaImpl;
 import pe.edu.pucp.vetcitas.cliente.model.Cliente;
 import pe.edu.pucp.vetcitas.cliente.model.Mascota;
 import pe.edu.pucp.vetcitas.common.enums.CanalRecordatorio;
@@ -25,191 +27,57 @@ public class Principal {
     public static void main(String[] args) {
         System.out.println("=== INICIO DE PRUEBAS DEL MODELO VETCITAS ===");
 
-        // 1. Crear permisos
-        Permiso permiso1 = new Permiso(1, "GESTIONAR_USUARIOS", "Permite gestionar usuarios del sistema");
-        Permiso permiso2 = new Permiso(2, "GESTIONAR_SERVICIOS", "Permite gestionar servicios");
-        Permiso permiso3 = new Permiso(3, "GESTIONAR_CITAS", "Permite gestionar citas");
+        System.out.println("\n=== INICIANDO PRUEBA CERO: DAO MASCOTA ===");
 
-        List<Permiso> permisosAdmin = new ArrayList<>();
-        permisosAdmin.add(permiso1);
-        permisosAdmin.add(permiso2);
+        //Estos datos los puse manuales pq no había Cliente aún
+        //cuando crees cliente el id es autimatico por la base de datos
+        // 1. Preparamos los "Padres" falsos (Solo nos importa que tengan el ID 1)
+        Cliente clientePrueba = new Cliente();
+        clientePrueba.setId(1); // Este es el que metimos por SQL
 
-        List<Permiso> permisosVet = new ArrayList<>();
-        permisosVet.add(permiso3);
+        Administrador adminPrueba = new Administrador();
+        adminPrueba.setId(1); // Este es el que metimos por SQL
 
-        // 2. Crear usuarios
-        Administrador admin = new Administrador(
-                1,
-                "admin01",
-                "hash_admin",
-                "Ana",
-                "Torres",
-                true,
-                Rol.ADMINISTRADOR,
-                "999111222",
-                permisosAdmin,
-                "Administración",
-                LocalDateTime.now(),
-                LocalDateTime.now(),
-                null
-        );
+        // 2. Preparamos tu Mascota
+        Mascota mascotaPrueba = new Mascota();
+        // NO asignamos ID a la mascota, MySQL lo generara
+        mascotaPrueba.setNombre("Oreo");
+        mascotaPrueba.setEspecie("Gato");
+        mascotaPrueba.setRaza("Carey");
+        mascotaPrueba.setFechaNacimiento(LocalDate.of(2023, 2, 14));
+        mascotaPrueba.setEsterilizado(true);
+        mascotaPrueba.setActivo(true);
 
-        Veterinario vet = new Veterinario(
-                2,
-                "vet01",
-                "hash_vet",
-                "Luis",
-                "Pérez",
-                true,
-                Rol.VETERINARIO,
-                "988777666",
-                permisosVet,
-                "CMPV-12345",
-                "Cirugía",
-                LocalDateTime.now(),
-                LocalDateTime.now(),
-                null
-        );
+        // Enlazamos los padres
+        mascotaPrueba.setCliente(clientePrueba);
+        mascotaPrueba.setCreatedOn(LocalDateTime.now());
+        mascotaPrueba.setModifiedOn(LocalDateTime.now());
+        mascotaPrueba.setModifiedBy(adminPrueba);
 
-        System.out.println("Administrador creado: " + admin.getNombres() + " " + admin.getApellidos());
-        System.out.println("Rol administrador: " + admin.getRol());
-        System.out.println("Veterinario creado: " + vet.getNombres() + " " + vet.getApellidos());
-        System.out.println("Especialidad veterinario: " + vet.getEspecialidad());
+        // 3. Ejecutamos tu DAO
+        MascotaDAO mascotaDAO = new MascotaImpl();
 
+        System.out.println("Intentando insertar mascota 'Oreo' en la base de datos AWS...");
+        int resultadoInsertar = mascotaDAO.insertar(mascotaPrueba);
 
-        // 3. Crear configuración
-        Configuracion configuracion = new Configuracion(1, 5, 20.0);
-        System.out.println("Umbral cliente frecuente: " + configuracion.getUmbralClienteFrecuente());
-        System.out.println("Descuento máximo permitido: " + configuracion.getDescuentoMaximoPermitido());
+        if (resultadoInsertar > 0) {
+            System.out.println("Exito: Mascota insertada. Tu DAO funciona perfectamente.");
+        } else {
+            System.out.println("Fallo la insercion. Revisa el texto de error en la consola.");
+        }
 
-        // 4. Crear cliente
-        Cliente cliente = new Cliente();
-        cliente.setId(1);
-        cliente.setNombres("Carlos");
-        cliente.setApellidos("Ramírez");
-        cliente.setTelefono("987654321");
-        cliente.setObservaciones("Cliente prefiere atención por las mañanas");
-        cliente.setCreatedOn(LocalDateTime.now());
-        cliente.setModifiedOn(LocalDateTime.now());
-        cliente.setModifiedBy(admin);
+        // 4. Comprobamos leyendo la base de datos
+        System.out.println("\nListando mascotas desde la BD:");
+        List<Mascota> listaBD = mascotaDAO.listarTodas();
 
-        System.out.println("Cliente creado: " + cliente.getNombres() + " " + cliente.getApellidos());
-
-        // 5. Crear servicio
-        Servicio servicio = new Servicio(
-                1,
-                "Esterilización",
-                TipoServicio.CLINICA,
-                90,
-                150.0,
-                true,
-                LocalDateTime.now(),
-                LocalDateTime.now(),
-                admin
-        );
-
-        System.out.println("Servicio creado: " + servicio.getNombre());
-        System.out.println("Tipo de servicio: " + servicio.getTipoServicio());
-        System.out.println("Duración del servicio: " + servicio.getDuracionMinutos() + " min");
-
-        // 6. Crear mascota
-        Mascota mascota = new Mascota();
-        mascota.setId(1);
-        mascota.setNombre("Firulais");
-        mascota.setEspecie("Perro");
-        mascota.setRaza("Mestizo");
-        mascota.setFechaNacimiento(LocalDate.of(2021, 5, 10));
-        mascota.setCliente(cliente);
-        mascota.setCreatedOn(LocalDateTime.now());
-        mascota.setModifiedOn(LocalDateTime.now());
-        mascota.setModifiedBy(vet);
-
-        System.out.println("Mascota creada: " + mascota.getNombre());
-        System.out.println("Especie: " + mascota.getEspecie());
-        System.out.println("Raza: " + mascota.getRaza());
-
-        // 7. Crear cita
-        LocalDateTime inicio = LocalDateTime.of(2026, 5, 20, 10, 0);
-        LocalDateTime fin = LocalDateTime.of(2026, 5, 20, 11, 30);
-
-        Cita cita = new Cita(
-                1,
-                inicio,
-                fin,
-                EstadoCita.PENDIENTE,
-                mascota,
-                vet,
-                servicio,
-                LocalDateTime.now(),
-                LocalDateTime.now(),
-                admin
-        );
-
-        System.out.println("Cita creada con ID: " + cita.getId());
-        System.out.println("Estado de la cita: " + cita.getEstado());
-        System.out.println("Inicio cita: " + cita.getFechaHoraInicio());
-        System.out.println("Fin cita: " + cita.getFechaHoraFin());
-
-        // 8. Crear atención
-        Atencion atencion = new Atencion(
-                1,
-                LocalDateTime.now(),
-                "Paciente estable, apto para procedimiento",
-                "Ayuno de 8 horas",
-                "Reposo por 48 horas",
-                "Control en 7 días",
-                150.0,
-                10.0,
-                cita,
-                LocalDateTime.now(),
-                LocalDateTime.now(),
-                vet
-        );
-
-        System.out.println("Atención creada con ID: " + atencion.getId());
-        System.out.println("Nota clínica: " + atencion.getNotaClinica());
-        System.out.println("Monto referencial: " + atencion.getMontoReferencial());
-        System.out.println("Descuento aplicado: " + atencion.getDescuentoAplicado());
-
-        // 9. Crear recordatorio
-        Recordatorio recordatorio = new Recordatorio(
-                1,
-                LocalDateTime.of(2026, 5, 27, 9, 0),
-                CanalRecordatorio.WHATSAPP,
-                EstadoSeguimiento.PENDIENTE,
-                "Recordatorio de control postoperatorio",
-                cita,
-                LocalDateTime.now(),
-                LocalDateTime.now(),
-                vet
-        );
-
-        System.out.println("Recordatorio creado con ID: " + recordatorio.getId());
-        System.out.println("Canal del recordatorio: " + recordatorio.getCanal());
-        System.out.println("Estado del recordatorio: " + recordatorio.getEstadoSeguimiento());
-
-
-
-        // 11. Probar constructor copia
-        Servicio copiaServicio = new Servicio(servicio);
-        Cliente copiaCliente = new Cliente(cliente);
-        Mascota copiaMascota = new Mascota(mascota);
-        Cita copiaCita = new Cita(cita);
-        Atencion copiaAtencion = new Atencion(atencion);
-        Recordatorio copiaRecordatorio = new Recordatorio(recordatorio);
-        Administrador copiaAdmin = new Administrador(admin);
-        Veterinario copiaVet = new Veterinario(vet);
-
-        System.out.println("\n=== PRUEBA DE CONSTRUCTORES COPIA ===");
-        System.out.println("Copia servicio: " + copiaServicio.getNombre());
-        System.out.println("Copia cliente: " + copiaCliente.getNombres());
-        System.out.println("Copia mascota: " + copiaMascota.getNombre());
-        System.out.println("Copia cita ID: " + copiaCita.getId());
-        System.out.println("Copia atención ID: " + copiaAtencion.getId());
-        System.out.println("Copia recordatorio ID: " + copiaRecordatorio.getId());
-        System.out.println("Copia administrador usuario: " + copiaAdmin.getUsername());
-        System.out.println("Copia veterinario usuario: " + copiaVet.getUsername());
-
-        System.out.println("\n=== FIN DE PRUEBAS DEL MODELO VETCITAS ===");
+        if (listaBD != null && !listaBD.isEmpty()) {
+            for (Mascota m : listaBD) {
+                System.out.println("ID BD: " + m.getId() + " | Nombre: " + m.getNombre() + " | Especie: " + m.getEspecie());
+            }
+        } else {
+            System.out.println("La lista esta vacia.");
+        }
+        //Probando si el id generado en SQL fue asignado en mi mascota
+        System.out.println(mascotaPrueba.getId());
     }
 }
