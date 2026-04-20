@@ -1,3 +1,5 @@
+DELIMITER $$
+
 DROP PROCEDURE IF EXISTS insertar_mascota;
 DROP PROCEDURE IF EXISTS modificar_mascota;
 DROP PROCEDURE IF EXISTS eliminar_mascota;
@@ -536,6 +538,169 @@ BEGIN
     SELECT id_recordatorio, fecha_programada, canal, estado_seguimiento, mensaje,
         id_cita, created_on, modified_on, modified_by
     FROM recordatorio;
+END$$
+
+-- PROCEDIMIENTO PARA INSERTAR SERVICIO
+CREATE PROCEDURE insertar_servicio(
+    IN p_nombre VARCHAR(100),
+    IN p_tipo_servicio VARCHAR(50),
+    IN p_duracion_minutos INT,
+    IN p_precio_referencial DECIMAL(10,2),
+    IN p_created_on DATETIME,
+    OUT p_id_generado INT
+)
+BEGIN
+    INSERT INTO servicio (nombre, tipo_servicio, duracion_minutos, precio_referencial, activo, created_on)
+    VALUES (p_nombre, p_tipo_servicio, p_duracion_minutos, p_precio_referencial, 1, p_created_on);
+
+    SET p_id_generado = LAST_INSERT_ID();
+END$$
+
+-- PROCEDIMIENTO PARA MODIFICAR SERVICIO
+CREATE PROCEDURE modificar_servicio(
+    IN p_id_servicio INT,
+    IN p_nombre VARCHAR(100),
+    IN p_tipo_servicio VARCHAR(50),
+    IN p_duracion_minutos INT,
+    IN p_precio_referencial DECIMAL(10,2),
+    IN p_modified_on DATETIME,
+    IN p_modified_by INT
+)
+BEGIN
+    UPDATE servicio
+    SET nombre = p_nombre,
+        tipo_servicio = p_tipo_servicio,
+        duracion_minutos = p_duracion_minutos,
+        precio_referencial = p_precio_referencial,
+        modified_on = p_modified_on,
+        modified_by = p_modified_by
+    WHERE id_servicio = p_id_servicio;
+END$$
+
+-- PROCEDIMIENTO PARA ELIMINAR SERVICIO (HARD DELETE o Físico)
+CREATE PROCEDURE eliminar_servicio(
+    IN p_id_servicio INT,
+    IN p_modified_on DATETIME,
+    IN p_modified_by INT
+)
+BEGIN
+    DELETE FROM servicio WHERE id_servicio = p_id_servicio;
+END$$
+
+-- PROCEDIMIENTO PARA DESHABILITAR SERVICIO (SOFT DELETE o Lógico)
+CREATE PROCEDURE deshabilitar_servicio(
+    IN p_id_servicio INT,
+    IN p_modified_on DATETIME,
+    IN p_modified_by INT
+)
+BEGIN
+    UPDATE servicio
+    SET activo = 0,
+        modified_on = p_modified_on,
+        modified_by = p_modified_by
+    WHERE id_servicio = p_id_servicio;
+END$$
+
+-- PROCEDIMIENTO PARA BUSCAR SERVICIO POR ID
+CREATE PROCEDURE buscar_servicio_por_id(
+    IN p_id_servicio INT
+)
+BEGIN
+    SELECT id_servicio, nombre, tipo_servicio, duracion_minutos, precio_referencial, activo
+    FROM servicio
+    WHERE id_servicio = p_id_servicio;
+END$$
+
+-- PROCEDIMIENTO PARA LISTAR TODOS LOS SERVICIOS
+CREATE PROCEDURE listar_servicios()
+BEGIN
+    SELECT id_servicio, nombre, tipo_servicio, duracion_minutos, precio_referencial, activo
+    FROM servicio;
+    -- Si solo deseas listar los activos, podrías agregar: WHERE activo = 1;
+END$$
+
+-- PROCEDIMIENTO PARA INSERTAR ATENCION
+CREATE PROCEDURE insertar_atencion(
+    IN p_fecha_hora DATETIME,
+    IN p_nota_clinica TEXT,
+    IN p_nota_pre_operatoria TEXT,
+    IN p_nota_post_operatoria TEXT,
+    IN p_recomendacion_control TEXT,
+    IN p_monto_referencial DECIMAL(10,2),
+    IN p_descuento_aplicado DECIMAL(5,2),
+    IN p_id_cita INT,
+    IN p_created_on DATETIME,
+    OUT p_id_generado INT
+)
+BEGIN
+    INSERT INTO atencion (fecha_hora, nota_clinica, nota_pre_operatoria, nota_post_operatoria, recomendacion_control, monto_referencial, descuento_aplicado, id_cita, created_on)
+    VALUES (p_fecha_hora, p_nota_clinica, p_nota_pre_operatoria, p_nota_post_operatoria, p_recomendacion_control, p_monto_referencial, p_descuento_aplicado, p_id_cita, p_created_on);
+
+    SET p_id_generado = LAST_INSERT_ID();
+END$$
+
+-- PROCEDIMIENTO PARA MODIFICAR ATENCION
+CREATE PROCEDURE modificar_atencion(
+    IN p_id_atencion INT,
+    IN p_fecha_hora DATETIME,
+    IN p_nota_clinica TEXT,
+    IN p_nota_pre_operatoria TEXT,
+    IN p_nota_post_operatoria TEXT,
+    IN p_recomendacion_control TEXT,
+    IN p_monto_referencial DECIMAL(10,2),
+    IN p_descuento_aplicado DECIMAL(5,2),
+    IN p_modified_on DATETIME,
+    IN p_modified_by INT
+)
+BEGIN
+    UPDATE atencion
+    SET fecha_hora = p_fecha_hora,
+        nota_clinica = p_nota_clinica,
+        nota_pre_operatoria = p_nota_pre_operatoria,
+        nota_post_operatoria = p_nota_post_operatoria,
+        recomendacion_control = p_recomendacion_control,
+        monto_referencial = p_monto_referencial,
+        descuento_aplicado = p_descuento_aplicado,
+        modified_on = p_modified_on,
+        modified_by = p_modified_by
+    WHERE id_atencion = p_id_atencion;
+END$$
+
+-- PROCEDIMIENTO PARA ELIMINAR ATENCION (Físico)
+CREATE PROCEDURE eliminar_atencion(
+    IN p_id_atencion INT,
+    IN p_modified_on DATETIME,
+    IN p_modified_by INT
+)
+BEGIN
+    DELETE FROM atencion WHERE id_atencion = p_id_atencion;
+END$$
+
+-- PROCEDIMIENTO PARA BUSCAR ATENCION POR ID
+CREATE PROCEDURE buscar_atencion_por_id(
+    IN p_id_atencion INT
+)
+BEGIN
+    SELECT id_atencion, fecha_hora, nota_clinica, nota_pre_operatoria, nota_post_operatoria, recomendacion_control, monto_referencial, descuento_aplicado, id_cita
+    FROM atencion
+    WHERE id_atencion = p_id_atencion;
+END$$
+
+-- PROCEDIMIENTO PARA BUSCAR ATENCION POR ID DE CITA
+CREATE PROCEDURE buscar_atencion_por_cita(
+    IN p_id_cita INT
+)
+BEGIN
+    SELECT id_atencion, fecha_hora, nota_clinica, nota_pre_operatoria, nota_post_operatoria, recomendacion_control, monto_referencial, descuento_aplicado, id_cita
+    FROM atencion
+    WHERE id_cita = p_id_cita;
+END$$
+
+-- PROCEDIMIENTO PARA LISTAR TODAS LAS ATENCIONES
+CREATE PROCEDURE listar_atenciones()
+BEGIN
+    SELECT id_atencion, fecha_hora, nota_clinica, nota_pre_operatoria, nota_post_operatoria, recomendacion_control, monto_referencial, descuento_aplicado, id_cita
+    FROM atencion;
 END$$
 
 DELIMITER ;
