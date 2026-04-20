@@ -16,14 +16,6 @@
         <maven.compiler.target>25</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-    <dependencies>
-        <dependency>
-            <groupId>pe.edu.pucp.vetcitas</groupId>
-            <artifactId>VetCitasModel</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-    </dependencies>
 
     <!-- Source: https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
     <dependencies>
@@ -31,6 +23,18 @@
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>8.0.33</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>pe.edu.pucp.vetcitas</groupId>
+            <artifactId>VetCitasModel</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>pe.edu.pucp.vetcitas</groupId>
+            <artifactId>VetCitasPersistencia</artifactId>
+            <version>1.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
