@@ -27,6 +27,12 @@
         </dependency>
         <dependency>
             <groupId>pe.edu.pucp.vetcitas</groupId>
+            <artifactId>VetCitasModel</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>pe.edu.pucp.vetcitas</groupId>
             <artifactId>VetCitasPersistencia</artifactId>
             <version>1.0-SNAPSHOT</version>
             <scope>compile</scope>
