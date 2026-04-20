@@ -1,5 +1,7 @@
 package pe.edu.pucp.vetcitas.main;
 
+import pe.edu.pucp.vetcitas.cita.dao.ICitaDAO;
+import pe.edu.pucp.vetcitas.cita.impl.CitaImpl;
 import pe.edu.pucp.vetcitas.cita.dao.IRecordatorioDAO;
 import pe.edu.pucp.vetcitas.cita.impl.RecordatorioImpl;
 import pe.edu.pucp.vetcitas.cita.model.Cita;
@@ -11,12 +13,20 @@ import pe.edu.pucp.vetcitas.cliente.impl.MascotaImpl;
 import pe.edu.pucp.vetcitas.cliente.model.Cliente;
 import pe.edu.pucp.vetcitas.cliente.model.Mascota;
 import pe.edu.pucp.vetcitas.common.enums.CanalRecordatorio;
+import pe.edu.pucp.vetcitas.common.enums.EstadoCita;
 import pe.edu.pucp.vetcitas.common.enums.EstadoSeguimiento;
 import pe.edu.pucp.vetcitas.common.enums.Rol;
 import pe.edu.pucp.vetcitas.usuario.dao.IVeterinarioDAO;
 import pe.edu.pucp.vetcitas.usuario.impl.VeterinarioImpl;
 import pe.edu.pucp.vetcitas.usuario.model.Administrador;
 import pe.edu.pucp.vetcitas.usuario.model.Veterinario;
+import pe.edu.pucp.vetcitas.servicio.dao.IServicioDAO;
+import pe.edu.pucp.vetcitas.servicio.impl.ServicioImpl;
+import pe.edu.pucp.vetcitas.servicio.model.Servicio;
+import pe.edu.pucp.vetcitas.common.enums.TipoServicio;
+import pe.edu.pucp.vetcitas.cita.dao.IAtencionDAO;
+import pe.edu.pucp.vetcitas.cita.impl.AtencionImpl;
+import pe.edu.pucp.vetcitas.cita.model.Atencion;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -179,6 +189,90 @@ public class Principal {
             System.out.println("Vet2 activo? " + vetEliminado.isActivo());
         }
 
+        // =========================================================
+        // PRUEBAS: DAO SERVICIO
+        // =========================================================
+        System.out.println("==============================================");
+        System.out.println("INICIANDO PRUEBAS DE SERVICIO");
+        System.out.println("==============================================");
+
+        IServicioDAO daoServicio = new ServicioImpl();
+
+        // 1. Insertar Servicio
+        System.out.println("\n1. Probando Inserción de Servicio...");
+        Servicio nuevoServicio = new Servicio();
+        nuevoServicio.setNombre("Baño y Corte de Pelo Premium");
+        nuevoServicio.setTipoServicio(TipoServicio.NO_CLINICA);
+        nuevoServicio.setDuracionMinutos(60);
+        nuevoServicio.setPrecioReferencial(85.50);
+
+        int resultadoServicio = daoServicio.insertar(nuevoServicio);
+        if (resultadoServicio != 0) {
+            System.out.println("EXITO: Servicio insertado con ID: " + resultadoServicio);
+            nuevoServicio.setId(resultadoServicio); // Guardamos el ID para las siguientes pruebas
+        } else {
+            System.out.println("ERROR: No se pudo insertar el servicio.");
+        }
+
+        // 2. Listar todos los servicios
+        System.out.println("\n2. Probando Listado de Servicios...");
+        List<Servicio> listaServicios = daoServicio.listarTodas();
+        for (Servicio s : listaServicios) {
+            System.out.println("ID: " + s.getId() + " | Nombre: " + s.getNombre() + " | Precio: S/." + s.getPrecioReferencial() + " | Activo: " + s.isActivo());
+        }
+
+        // 3. Modificar Servicio
+        System.out.println("\n3. Probando Modificación de Servicio...");
+        nuevoServicio.setPrecioReferencial(95.00); // Subimos el precio
+        nuevoServicio.setNombre("Baño y Corte Premium (Actualizado)");
+        int modificado = daoServicio.modificar(nuevoServicio);
+        System.out.println(modificado > 0 ? "EXITO: Servicio modificado." : "ERROR al modificar.");
+
+        // 4. Deshabilitar Servicio (Borrado lógico)
+        System.out.println("\n4. Probando Deshabilitar Servicio...");
+        int deshabilitado = daoServicio.deshabilitar(nuevoServicio.getId());
+        System.out.println(deshabilitado > 0 ? "EXITO: Servicio deshabilitado." : "ERROR al deshabilitar.");
+
+        // 5. Buscar por ID para comprobar cambios
+        System.out.println("\n5. Comprobando cambios con Buscar por ID...");
+        Servicio servicioBuscado = daoServicio.buscarPorId(nuevoServicio.getId());
+        if (servicioBuscado != null) {
+            System.out.println("Servicio encontrado: " + servicioBuscado.getNombre() + " | Activo: " + servicioBuscado.isActivo() + " | Precio: " + servicioBuscado.getPrecioReferencial());
+        }
+
+        // =========================================================
+        // PRUEBAS: CITA
+        // =========================================================
+        System.out.println("\n==============================================");
+        System.out.println("INICIANDO PRUEBAS DE CITA [CREACION]");
+        System.out.println("==============================================");
+
+        ICitaDAO daoCita = new CitaImpl();
+        Cita citaPruebaGenerada = new Cita();
+        citaPruebaGenerada.setFechaHoraInicio(LocalDateTime.now().plusDays(1));
+        citaPruebaGenerada.setFechaHoraFin(LocalDateTime.now().plusDays(1).plusHours(1));
+        citaPruebaGenerada.setEstado(EstadoCita.PENDIENTE);
+
+        Mascota mascotaCita = new Mascota();
+        mascotaCita.setId(mascotaPrueba.getId());
+
+        Veterinario vetCita = new Veterinario();
+        vetCita.setId(idVet);
+
+        Servicio servicioCita = new Servicio();
+        servicioCita.setId(nuevoServicio.getId());
+
+        citaPruebaGenerada.setMascota(mascotaCita);
+        citaPruebaGenerada.setVeterinario(vetCita);
+        citaPruebaGenerada.setServicio(servicioCita);
+
+        int idCitaGenerada = daoCita.insertar(citaPruebaGenerada);
+        if (idCitaGenerada > 0) {
+            System.out.println("EXITO: Cita de prueba generada con ID: " + idCitaGenerada);
+        } else {
+            System.out.println("ERROR: No se pudo crear la cita.");
+        }
+
         // ============================================================
         // PRUEBA 6: DAO RECORDATORIO
         // Para recordatorio se necesita una cita existente en la BD.
@@ -248,5 +342,62 @@ public class Principal {
         System.out.println("Buscar despues de eliminar: " + (recEliminado == null ? "No encontrado (OK)" : "Aun existe"));
 
         System.out.println("\n=== FIN DE PRUEBAS ===");
+
+
+        // =========================================================
+        // PRUEBAS: ATENCION
+        // =========================================================
+        System.out.println("\n==============================================");
+        System.out.println("INICIANDO PRUEBAS DE ATENCION");
+        System.out.println("==============================================");
+
+        IAtencionDAO daoAtencion = new AtencionImpl();
+
+        // Cambiar este número por un ID de Cita existente
+        int idCitaExistente = 1;
+
+        // 1. Insertar Atención
+        System.out.println("\n1. Probando Inserción de Atención...");
+        Atencion nuevaAtencion = new Atencion();
+        nuevaAtencion.setFechaHora(LocalDateTime.now());
+        nuevaAtencion.setNotaClinica("El paciente presenta leve irritación en la piel. Se aplicó crema.");
+        nuevaAtencion.setNotaPreOperatoria("");
+        nuevaAtencion.setNotaPostOperatoria("");
+        nuevaAtencion.setRecomendacionControl("Evitar que se lama la herida por 3 días.");
+        nuevaAtencion.setMontoReferencial(150.00);
+        nuevaAtencion.setDescuentoAplicado(10.00); // S/. 10 de descuento
+
+        Cita citaAsociada = new Cita();
+        citaAsociada.setId(idCitaExistente);
+        nuevaAtencion.setCita(citaAsociada);
+
+        int resultadoAtencion = daoAtencion.insertar(nuevaAtencion);
+        if (resultadoAtencion != 0) {
+            System.out.println("EXITO: Atención insertada con ID: " + resultadoAtencion);
+            nuevaAtencion.setId(resultadoAtencion);
+        } else {
+            System.out.println("ERROR: No se pudo insertar la atención (Verifica que la cita con ID " + idCitaExistente + " exista).");
+        }
+
+        // 2. Buscar Atención por ID de Cita
+        System.out.println("\n2. Probando Búsqueda de Atención por Cita...");
+        Atencion atencionPorCita = daoAtencion.buscarPorCita(idCitaExistente);
+        if (atencionPorCita != null) {
+            System.out.println("Atención encontrada para la Cita " + idCitaExistente + ": " + atencionPorCita.getNotaClinica());
+        } else {
+            System.out.println("No se encontró atención para esa cita.");
+        }
+
+        // 3. Modificar Atención
+        System.out.println("\n3. Probando Modificación de Atención...");
+        if (nuevaAtencion.getId() != 0) {
+            nuevaAtencion.setNotaClinica("El paciente presenta leve irritación en la piel. Se aplicó crema. Actualización: Se recetan pastillas.");
+            int atencionModificada = daoAtencion.modificar(nuevaAtencion);
+            System.out.println(atencionModificada > 0 ? "EXITO: Atención modificada." : "ERROR al modificar atención.");
+        }
+
+        System.out.println("\n==============================================");
+        System.out.println("FIN DE LAS PRUEBAS");
+        System.out.println("==============================================");
     }
 }
