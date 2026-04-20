@@ -20,29 +20,29 @@ public class VeterinarioImpl implements IVeterinarioDAO {
         int resultado = 0;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{call INSERTAR_VETERINARIO(?,?,?,?,?,?,?,?,?,?)}");
-            cs.registerOutParameter("_id_usuario", Types.INTEGER);
-            cs.setString("_username", objeto.getUsername());
-            cs.setString("_contrasena_hash", objeto.getContrasenaHash());
-            cs.setString("_nombres", objeto.getNombres());
-            cs.setString("_apellidos", objeto.getApellidos());
-            cs.setString("_telefono", objeto.getTelefono());
-            cs.setString("_rol", objeto.getRol().name());
-            cs.setString("_cmpv", objeto.getCmpv());
-            cs.setString("_especialidad", objeto.getEspecialidad());
+            cs = con.prepareCall("{CALL insertar_veterinario(?,?,?,?,?,?,?,?,?,?)}");
+            cs.setString(1, objeto.getUsername());
+            cs.setString(2, objeto.getContrasenaHash());
+            cs.setString(3, objeto.getNombres());
+            cs.setString(4, objeto.getApellidos());
+            cs.setString(5, objeto.getTelefono());
+            cs.setString(6, objeto.getRol().name());
+            cs.setString(7, objeto.getCmpv());
+            cs.setString(8, objeto.getEspecialidad());
             if (objeto.getModifiedBy() != null) {
-                cs.setInt("_modified_by", objeto.getModifiedBy().getId());
+                cs.setInt(9, objeto.getModifiedBy().getId());
             } else {
-                cs.setNull("_modified_by", Types.INTEGER);
+                cs.setNull(9, Types.INTEGER);
             }
+            cs.registerOutParameter(10, Types.INTEGER);
             cs.executeUpdate();
-            resultado = cs.getInt("_id_usuario");
+            resultado = cs.getInt(10);
             objeto.setId(resultado);
         } catch (Exception ex) {
             System.out.println("ERROR: " + ex.getMessage());
         } finally {
-            try { cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (cs != null) cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (con != null) con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
         }
         return resultado;
     }
@@ -52,26 +52,26 @@ public class VeterinarioImpl implements IVeterinarioDAO {
         int resultado = 0;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{call MODIFICAR_VETERINARIO(?,?,?,?,?,?,?,?,?)}");
-            cs.setInt("_id_usuario", objeto.getId());
-            cs.setString("_username", objeto.getUsername());
-            cs.setString("_contrasena_hash", objeto.getContrasenaHash());
-            cs.setString("_nombres", objeto.getNombres());
-            cs.setString("_apellidos", objeto.getApellidos());
-            cs.setString("_telefono", objeto.getTelefono());
-            cs.setString("_cmpv", objeto.getCmpv());
-            cs.setString("_especialidad", objeto.getEspecialidad());
+            cs = con.prepareCall("{CALL modificar_veterinario(?,?,?,?,?,?,?,?,?)}");
+            cs.setInt(1, objeto.getId());
+            cs.setString(2, objeto.getUsername());
+            cs.setString(3, objeto.getContrasenaHash());
+            cs.setString(4, objeto.getNombres());
+            cs.setString(5, objeto.getApellidos());
+            cs.setString(6, objeto.getTelefono());
+            cs.setString(7, objeto.getCmpv());
+            cs.setString(8, objeto.getEspecialidad());
             if (objeto.getModifiedBy() != null) {
-                cs.setInt("_modified_by", objeto.getModifiedBy().getId());
+                cs.setInt(9, objeto.getModifiedBy().getId());
             } else {
-                cs.setNull("_modified_by", Types.INTEGER);
+                cs.setNull(9, Types.INTEGER);
             }
             resultado = cs.executeUpdate();
         } catch (Exception ex) {
             System.out.println("ERROR: " + ex.getMessage());
         } finally {
-            try { cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (cs != null) cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (con != null) con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
         }
         return resultado;
     }
@@ -81,14 +81,14 @@ public class VeterinarioImpl implements IVeterinarioDAO {
         int resultado = 0;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{call ELIMINAR_VETERINARIO(?)}");
-            cs.setInt("_id_usuario", id);
+            cs = con.prepareCall("{CALL eliminar_veterinario(?)}");
+            cs.setInt(1, id);
             resultado = cs.executeUpdate();
         } catch (Exception ex) {
             System.out.println("ERROR: " + ex.getMessage());
         } finally {
-            try { cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (cs != null) cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (con != null) con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
         }
         return resultado;
     }
@@ -98,8 +98,8 @@ public class VeterinarioImpl implements IVeterinarioDAO {
         Veterinario veterinario = null;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{call BUSCAR_VETERINARIO_POR_ID(?)}");
-            cs.setInt("_id_usuario", id);
+            cs = con.prepareCall("{CALL buscar_veterinario_por_id(?)}");
+            cs.setInt(1, id);
             rs = cs.executeQuery();
             if (rs.next()) {
                 veterinario = new Veterinario();
@@ -122,9 +122,9 @@ public class VeterinarioImpl implements IVeterinarioDAO {
         } catch (Exception ex) {
             System.out.println("ERROR: " + ex.getMessage());
         } finally {
-            try { rs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (rs != null) rs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (cs != null) cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (con != null) con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
         }
         return veterinario;
     }
@@ -134,7 +134,7 @@ public class VeterinarioImpl implements IVeterinarioDAO {
         List<Veterinario> veterinarios = null;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{call LISTAR_VETERINARIOS()}");
+            cs = con.prepareCall("{CALL listar_veterinarios()}");
             rs = cs.executeQuery();
             while (rs.next()) {
                 if (veterinarios == null) veterinarios = new ArrayList<>();
@@ -159,9 +159,9 @@ public class VeterinarioImpl implements IVeterinarioDAO {
         } catch (Exception ex) {
             System.out.println("ERROR: " + ex.getMessage());
         } finally {
-            try { rs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (rs != null) rs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (cs != null) cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (con != null) con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
         }
         return veterinarios;
     }

@@ -22,26 +22,26 @@ public class RecordatorioImpl implements IRecordatorioDAO {
         int resultado = 0;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{call INSERTAR_RECORDATORIO(?,?,?,?,?,?,?)}");
-            cs.registerOutParameter("_id_recordatorio", Types.INTEGER);
-            cs.setTimestamp("_fecha_programada", Timestamp.valueOf(objeto.getFechaProgramada()));
-            cs.setString("_canal", objeto.getCanal().name());
-            cs.setString("_estado_seguimiento", objeto.getEstadoSeguimiento().name());
-            cs.setString("_mensaje", objeto.getMensaje());
-            cs.setInt("_id_cita", objeto.getCita().getId());
+            cs = con.prepareCall("{CALL insertar_recordatorio(?,?,?,?,?,?,?)}");
+            cs.setTimestamp(1, Timestamp.valueOf(objeto.getFechaProgramada()));
+            cs.setString(2, objeto.getCanal().name());
+            cs.setString(3, objeto.getEstadoSeguimiento().name());
+            cs.setString(4, objeto.getMensaje());
+            cs.setInt(5, objeto.getCita().getId());
             if (objeto.getModifiedBy() != null) {
-                cs.setInt("_modified_by", objeto.getModifiedBy().getId());
+                cs.setInt(6, objeto.getModifiedBy().getId());
             } else {
-                cs.setNull("_modified_by", Types.INTEGER);
+                cs.setNull(6, Types.INTEGER);
             }
+            cs.registerOutParameter(7, Types.INTEGER);
             cs.executeUpdate();
-            resultado = cs.getInt("_id_recordatorio");
+            resultado = cs.getInt(7);
             objeto.setId(resultado);
         } catch (Exception ex) {
             System.out.println("ERROR: " + ex.getMessage());
         } finally {
-            try { cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (cs != null) cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (con != null) con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
         }
         return resultado;
     }
@@ -51,24 +51,24 @@ public class RecordatorioImpl implements IRecordatorioDAO {
         int resultado = 0;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{call MODIFICAR_RECORDATORIO(?,?,?,?,?,?,?)}");
-            cs.setInt("_id_recordatorio", objeto.getId());
-            cs.setTimestamp("_fecha_programada", Timestamp.valueOf(objeto.getFechaProgramada()));
-            cs.setString("_canal", objeto.getCanal().name());
-            cs.setString("_estado_seguimiento", objeto.getEstadoSeguimiento().name());
-            cs.setString("_mensaje", objeto.getMensaje());
-            cs.setInt("_id_cita", objeto.getCita().getId());
+            cs = con.prepareCall("{CALL modificar_recordatorio(?,?,?,?,?,?,?)}");
+            cs.setInt(1, objeto.getId());
+            cs.setTimestamp(2, Timestamp.valueOf(objeto.getFechaProgramada()));
+            cs.setString(3, objeto.getCanal().name());
+            cs.setString(4, objeto.getEstadoSeguimiento().name());
+            cs.setString(5, objeto.getMensaje());
+            cs.setInt(6, objeto.getCita().getId());
             if (objeto.getModifiedBy() != null) {
-                cs.setInt("_modified_by", objeto.getModifiedBy().getId());
+                cs.setInt(7, objeto.getModifiedBy().getId());
             } else {
-                cs.setNull("_modified_by", Types.INTEGER);
+                cs.setNull(7, Types.INTEGER);
             }
             resultado = cs.executeUpdate();
         } catch (Exception ex) {
             System.out.println("ERROR: " + ex.getMessage());
         } finally {
-            try { cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (cs != null) cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (con != null) con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
         }
         return resultado;
     }
@@ -78,14 +78,14 @@ public class RecordatorioImpl implements IRecordatorioDAO {
         int resultado = 0;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{call ELIMINAR_RECORDATORIO(?)}");
-            cs.setInt("_id_recordatorio", id);
+            cs = con.prepareCall("{CALL eliminar_recordatorio(?)}");
+            cs.setInt(1, id);
             resultado = cs.executeUpdate();
         } catch (Exception ex) {
             System.out.println("ERROR: " + ex.getMessage());
         } finally {
-            try { cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (cs != null) cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (con != null) con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
         }
         return resultado;
     }
@@ -95,8 +95,8 @@ public class RecordatorioImpl implements IRecordatorioDAO {
         Recordatorio recordatorio = null;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{call BUSCAR_RECORDATORIO_POR_ID(?)}");
-            cs.setInt("_id_recordatorio", id);
+            cs = con.prepareCall("{CALL buscar_recordatorio_por_id(?)}");
+            cs.setInt(1, id);
             rs = cs.executeQuery();
             if (rs.next()) {
                 recordatorio = new Recordatorio();
@@ -117,9 +117,9 @@ public class RecordatorioImpl implements IRecordatorioDAO {
         } catch (Exception ex) {
             System.out.println("ERROR: " + ex.getMessage());
         } finally {
-            try { rs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (rs != null) rs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (cs != null) cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (con != null) con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
         }
         return recordatorio;
     }
@@ -129,7 +129,7 @@ public class RecordatorioImpl implements IRecordatorioDAO {
         List<Recordatorio> recordatorios = null;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{call LISTAR_RECORDATORIOS()}");
+            cs = con.prepareCall("{CALL listar_recordatorios()}");
             rs = cs.executeQuery();
             while (rs.next()) {
                 if (recordatorios == null) recordatorios = new ArrayList<>();
@@ -152,9 +152,9 @@ public class RecordatorioImpl implements IRecordatorioDAO {
         } catch (Exception ex) {
             System.out.println("ERROR: " + ex.getMessage());
         } finally {
-            try { rs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (rs != null) rs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (cs != null) cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (con != null) con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
         }
         return recordatorios;
     }
