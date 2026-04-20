@@ -253,9 +253,9 @@ SELECT
     c.modified_by
 FROM cliente c
 WHERE c.activo = 1;
-
+END$$
 DELIMITER $$
---Procedures de CITA
+
 CREATE PROCEDURE insertar_cita(
     IN p_fecha_hora_inicio DATETIME,
     IN p_fecha_hora_fin DATETIME,
@@ -381,9 +381,6 @@ FROM cita c
          INNER JOIN servicio s ON c.id_servicio = s.id_servicio;
 END$$
 
--- =========================================================
--- Procedures de VETERINARIO
--- =========================================================
 
 DROP PROCEDURE IF EXISTS insertar_veterinario;
 DROP PROCEDURE IF EXISTS modificar_veterinario;
