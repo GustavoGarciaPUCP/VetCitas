@@ -132,6 +132,128 @@ END$$
 
 DELIMITER ;
 
+
+
+
+
+
+DROP PROCEDURE IF EXISTS insertar_cliente;
+DROP PROCEDURE IF EXISTS modificar_cliente;
+DROP PROCEDURE IF EXISTS eliminar_cliente;
+DROP PROCEDURE IF EXISTS buscar_cliente_por_id;
+DROP PROCEDURE IF EXISTS listar_clientes_activos;
+
+-- Procedures de CLIENTE
+DELIMITER $$
+
+CREATE PROCEDURE insertar_cliente(
+    IN p_nombres VARCHAR(100),
+    IN p_apellidos VARCHAR(100),
+    IN p_telefono VARCHAR(20),
+    IN p_observaciones VARCHAR(255),
+    IN p_activo TINYINT,
+    IN p_created_on DATETIME,
+    IN p_modified_on DATETIME,
+    IN p_modified_by INT,
+    OUT p_id_generado INT
+)
+BEGIN
+INSERT INTO cliente(
+    nombres,
+    apellidos,
+    telefono,
+    observaciones,
+    activo,
+    created_on,
+    modified_on,
+    modified_by
+)
+VALUES(
+          p_nombres,
+          p_apellidos,
+          p_telefono,
+          p_observaciones,
+          p_activo,
+          p_created_on,
+          p_modified_on,
+          p_modified_by
+      );
+
+SET p_id_generado = LAST_INSERT_ID();
+END$$
+
+
+CREATE PROCEDURE modificar_cliente(
+    IN p_id_cliente INT,
+    IN p_nombres VARCHAR(100),
+    IN p_apellidos VARCHAR(100),
+    IN p_telefono VARCHAR(20),
+    IN p_observaciones VARCHAR(255),
+    IN p_activo TINYINT,
+    IN p_modified_on DATETIME,
+    IN p_modified_by INT
+)
+BEGIN
+UPDATE cliente
+SET nombres = p_nombres,
+    apellidos = p_apellidos,
+    telefono = p_telefono,
+    observaciones = p_observaciones,
+    activo = p_activo,
+    modified_on = p_modified_on,
+    modified_by = p_modified_by
+WHERE id_cliente = p_id_cliente;
+END$$
+
+
+CREATE PROCEDURE eliminar_cliente(
+    IN p_id_cliente INT,
+    IN p_modified_on DATETIME,
+    IN p_modified_by INT
+)
+BEGIN
+UPDATE cliente
+SET activo = 0,
+    modified_on = p_modified_on,
+    modified_by = p_modified_by
+WHERE id_cliente = p_id_cliente;
+END$$
+
+
+CREATE PROCEDURE buscar_cliente_por_id(
+    IN p_id_cliente INT
+)
+BEGIN
+SELECT
+    c.id_cliente,
+    c.nombres,
+    c.apellidos,
+    c.telefono,
+    c.observaciones,
+    c.activo,
+    c.created_on,
+    c.modified_on,
+    c.modified_by
+FROM cliente c
+WHERE c.id_cliente = p_id_cliente;
+END$$
+
+
+CREATE PROCEDURE listar_clientes_activos()
+BEGIN
+SELECT
+    c.id_cliente,
+    c.nombres,
+    c.apellidos,
+    c.telefono,
+    c.observaciones,
+    c.activo,
+    c.created_on,
+    c.modified_on,
+    c.modified_by
+FROM cliente c
+WHERE c.activo = 1;
+
 DELIMITER $$
 --Procedures de CITA
 CREATE PROCEDURE insertar_cita(
@@ -339,9 +461,18 @@ BEGIN
     FROM usuario u
     INNER JOIN veterinario v ON u.id_usuario = v.id_veterinario
     WHERE u.activo = 1;
+
 END$$
 
 DELIMITER ;
+
+
+
+
+
+
+
+
 
 -- =========================================================
 -- Procedures de RECORDATORIO
