@@ -34,6 +34,7 @@ public class AtencionImpl implements IAtencionDAO {
             cs.registerOutParameter("p_id_generado", Types.INTEGER);
             cs.executeUpdate();
             resultado = cs.getInt("p_id_generado");
+            atencion.setId(resultado);
         } catch (Exception ex) {
             System.out.println("ERROR: " + ex.getMessage());
         } finally {

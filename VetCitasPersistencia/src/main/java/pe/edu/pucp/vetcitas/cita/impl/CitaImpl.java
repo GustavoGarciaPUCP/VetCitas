@@ -38,6 +38,7 @@ public class CitaImpl implements ICitaDAO {
             cs.registerOutParameter("p_id_generado", Types.INTEGER);
             cs.executeUpdate();
             resultado = cs.getInt("p_id_generado");
+            cita.setId(resultado);
         } catch (Exception ex) {
             System.out.println("ERROR: " + ex.getMessage());
         } finally {

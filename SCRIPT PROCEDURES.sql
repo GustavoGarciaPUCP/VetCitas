@@ -1,3 +1,5 @@
+USE vetcitas_db;
+
 DELIMITER $$
 
 DROP PROCEDURE IF EXISTS insertar_mascota;
