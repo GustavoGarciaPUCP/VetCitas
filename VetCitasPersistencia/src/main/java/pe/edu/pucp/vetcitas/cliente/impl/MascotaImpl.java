@@ -72,8 +72,8 @@ public class MascotaImpl implements MascotaDAO {
             System.out.println("ERROR: "+ex.getMessage());
         }finally {
             try{
+                if (cs != null) cs.close();
                 if (con != null) con.close();
-                cs.close();
             }catch (Exception ex){
                 System.out.println("ERROR: "+ex.getMessage());
             }
