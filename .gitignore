@@ -39,4 +39,5 @@ build/
 .DS_Store
 .claude
 
+### ruta de las credenciales
 VetCitas/src/main/resources/db.properties
