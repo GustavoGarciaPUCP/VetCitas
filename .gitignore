@@ -38,3 +38,5 @@ build/
 ### Mac OS ###
 .DS_Store
 .claude
+
+VetCitas/src/main/resources/db.properties
