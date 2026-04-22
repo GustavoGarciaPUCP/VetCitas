@@ -40,5 +40,3 @@ build/
 .claude
 
 ### ruta de las credenciales
-VetCitas/src/main/resources/db.properties
-VetCitasDBManager/src/main/resources/db.properties
