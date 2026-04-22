@@ -61,6 +61,52 @@ public class Principal {
             System.out.println("Fallo la insercion del cliente.");
         }
 
+        // ============================================================
+        // PRUEBA CLIENTE: Buscar por ID
+        // ============================================================
+        System.out.println("\n=== PRUEBA CLIENTE: BUSCAR POR ID ===");
+        Cliente clienteBuscado = clienteDAO.buscarPorId(clienteNuevo.getId());
+
+        if (clienteBuscado != null) {
+            System.out.println("Cliente encontrado:");
+            System.out.println("ID: " + clienteBuscado.getId());
+            System.out.println("Nombres: " + clienteBuscado.getNombres());
+            System.out.println("Apellidos: " + clienteBuscado.getApellidos());
+            System.out.println("Telefono: " + clienteBuscado.getTelefono());
+            System.out.println("Observaciones: " + clienteBuscado.getObservaciones());
+            System.out.println("Activo: " + clienteBuscado.isActivo());
+        } else {
+            System.out.println("No se encontro cliente con ID: " + clienteNuevo.getId());
+        }
+
+        // ============================================================
+        // PRUEBA CLIENTE: Modificar cliente
+        // ============================================================
+        System.out.println("\n=== PRUEBA CLIENTE: MODIFICAR CLIENTE ===");
+        clienteNuevo.setNombres("Juan Carlos");
+        clienteNuevo.setApellidos("Martinez Silva Modificado");
+        clienteNuevo.setTelefono("999888777");
+        clienteNuevo.setObservaciones("Cliente modificado desde prueba");
+        clienteNuevo.setModifiedOn(LocalDateTime.now());
+
+        int resultadoMod = clienteDAO.modificar(clienteNuevo);
+        if (resultadoMod > 0) {
+            System.out.println("Cliente modificado correctamente.");
+
+            Cliente clienteModificado = clienteDAO.buscarPorId(clienteNuevo.getId());
+            if (clienteModificado != null) {
+                System.out.println("Datos luego de modificar:");
+                System.out.println("ID: " + clienteModificado.getId());
+                System.out.println("Nombres: " + clienteModificado.getNombres());
+                System.out.println("Apellidos: " + clienteModificado.getApellidos());
+                System.out.println("Telefono: " + clienteModificado.getTelefono());
+                System.out.println("Observaciones: " + clienteModificado.getObservaciones());
+            }
+        } else {
+            System.out.println("Fallo la modificacion del cliente.");
+        }
+
+
         // Listar clientes
         System.out.println("\nListando clientes activos:");
         List<Cliente> listaClientes = clienteDAO.listarTodas();
@@ -72,6 +118,8 @@ public class Principal {
         } else {
             System.out.println("No se encontraron clientes.");
         }
+
+
 
         // ============================================================
         // PRUEBA MASCOTA: Ahora usando el cliente recien creado
@@ -266,12 +314,92 @@ public class Principal {
         citaPruebaGenerada.setVeterinario(vetCita);
         citaPruebaGenerada.setServicio(servicioCita);
 
+        // =========================================================
+        // PRUEBA 1: INSERTAR CITA
+        // =========================================================
         int idCitaGenerada = daoCita.insertar(citaPruebaGenerada);
         if (idCitaGenerada > 0) {
             System.out.println("EXITO: Cita de prueba generada con ID: " + idCitaGenerada);
         } else {
             System.out.println("ERROR: No se pudo crear la cita.");
         }
+
+        // =========================================================
+        // PRUEBA 2: BUSCAR CITA POR ID
+        // =========================================================
+        System.out.println("\n=== PRUEBA 2: BUSCAR CITA POR ID ===");
+        Cita citaBuscada = daoCita.buscarPorId(idCitaGenerada);
+        if (citaBuscada != null) {
+            System.out.println("Cita encontrada:");
+            System.out.println("ID: " + citaBuscada.getId());
+            System.out.println("Inicio: " + citaBuscada.getFechaHoraInicio());
+            System.out.println("Fin: " + citaBuscada.getFechaHoraFin());
+            System.out.println("Estado: " + citaBuscada.getEstado());
+            System.out.println("ID Mascota: " + citaBuscada.getMascota().getId());
+            System.out.println("ID Veterinario: " + citaBuscada.getVeterinario().getId());
+            System.out.println("ID Servicio: " + citaBuscada.getServicio().getId());
+        } else {
+            System.out.println("ERROR: No se encontro la cita con ID: " + idCitaGenerada);
+        }
+
+        // =========================================================
+        // PRUEBA 3: MODIFICAR CITA
+        // =========================================================
+        System.out.println("\n=== PRUEBA 3: MODIFICAR CITA ===");
+        citaPruebaGenerada.setId(idCitaGenerada);
+        citaPruebaGenerada.setFechaHoraInicio(LocalDateTime.now().plusDays(2));
+        citaPruebaGenerada.setFechaHoraFin(LocalDateTime.now().plusDays(2).plusHours(1));
+        citaPruebaGenerada.setEstado(EstadoCita.CONFIRMADA);
+
+        int resModificarCita = daoCita.modificar(citaPruebaGenerada);
+        System.out.println("Resultado modificar cita: " + resModificarCita);
+
+        Cita citaModificada = daoCita.buscarPorId(idCitaGenerada);
+        if (citaModificada != null) {
+            System.out.println("Datos luego de modificar:");
+            System.out.println("ID: " + citaModificada.getId());
+            System.out.println("Inicio: " + citaModificada.getFechaHoraInicio());
+            System.out.println("Fin: " + citaModificada.getFechaHoraFin());
+            System.out.println("Estado: " + citaModificada.getEstado());
+        } else {
+            System.out.println("ERROR: No se pudo recuperar la cita modificada.");
+        }
+
+        // =========================================================
+        // PRUEBA 4: LISTAR TODAS LAS CITAS
+        // =========================================================
+        System.out.println("\n=== PRUEBA 4: LISTAR TODAS LAS CITAS ===");
+        List<Cita> listaCitas = daoCita.listarTodas();
+        if (listaCitas != null && !listaCitas.isEmpty()) {
+            for (Cita c : listaCitas) {
+                System.out.println("ID: " + c.getId()
+                        + " | Inicio: " + c.getFechaHoraInicio()
+                        + " | Fin: " + c.getFechaHoraFin()
+                        + " | Estado: " + c.getEstado()
+                        + " | Mascota ID: " + c.getMascota().getId()
+                        + " | Vet ID: " + c.getVeterinario().getId()
+                        + " | Servicio ID: " + c.getServicio().getId());
+            }
+        } else {
+            System.out.println("No se encontraron citas.");
+        }
+
+        // =========================================================
+        // PRUEBA 5: ELIMINAR CITA (CAMBIAR ESTADO A CANCELADA)
+        // =========================================================
+        System.out.println("\n=== PRUEBA 5: ELIMINAR CITA (SOFT DELETE) ===");
+        int resEliminarCita = daoCita.eliminar(idCitaGenerada);
+        System.out.println("Resultado eliminar cita: " + resEliminarCita);
+
+        Cita citaEliminada = daoCita.buscarPorId(idCitaGenerada);
+        if (citaEliminada != null) {
+            System.out.println("Cita luego de eliminar:");
+            System.out.println("ID: " + citaEliminada.getId());
+            System.out.println("Estado: " + citaEliminada.getEstado());
+        } else {
+            System.out.println("ERROR: No se encontro la cita luego del eliminar.");
+        }
+
 
         // ============================================================
         // PRUEBA 6: DAO RECORDATORIO
@@ -394,6 +522,24 @@ public class Principal {
             nuevaAtencion.setNotaClinica("El paciente presenta leve irritación en la piel. Se aplicó crema. Actualización: Se recetan pastillas.");
             int atencionModificada = daoAtencion.modificar(nuevaAtencion);
             System.out.println(atencionModificada > 0 ? "EXITO: Atención modificada." : "ERROR al modificar atención.");
+        }
+
+        // ============================================================
+        // PRUEBA CLIENTE: Eliminar cliente (SOFT DELETE)
+        // ============================================================
+        System.out.println("\n=== PRUEBA CLIENTE: ELIMINAR CLIENTE (SOFT DELETE) ===");
+        int resultadoElim = clienteDAO.eliminar(clienteNuevo.getId());
+        System.out.println("Resultado eliminar cliente: " + resultadoElim);
+
+        Cliente clienteEliminado = clienteDAO.buscarPorId(clienteNuevo.getId());
+        if (clienteEliminado != null) {
+            System.out.println("Cliente encontrado luego del soft delete:");
+            System.out.println("ID: " + clienteEliminado.getId());
+            System.out.println("Nombres: " + clienteEliminado.getNombres());
+            System.out.println("Apellidos: " + clienteEliminado.getApellidos());
+            System.out.println("Activo? " + clienteEliminado.isActivo());
+        } else {
+            System.out.println("No se encontro el cliente.");
         }
 
         System.out.println("\n==============================================");
