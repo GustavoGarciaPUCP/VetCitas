@@ -1,0 +1,14 @@
+package pe.edu.pucp.vetcitas.usuario.dao;
+
+import pe.edu.pucp.vetcitas.dao.IDAO;
+import pe.edu.pucp.vetcitas.usuario.model.Administrador;
+import pe.edu.pucp.vetcitas.usuario.model.RolSistema;
+
+import java.util.List;
+
+public interface IAdministradorDAO extends IDAO<Administrador> {
+    void asignarRol(int idUsuario, String codigoRol);
+    void revocarRol(int idUsuario, String codigoRol);
+    List<RolSistema> listarRolesDeUsuario(int idUsuario);
+    List<String> listarPermisosDeUsuario(int idUsuario);
+}

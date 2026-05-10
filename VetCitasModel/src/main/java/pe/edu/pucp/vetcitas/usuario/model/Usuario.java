@@ -1,6 +1,6 @@
 package pe.edu.pucp.vetcitas.usuario.model;
 
-import pe.edu.pucp.vetcitas.common.enums.Rol;
+import pe.edu.pucp.vetcitas.common.enums.CodigoRol;
 import pe.edu.pucp.vetcitas.common.model.EntidadAuditable;
 
 import java.time.LocalDateTime;
@@ -14,25 +14,24 @@ public class Usuario extends EntidadAuditable {
     private String nombres;
     private String apellidos;
     private boolean activo;
-    private Rol rol;
     private String telefono;
-    private List<Permiso> permisos;
+    private List<RolSistema> roles;
 
     public Usuario() {
+        super();
         this.id = 0;
         this.username = "";
         this.contrasenaHash = "";
         this.nombres = "";
         this.apellidos = "";
         this.activo = true;
-        this.rol = null;
         this.telefono = "";
-        this.permisos = new ArrayList<>();
+        this.roles = new ArrayList<>();
     }
 
     public Usuario(int id, String username, String contrasenaHash, String nombres,
-                   String apellidos, boolean activo, Rol rol, String telefono,
-                   List<Permiso> permisos, LocalDateTime createdOn,
+                   String apellidos, boolean activo, String telefono,
+                   List<RolSistema> roles, LocalDateTime createdOn,
                    LocalDateTime modifiedOn, Usuario modifiedBy) {
         super(createdOn, modifiedOn, modifiedBy);
         this.id = id;
@@ -41,13 +40,12 @@ public class Usuario extends EntidadAuditable {
         this.nombres = nombres;
         this.apellidos = apellidos;
         this.activo = activo;
-        this.rol = rol;
         this.telefono = telefono;
-        this.permisos = new ArrayList<>();
+        this.roles = new ArrayList<>();
 
-        if (permisos != null) {
-            for (Permiso permiso : permisos) {
-                this.permisos.add(new Permiso(permiso));
+        if (roles != null) {
+            for (RolSistema rol : roles) {
+                this.roles.add(new RolSistema(rol));
             }
         }
     }
@@ -60,27 +58,27 @@ public class Usuario extends EntidadAuditable {
         this.nombres = otro.nombres;
         this.apellidos = otro.apellidos;
         this.activo = otro.activo;
-        this.rol = otro.rol;
         this.telefono = otro.telefono;
-        this.permisos = new ArrayList<>();
+        this.roles = new ArrayList<>();
 
-        if (otro.permisos != null) {
-            for (Permiso permiso : otro.permisos) {
-                this.permisos.add(new Permiso(permiso));
+        if (otro.roles != null) {
+            for (RolSistema rol : otro.roles) {
+                this.roles.add(new RolSistema(rol));
             }
         }
     }
 
     public int getId() {
-        return this.id;
+        return id;
     }
 
     public void setId(int id) {
         this.id = id;
     }
 
+
     public String getUsername() {
-        return this.username;
+        return username;
     }
 
     public void setUsername(String username) {
@@ -88,7 +86,7 @@ public class Usuario extends EntidadAuditable {
     }
 
     public String getContrasenaHash() {
-        return this.contrasenaHash;
+        return contrasenaHash;
     }
 
     public void setContrasenaHash(String contrasenaHash) {
@@ -96,7 +94,7 @@ public class Usuario extends EntidadAuditable {
     }
 
     public String getNombres() {
-        return this.nombres;
+        return nombres;
     }
 
     public void setNombres(String nombres) {
@@ -104,7 +102,7 @@ public class Usuario extends EntidadAuditable {
     }
 
     public String getApellidos() {
-        return this.apellidos;
+        return apellidos;
     }
 
     public void setApellidos(String apellidos) {
@@ -112,58 +110,64 @@ public class Usuario extends EntidadAuditable {
     }
 
     public boolean isActivo() {
-        return this.activo;
+        return activo;
     }
 
     public void setActivo(boolean activo) {
         this.activo = activo;
     }
 
-    public Rol getRol() {
-        return this.rol;
-    }
-
-    public void setRol(Rol rol) {
-        this.rol = rol;
-    }
-
     public String getTelefono() {
-        return this.telefono;
+        return telefono;
     }
 
     public void setTelefono(String telefono) {
         this.telefono = telefono;
     }
 
-    public List<Permiso> getPermisos() {
-        List<Permiso> copia = new ArrayList<>();
-
-        for (Permiso permiso : this.permisos) {
-            copia.add(new Permiso(permiso));
+    public List<RolSistema> getRoles() {
+        List<RolSistema> copia = new ArrayList<>();
+        for (RolSistema rol : this.roles) {
+            copia.add(new RolSistema(rol));
         }
-
         return copia;
     }
 
-    public void setPermisos(List<Permiso> permisos) {
-        this.permisos = new ArrayList<>();
-
-        if (permisos != null) {
-            for (Permiso permiso : permisos) {
-                this.permisos.add(new Permiso(permiso));
+    public void setRoles(List<RolSistema> roles) {
+        this.roles = new ArrayList<>();
+        if (roles != null) {
+            for (RolSistema rol : roles) {
+                this.roles.add(new RolSistema(rol));
             }
         }
     }
 
-    public boolean validarCredenciales(String passwordPlano) {
-        throw new UnsupportedOperationException("Metodo no implementado aun.");
+    public boolean tieneRol(String codigoRol) {
+        if (this.roles == null) {
+            return false;
+        }
+
+        for (RolSistema rol : this.roles) {
+            if (rol.getCodigo() != null && rol.getCodigo().name().equals(codigoRol)) {
+                return true;
+            }
+        }
+        return false;
     }
 
-    public void activar() {
-        this.activo = true;
-    }
+    public boolean tienePermiso(String nombrePermiso) {
+        if (this.roles == null) {
+            return false;
+        }
 
-    public void desactivar() {
-        this.activo = false;
+        for (RolSistema rol : this.roles) {
+            List<Permiso> permisos = rol.getPermisos();
+            for (Permiso permiso : permisos) {
+                if (permiso.getNombre() != null && permiso.getNombre().equals(nombrePermiso)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

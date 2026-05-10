@@ -2,548 +2,591 @@ package pe.edu.pucp.vetcitas.main;
 
 import pe.edu.pucp.vetcitas.cita.dao.ICitaDAO;
 import pe.edu.pucp.vetcitas.cita.impl.CitaImpl;
-import pe.edu.pucp.vetcitas.cita.dao.IRecordatorioDAO;
-import pe.edu.pucp.vetcitas.cita.impl.RecordatorioImpl;
 import pe.edu.pucp.vetcitas.cita.model.Cita;
-import pe.edu.pucp.vetcitas.cita.model.Recordatorio;
 import pe.edu.pucp.vetcitas.cliente.dao.ClienteDAO;
 import pe.edu.pucp.vetcitas.cliente.dao.MascotaDAO;
 import pe.edu.pucp.vetcitas.cliente.impl.ClienteImpl;
 import pe.edu.pucp.vetcitas.cliente.impl.MascotaImpl;
 import pe.edu.pucp.vetcitas.cliente.model.Cliente;
 import pe.edu.pucp.vetcitas.cliente.model.Mascota;
-import pe.edu.pucp.vetcitas.common.enums.CanalRecordatorio;
+import pe.edu.pucp.vetcitas.common.enums.CodigoRol;
 import pe.edu.pucp.vetcitas.common.enums.EstadoCita;
-import pe.edu.pucp.vetcitas.common.enums.EstadoSeguimiento;
-import pe.edu.pucp.vetcitas.common.enums.Rol;
-import pe.edu.pucp.vetcitas.usuario.dao.IVeterinarioDAO;
-import pe.edu.pucp.vetcitas.usuario.impl.VeterinarioImpl;
-import pe.edu.pucp.vetcitas.usuario.model.Administrador;
-import pe.edu.pucp.vetcitas.usuario.model.Veterinario;
+import pe.edu.pucp.vetcitas.common.enums.TipoServicio;
+import pe.edu.pucp.vetcitas.configuracion.dao.IConfiguracionDAO;
+import pe.edu.pucp.vetcitas.configuracion.impl.ConfiguracionImpl;
+import pe.edu.pucp.vetcitas.configuracion.model.Configuracion;
 import pe.edu.pucp.vetcitas.servicio.dao.IServicioDAO;
 import pe.edu.pucp.vetcitas.servicio.impl.ServicioImpl;
 import pe.edu.pucp.vetcitas.servicio.model.Servicio;
-import pe.edu.pucp.vetcitas.common.enums.TipoServicio;
-import pe.edu.pucp.vetcitas.cita.dao.IAtencionDAO;
-import pe.edu.pucp.vetcitas.cita.impl.AtencionImpl;
-import pe.edu.pucp.vetcitas.cita.model.Atencion;
+import pe.edu.pucp.vetcitas.usuario.dao.IAdministradorDAO;
+import pe.edu.pucp.vetcitas.usuario.dao.IHorarioVeterinarioDAO;
+import pe.edu.pucp.vetcitas.usuario.dao.IPermisoDAO;
+import pe.edu.pucp.vetcitas.usuario.dao.IRecepcionistaDAO;
+import pe.edu.pucp.vetcitas.usuario.dao.IVeterinarioDAO;
+import pe.edu.pucp.vetcitas.usuario.impl.AdministradorImpl;
+import pe.edu.pucp.vetcitas.usuario.impl.HorarioVeterinarioImpl;
+import pe.edu.pucp.vetcitas.usuario.impl.PermisoImpl;
+import pe.edu.pucp.vetcitas.usuario.impl.RecepcionistaImpl;
+import pe.edu.pucp.vetcitas.usuario.impl.VeterinarioImpl;
+import pe.edu.pucp.vetcitas.usuario.model.Administrador;
+import pe.edu.pucp.vetcitas.usuario.model.HorarioVeterinario;
+import pe.edu.pucp.vetcitas.usuario.model.Permiso;
+import pe.edu.pucp.vetcitas.usuario.model.Recepcionista;
+import pe.edu.pucp.vetcitas.usuario.model.RolSistema;
+import pe.edu.pucp.vetcitas.usuario.model.Veterinario;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 public class Principal {
+
     public static void main(String[] args) {
-        System.out.println("=== INICIO DE PRUEBAS DEL MODELO VETCITAS ===");
+        System.out.println("==================================================");
+        System.out.println(" INICIO DE PRUEBAS INTEGRALES VETCITAS");
+        System.out.println("==================================================");
 
-        // Sufijo unico para evitar conflictos con UNIQUE constraints al re-ejecutar
-        String sufijo = String.valueOf(System.currentTimeMillis() % 100000);
+        IAdministradorDAO administradorDAO = new AdministradorImpl();
+        IVeterinarioDAO veterinarioDAO = new VeterinarioImpl();
+        IRecepcionistaDAO recepcionistaDAO = new RecepcionistaImpl();
+        IHorarioVeterinarioDAO horarioDAO = new HorarioVeterinarioImpl();
+        IPermisoDAO permisoDAO = new PermisoImpl();
+        IConfiguracionDAO configuracionDAO = new ConfiguracionImpl();
 
-        // ============================================================
-        // PRUEBA CLIENTE: Insertar cliente para asociar a mascota
-        // ============================================================
-        System.out.println("\n=== PRUEBA CLIENTE: INSERTAR CLIENTE ===");
         ClienteDAO clienteDAO = new ClienteImpl();
-
-        Cliente clienteNuevo = new Cliente();
-        clienteNuevo.setNombres("Juan");
-        clienteNuevo.setApellidos("Martinez Silva");
-        clienteNuevo.setTelefono("951753852");
-        clienteNuevo.setObservaciones("Cliente de prueba");
-        clienteNuevo.setActivo(true);
-        clienteNuevo.setCreatedOn(LocalDateTime.now());
-        clienteNuevo.setModifiedOn(LocalDateTime.now());
-
-        int idCliente = clienteDAO.insertar(clienteNuevo);
-        if (idCliente > 0) {
-            System.out.println("Cliente insertado con ID: " + clienteNuevo.getId());
-        } else {
-            System.out.println("Fallo la insercion del cliente.");
-        }
-
-        // ============================================================
-        // PRUEBA CLIENTE: Buscar por ID
-        // ============================================================
-        System.out.println("\n=== PRUEBA CLIENTE: BUSCAR POR ID ===");
-        Cliente clienteBuscado = clienteDAO.buscarPorId(clienteNuevo.getId());
-
-        if (clienteBuscado != null) {
-            System.out.println("Cliente encontrado:");
-            System.out.println("ID: " + clienteBuscado.getId());
-            System.out.println("Nombres: " + clienteBuscado.getNombres());
-            System.out.println("Apellidos: " + clienteBuscado.getApellidos());
-            System.out.println("Telefono: " + clienteBuscado.getTelefono());
-            System.out.println("Observaciones: " + clienteBuscado.getObservaciones());
-            System.out.println("Activo: " + clienteBuscado.isActivo());
-        } else {
-            System.out.println("No se encontro cliente con ID: " + clienteNuevo.getId());
-        }
-
-        // ============================================================
-        // PRUEBA CLIENTE: Modificar cliente
-        // ============================================================
-        System.out.println("\n=== PRUEBA CLIENTE: MODIFICAR CLIENTE ===");
-        clienteNuevo.setNombres("Juan Carlos");
-        clienteNuevo.setApellidos("Martinez Silva Modificado");
-        clienteNuevo.setTelefono("999888777");
-        clienteNuevo.setObservaciones("Cliente modificado desde prueba");
-        clienteNuevo.setModifiedOn(LocalDateTime.now());
-
-        int resultadoMod = clienteDAO.modificar(clienteNuevo);
-        if (resultadoMod > 0) {
-            System.out.println("Cliente modificado correctamente.");
-
-            Cliente clienteModificado = clienteDAO.buscarPorId(clienteNuevo.getId());
-            if (clienteModificado != null) {
-                System.out.println("Datos luego de modificar:");
-                System.out.println("ID: " + clienteModificado.getId());
-                System.out.println("Nombres: " + clienteModificado.getNombres());
-                System.out.println("Apellidos: " + clienteModificado.getApellidos());
-                System.out.println("Telefono: " + clienteModificado.getTelefono());
-                System.out.println("Observaciones: " + clienteModificado.getObservaciones());
-            }
-        } else {
-            System.out.println("Fallo la modificacion del cliente.");
-        }
-
-
-        // Listar clientes
-        System.out.println("\nListando clientes activos:");
-        List<Cliente> listaClientes = clienteDAO.listarTodas();
-        if (listaClientes != null && !listaClientes.isEmpty()) {
-            for (Cliente c : listaClientes) {
-                System.out.println("ID: " + c.getId() + " | " + c.getNombres()
-                        + " " + c.getApellidos() + " | Tel: " + c.getTelefono());
-            }
-        } else {
-            System.out.println("No se encontraron clientes.");
-        }
-
-
-
-        // ============================================================
-        // PRUEBA MASCOTA: Ahora usando el cliente recien creado
-        // ============================================================
-        System.out.println("\n=== PRUEBA MASCOTA: INSERTAR MASCOTA ===");
         MascotaDAO mascotaDAO = new MascotaImpl();
+        IServicioDAO servicioDAO = new ServicioImpl();
+        ICitaDAO citaDAO = new CitaImpl();
 
-        Mascota mascotaPrueba = new Mascota();
-        mascotaPrueba.setNombre("Oreo");
-        mascotaPrueba.setEspecie("Gato");
-        mascotaPrueba.setRaza("Carey");
-        mascotaPrueba.setFechaNacimiento(LocalDate.of(2023, 2, 14));
-        mascotaPrueba.setEsterilizado(true);
-        mascotaPrueba.setActivo(true);
-        mascotaPrueba.setCliente(clienteNuevo); // Asociado al cliente recien insertado
-        mascotaPrueba.setCreatedOn(LocalDateTime.now());
-        mascotaPrueba.setModifiedOn(LocalDateTime.now());
+        LocalDateTime ahora = LocalDateTime.now();
 
-        int resultadoInsertar = mascotaDAO.insertar(mascotaPrueba);
-        if (resultadoInsertar > 0) {
-            System.out.println("Mascota insertada. ID generado: " + mascotaPrueba.getId());
-        } else {
-            System.out.println("Fallo la insercion de la mascota.");
-        }
+        try {
+            // ==================================================
+            // 1. ADMINISTRADOR
+            // ==================================================
+            imprimirSeccion("1. INSERTAR ADMINISTRADOR");
 
-        System.out.println("\nListando mascotas desde la BD:");
-        List<Mascota> listaBD = mascotaDAO.listarTodas();
-        if (listaBD != null && !listaBD.isEmpty()) {
-            for (Mascota m : listaBD) {
-                System.out.println("ID BD: " + m.getId() + " | Nombre: " + m.getNombre() + " | Especie: " + m.getEspecie());
+            Administrador admin = new Administrador();
+            admin.setUsername("admin_lab_final");
+            admin.setContrasenaHash("hash_admin_123");
+            admin.setNombres("Ana");
+            admin.setApellidos("Torres");
+            admin.setTelefono("999111222");
+            admin.setActivo(true);
+            admin.setArea("Administración");
+            admin.setCreatedOn(ahora);
+
+            int idAdmin = administradorDAO.insertar(admin);
+            System.out.println("Administrador insertado con ID: " + idAdmin);
+
+            Administrador adminBD = null;
+            if (idAdmin > 0) {
+                adminBD = administradorDAO.buscarPorId(idAdmin);
             }
-        } else {
-            System.out.println("La lista esta vacia.");
-        }
+            imprimirAdministrador(adminBD);
 
-        // ============================================================
-        // PRUEBA 1: DAO VETERINARIO
-        // ============================================================
-        System.out.println("\n=== PRUEBA 1: INSERTAR VETERINARIO ===");
-        IVeterinarioDAO vetDAO = new VeterinarioImpl();
+            // ==================================================
+            // 2. VETERINARIO
+            // ==================================================
+            imprimirSeccion("2. INSERTAR VETERINARIO");
 
-        Veterinario vet = new Veterinario();
-        vet.setUsername("drperez" + sufijo);
-        vet.setContrasenaHash("hash123");
-        vet.setNombres("Carlos");
-        vet.setApellidos("Perez Lopez");
-        vet.setTelefono("987654321");
-        vet.setRol(Rol.VETERINARIO);
-        vet.setCmpv("CMPV-" + sufijo);
-        vet.setEspecialidad("Cirugia");
+            Veterinario vet = new Veterinario();
+            vet.setUsername("vet_lab_final");
+            vet.setContrasenaHash("hash_vet_123");
+            vet.setNombres("Luis");
+            vet.setApellidos("Pérez");
+            vet.setTelefono("988777666");
+            vet.setActivo(true);
+            vet.setCmpv("CMPV-99999");
+            vet.setEspecialidad("Medicina General");
+            vet.setCreatedOn(ahora);
+            vet.setModifiedBy(adminBD);
 
-        int idVet = vetDAO.insertar(vet);
-        if (idVet > 0) {
+            int idVet = veterinarioDAO.insertar(vet);
             System.out.println("Veterinario insertado con ID: " + idVet);
-        } else {
-            System.out.println("Fallo la insercion del veterinario.");
-        }
 
-        // Insertar un segundo veterinario para tener mas datos
-        Veterinario vet2 = new Veterinario();
-        vet2.setUsername("dragomez" + sufijo);
-        vet2.setContrasenaHash("hash456");
-        vet2.setNombres("Ana");
-        vet2.setApellidos("Gomez Ruiz");
-        vet2.setTelefono("912345678");
-        vet2.setRol(Rol.VETERINARIO);
-        vet2.setCmpv("CMPV2-" + sufijo);
-        vet2.setEspecialidad("Dermatologia");
-
-        int idVet2 = vetDAO.insertar(vet2);
-        System.out.println("Segundo veterinario insertado con ID: " + idVet2);
-
-        // Listar veterinarios
-        System.out.println("\n=== PRUEBA 2: LISTAR VETERINARIOS ===");
-        List<Veterinario> listaVets = vetDAO.listarTodas();
-        if (listaVets != null) {
-            for (Veterinario v : listaVets) {
-                System.out.println("ID: " + v.getId() + " | " + v.getNombres()
-                        + " " + v.getApellidos() + " | CMPV: " + v.getCmpv()
-                        + " | Esp: " + v.getEspecialidad());
+            Veterinario vetBD = null;
+            if (idVet > 0) {
+                vetBD = veterinarioDAO.buscarPorId(idVet);
             }
-        } else {
-            System.out.println("No se encontraron veterinarios.");
-        }
+            imprimirVeterinario(vetBD);
 
-        // Buscar por ID
-        System.out.println("\n=== PRUEBA 3: BUSCAR VETERINARIO POR ID ===");
-        Veterinario vetBuscado = vetDAO.buscarPorId(idVet);
-        if (vetBuscado != null) {
-            System.out.println("Encontrado: " + vetBuscado.getNombres() + " "
-                    + vetBuscado.getApellidos() + " | Username: "
-                    + vetBuscado.getUsername() + " | CMPV: " + vetBuscado.getCmpv());
-        } else {
-            System.out.println("No se encontro el veterinario con ID: " + idVet);
-        }
+            // ==================================================
+            // 3. RECEPCIONISTA
+            // ==================================================
+            imprimirSeccion("3. INSERTAR RECEPCIONISTA");
 
-        // Modificar veterinario
-        System.out.println("\n=== PRUEBA 4: MODIFICAR VETERINARIO ===");
-        vet.setEspecialidad("Traumatologia");
-        vet.setTelefono("999888777");
-        int resModificar = vetDAO.modificar(vet);
-        System.out.println("Resultado modificar: " + resModificar);
-        Veterinario vetModificado = vetDAO.buscarPorId(idVet);
-        if (vetModificado != null) {
-            System.out.println("Especialidad actualizada: " + vetModificado.getEspecialidad()
-                    + " | Telefono: " + vetModificado.getTelefono());
-        }
+            Recepcionista recep = new Recepcionista();
+            recep.setUsername("recep_lab_final");
+            recep.setContrasenaHash("hash_recep_123");
+            recep.setNombres("Carla");
+            recep.setApellidos("Rojas");
+            recep.setTelefono("977555444");
+            recep.setActivo(true);
+            recep.setArea("Front Desk");
+            recep.setCreatedOn(ahora);
+            recep.setModifiedBy(adminBD);
 
-        // Eliminar veterinario (soft delete)
-        System.out.println("\n=== PRUEBA 5: ELIMINAR VETERINARIO (SOFT DELETE) ===");
-        int resEliminar = vetDAO.eliminar(idVet2);
-        System.out.println("Resultado eliminar vet2: " + resEliminar);
-        Veterinario vetEliminado = vetDAO.buscarPorId(idVet2);
-        if (vetEliminado != null) {
-            System.out.println("Vet2 activo? " + vetEliminado.isActivo());
-        }
+            int idRecep = recepcionistaDAO.insertar(recep);
+            System.out.println("Recepcionista insertada con ID: " + idRecep);
 
-        // =========================================================
-        // PRUEBAS: DAO SERVICIO
-        // =========================================================
-        System.out.println("==============================================");
-        System.out.println("INICIANDO PRUEBAS DE SERVICIO");
-        System.out.println("==============================================");
-
-        IServicioDAO daoServicio = new ServicioImpl();
-
-        // 1. Insertar Servicio
-        System.out.println("\n1. Probando Inserción de Servicio...");
-        Servicio nuevoServicio = new Servicio();
-        nuevoServicio.setNombre("Baño y Corte de Pelo Premium");
-        nuevoServicio.setTipoServicio(TipoServicio.NO_CLINICA);
-        nuevoServicio.setDuracionMinutos(60);
-        nuevoServicio.setPrecioReferencial(85.50);
-
-        int resultadoServicio = daoServicio.insertar(nuevoServicio);
-        if (resultadoServicio != 0) {
-            System.out.println("EXITO: Servicio insertado con ID: " + resultadoServicio);
-            nuevoServicio.setId(resultadoServicio); // Guardamos el ID para las siguientes pruebas
-        } else {
-            System.out.println("ERROR: No se pudo insertar el servicio.");
-        }
-
-        // 2. Listar todos los servicios
-        System.out.println("\n2. Probando Listado de Servicios...");
-        List<Servicio> listaServicios = daoServicio.listarTodas();
-        for (Servicio s : listaServicios) {
-            System.out.println("ID: " + s.getId() + " | Nombre: " + s.getNombre() + " | Precio: S/." + s.getPrecioReferencial() + " | Activo: " + s.isActivo());
-        }
-
-        // 3. Modificar Servicio
-        System.out.println("\n3. Probando Modificación de Servicio...");
-        nuevoServicio.setPrecioReferencial(95.00); // Subimos el precio
-        nuevoServicio.setNombre("Baño y Corte Premium (Actualizado)");
-        int modificado = daoServicio.modificar(nuevoServicio);
-        System.out.println(modificado > 0 ? "EXITO: Servicio modificado." : "ERROR al modificar.");
-
-        // 4. Deshabilitar Servicio (Borrado lógico)
-        System.out.println("\n4. Probando Deshabilitar Servicio...");
-        int deshabilitado = daoServicio.deshabilitar(nuevoServicio.getId());
-        System.out.println(deshabilitado > 0 ? "EXITO: Servicio deshabilitado." : "ERROR al deshabilitar.");
-
-        // 5. Buscar por ID para comprobar cambios
-        System.out.println("\n5. Comprobando cambios con Buscar por ID...");
-        Servicio servicioBuscado = daoServicio.buscarPorId(nuevoServicio.getId());
-        if (servicioBuscado != null) {
-            System.out.println("Servicio encontrado: " + servicioBuscado.getNombre() + " | Activo: " + servicioBuscado.isActivo() + " | Precio: " + servicioBuscado.getPrecioReferencial());
-        }
-
-        // =========================================================
-        // PRUEBAS: CITA
-        // =========================================================
-        System.out.println("\n==============================================");
-        System.out.println("INICIANDO PRUEBAS DE CITA [CREACION]");
-        System.out.println("==============================================");
-
-        ICitaDAO daoCita = new CitaImpl();
-        Cita citaPruebaGenerada = new Cita();
-        citaPruebaGenerada.setFechaHoraInicio(LocalDateTime.now().plusDays(1));
-        citaPruebaGenerada.setFechaHoraFin(LocalDateTime.now().plusDays(1).plusHours(1));
-        citaPruebaGenerada.setEstado(EstadoCita.PENDIENTE);
-
-        Mascota mascotaCita = new Mascota();
-        mascotaCita.setId(mascotaPrueba.getId());
-
-        Veterinario vetCita = new Veterinario();
-        vetCita.setId(idVet);
-
-        Servicio servicioCita = new Servicio();
-        servicioCita.setId(nuevoServicio.getId());
-
-        citaPruebaGenerada.setMascota(mascotaCita);
-        citaPruebaGenerada.setVeterinario(vetCita);
-        citaPruebaGenerada.setServicio(servicioCita);
-
-        // =========================================================
-        // PRUEBA 1: INSERTAR CITA
-        // =========================================================
-        int idCitaGenerada = daoCita.insertar(citaPruebaGenerada);
-        if (idCitaGenerada > 0) {
-            System.out.println("EXITO: Cita de prueba generada con ID: " + idCitaGenerada);
-        } else {
-            System.out.println("ERROR: No se pudo crear la cita.");
-        }
-
-        // =========================================================
-        // PRUEBA 2: BUSCAR CITA POR ID
-        // =========================================================
-        System.out.println("\n=== PRUEBA 2: BUSCAR CITA POR ID ===");
-        Cita citaBuscada = daoCita.buscarPorId(idCitaGenerada);
-        if (citaBuscada != null) {
-            System.out.println("Cita encontrada:");
-            System.out.println("ID: " + citaBuscada.getId());
-            System.out.println("Inicio: " + citaBuscada.getFechaHoraInicio());
-            System.out.println("Fin: " + citaBuscada.getFechaHoraFin());
-            System.out.println("Estado: " + citaBuscada.getEstado());
-            System.out.println("ID Mascota: " + citaBuscada.getMascota().getId());
-            System.out.println("ID Veterinario: " + citaBuscada.getVeterinario().getId());
-            System.out.println("ID Servicio: " + citaBuscada.getServicio().getId());
-        } else {
-            System.out.println("ERROR: No se encontro la cita con ID: " + idCitaGenerada);
-        }
-
-        // =========================================================
-        // PRUEBA 3: MODIFICAR CITA
-        // =========================================================
-        System.out.println("\n=== PRUEBA 3: MODIFICAR CITA ===");
-        citaPruebaGenerada.setId(idCitaGenerada);
-        citaPruebaGenerada.setFechaHoraInicio(LocalDateTime.now().plusDays(2));
-        citaPruebaGenerada.setFechaHoraFin(LocalDateTime.now().plusDays(2).plusHours(1));
-        citaPruebaGenerada.setEstado(EstadoCita.CONFIRMADA);
-
-        int resModificarCita = daoCita.modificar(citaPruebaGenerada);
-        System.out.println("Resultado modificar cita: " + resModificarCita);
-
-        Cita citaModificada = daoCita.buscarPorId(idCitaGenerada);
-        if (citaModificada != null) {
-            System.out.println("Datos luego de modificar:");
-            System.out.println("ID: " + citaModificada.getId());
-            System.out.println("Inicio: " + citaModificada.getFechaHoraInicio());
-            System.out.println("Fin: " + citaModificada.getFechaHoraFin());
-            System.out.println("Estado: " + citaModificada.getEstado());
-        } else {
-            System.out.println("ERROR: No se pudo recuperar la cita modificada.");
-        }
-
-        // =========================================================
-        // PRUEBA 4: LISTAR TODAS LAS CITAS
-        // =========================================================
-        System.out.println("\n=== PRUEBA 4: LISTAR TODAS LAS CITAS ===");
-        List<Cita> listaCitas = daoCita.listarTodas();
-        if (listaCitas != null && !listaCitas.isEmpty()) {
-            for (Cita c : listaCitas) {
-                System.out.println("ID: " + c.getId()
-                        + " | Inicio: " + c.getFechaHoraInicio()
-                        + " | Fin: " + c.getFechaHoraFin()
-                        + " | Estado: " + c.getEstado()
-                        + " | Mascota ID: " + c.getMascota().getId()
-                        + " | Vet ID: " + c.getVeterinario().getId()
-                        + " | Servicio ID: " + c.getServicio().getId());
+            Recepcionista recepBD = null;
+            if (idRecep > 0) {
+                recepBD = recepcionistaDAO.buscarPorId(idRecep);
             }
-        } else {
-            System.out.println("No se encontraron citas.");
-        }
+            imprimirRecepcionista(recepBD);
 
-        // =========================================================
-        // PRUEBA 5: ELIMINAR CITA (CAMBIAR ESTADO A CANCELADA)
-        // =========================================================
-        System.out.println("\n=== PRUEBA 5: ELIMINAR CITA (SOFT DELETE) ===");
-        int resEliminarCita = daoCita.eliminar(idCitaGenerada);
-        System.out.println("Resultado eliminar cita: " + resEliminarCita);
+            // ==================================================
+            // 4. ASIGNAR ROL RECEPCIONISTA AL VETERINARIO
+            // ==================================================
+            imprimirSeccion("4. ASIGNAR ROL ADICIONAL AL VETERINARIO");
 
-        Cita citaEliminada = daoCita.buscarPorId(idCitaGenerada);
-        if (citaEliminada != null) {
-            System.out.println("Cita luego de eliminar:");
-            System.out.println("ID: " + citaEliminada.getId());
-            System.out.println("Estado: " + citaEliminada.getEstado());
-        } else {
-            System.out.println("ERROR: No se encontro la cita luego del eliminar.");
-        }
+            if (idVet > 0) {
+                administradorDAO.asignarRol(idVet, CodigoRol.RECEPCIONISTA.name());
+                System.out.println("Se asignó el rol RECEPCIONISTA al veterinario.");
 
+                List<RolSistema> rolesVet = administradorDAO.listarRolesDeUsuario(idVet);
+                List<String> permisosVet = administradorDAO.listarPermisosDeUsuario(idVet);
 
-        // ============================================================
-        // PRUEBA 6: DAO RECORDATORIO
-        // Para recordatorio se necesita una cita existente en la BD.
-        // Asegurate de tener al menos una cita insertada con id_cita = 1
-        // ============================================================
-        System.out.println("\n=== PRUEBA 6: INSERTAR RECORDATORIO ===");
-        IRecordatorioDAO recDAO = new RecordatorioImpl();
+                System.out.println("Roles actuales del veterinario:");
+                for (RolSistema rol : rolesVet) {
+                    System.out.println("- " + rol.getCodigo());
+                }
 
-        Cita citaPrueba = new Cita();
-        citaPrueba.setId(1); // ID de una cita existente en la BD
-
-        Recordatorio rec = new Recordatorio();
-        rec.setFechaProgramada(LocalDateTime.now().plusDays(1));
-        rec.setCanal(CanalRecordatorio.WHATSAPP);
-        rec.setEstadoSeguimiento(EstadoSeguimiento.PENDIENTE);
-        rec.setMensaje("Recordatorio: su cita es manana a las 10am");
-        rec.setCita(citaPrueba);
-
-        int idRec = recDAO.insertar(rec);
-        if (idRec > 0) {
-            System.out.println("Recordatorio insertado con ID: " + idRec);
-        } else {
-            System.out.println("Fallo la insercion del recordatorio. Verifica que exista la cita con ID 1.");
-        }
-
-        // Listar recordatorios
-        System.out.println("\n=== PRUEBA 7: LISTAR RECORDATORIOS ===");
-        List<Recordatorio> listaRecs = recDAO.listarTodas();
-        if (listaRecs != null) {
-            for (Recordatorio r : listaRecs) {
-                System.out.println("ID: " + r.getId() + " | Fecha: " + r.getFechaProgramada()
-                        + " | Canal: " + r.getCanal() + " | Estado: " + r.getEstadoSeguimiento()
-                        + " | Cita ID: " + r.getCita().getId());
+                System.out.println("Permisos actuales del veterinario:");
+                for (String permiso : permisosVet) {
+                    System.out.println("- " + permiso);
+                }
+            } else {
+                System.out.println("No se pudo asignar rol porque el veterinario no fue insertado.");
             }
-        } else {
-            System.out.println("No se encontraron recordatorios.");
+
+            // ==================================================
+            // 5. PERMISO CRUD
+            // ==================================================
+            imprimirSeccion("5. CRUD DE PERMISO");
+
+            Permiso permiso = new Permiso();
+            permiso.setNombre("EXPORTAR_DATOS");
+            permiso.setDescripcion("Permite exportar información del sistema");
+
+            int idPermiso = permisoDAO.insertar(permiso);
+            System.out.println("Permiso insertado con ID: " + idPermiso);
+
+            Permiso permisoBD = null;
+            if (idPermiso > 0) {
+                permisoBD = permisoDAO.buscarPorId(idPermiso);
+            }
+
+            if (permisoBD != null) {
+                System.out.println("Permiso buscado: " + permisoBD.getId() + " - "
+                        + permisoBD.getNombre() + " - " + permisoBD.getDescripcion());
+
+                permisoBD.setDescripcion("Permite exportar información clínica y administrativa");
+                permisoDAO.modificar(permisoBD);
+
+                Permiso permisoModificado = permisoDAO.buscarPorId(idPermiso);
+                if (permisoModificado != null) {
+                    System.out.println("Permiso modificado: " + permisoModificado.getDescripcion());
+                } else {
+                    System.out.println("No se pudo recuperar el permiso modificado.");
+                }
+            } else {
+                System.out.println("No se pudo recuperar el permiso insertado.");
+            }
+
+            List<Permiso> permisos = permisoDAO.listarTodas();
+            System.out.println("Total permisos listados: " + permisos.size());
+
+            // ==================================================
+            // 6. CONFIGURACIÓN
+            // ==================================================
+            imprimirSeccion("6. CONFIGURACIÓN");
+
+            Configuracion configuracion = configuracionDAO.buscarPorId(1);
+            if (configuracion != null) {
+                System.out.println("Configuración inicial:");
+                System.out.println("Umbral cliente frecuente: " + configuracion.getUmbralClienteFrecuente());
+                System.out.println("Descuento máximo permitido: " + configuracion.getDescuentoMaximoPermitido());
+
+                configuracion.setUmbralClienteFrecuente(configuracion.getUmbralClienteFrecuente() + 1);
+                configuracion.setDescuentoMaximoPermitido(configuracion.getDescuentoMaximoPermitido() + 5.0);
+                configuracionDAO.modificar(configuracion);
+
+                Configuracion configuracionModificada = configuracionDAO.buscarPorId(1);
+                if (configuracionModificada != null) {
+                    System.out.println("Configuración modificada:");
+                    System.out.println("Umbral cliente frecuente: " + configuracionModificada.getUmbralClienteFrecuente());
+                    System.out.println("Descuento máximo permitido: " + configuracionModificada.getDescuentoMaximoPermitido());
+                } else {
+                    System.out.println("No se pudo recuperar la configuración modificada.");
+                }
+            } else {
+                System.out.println("No se encontró la configuración con ID 1.");
+            }
+
+            // ==================================================
+            // 7. HORARIO DEL VETERINARIO
+            // ==================================================
+            imprimirSeccion("7. HORARIO DEL VETERINARIO");
+
+            int idHorario = 0;
+            HorarioVeterinario horarioBD = null;
+
+            if (vetBD != null) {
+                HorarioVeterinario horario = new HorarioVeterinario();
+                horario.setVeterinario(vetBD);
+                horario.setDiaSemana(1); // Lunes
+                horario.setHoraInicio(LocalTime.of(9, 0));
+                horario.setHoraFin(LocalTime.of(18, 0));
+                horario.setHoraDescansoInicio(LocalTime.of(13, 0));
+                horario.setHoraDescansoFin(LocalTime.of(14, 0));
+                horario.setActivo(true);
+                horario.setCreatedOn(ahora);
+                horario.setModifiedBy(adminBD);
+
+                idHorario = horarioDAO.insertar(horario);
+                System.out.println("Horario insertado con ID: " + idHorario);
+
+                if (idHorario > 0) {
+                    horarioBD = horarioDAO.buscarPorId(idHorario);
+                }
+                imprimirHorario(horarioBD);
+
+                if (horarioBD != null) {
+                    horarioBD.setHoraFin(LocalTime.of(17, 30));
+                    horarioBD.setModifiedBy(adminBD);
+                    horarioDAO.modificar(horarioBD);
+                    System.out.println("Horario modificado.");
+                } else {
+                    System.out.println("No se pudo recuperar el horario insertado.");
+                }
+
+                List<HorarioVeterinario> horariosVet = horarioDAO.listarPorVeterinario(idVet);
+                System.out.println("Horarios del veterinario: " + horariosVet.size());
+            } else {
+                System.out.println("No se puede registrar horario porque el veterinario no existe.");
+            }
+
+            // ==================================================
+            // 8. CLIENTE
+            // ==================================================
+            imprimirSeccion("8. INSERTAR CLIENTE");
+
+            Cliente cliente = new Cliente();
+            cliente.setNombres("Mariana");
+            cliente.setApellidos("Gómez");
+            cliente.setTelefono("966123123");
+            cliente.setObservaciones("Cliente frecuente");
+            cliente.setActivo(true);
+            cliente.setCreatedOn(ahora);
+            cliente.setModifiedBy(adminBD);
+
+            int resultadoCliente = clienteDAO.insertar(cliente);
+            System.out.println("Resultado insertar cliente: " + resultadoCliente);
+            System.out.println("Cliente insertado con ID real: " + cliente.getId());
+
+            Cliente clienteBD = null;
+            if (cliente.getId() > 0) {
+                clienteBD = clienteDAO.buscarPorId(cliente.getId());
+            }
+
+            if (clienteBD != null) {
+                System.out.println("Cliente buscado: " + clienteBD.getId() + " - "
+                        + clienteBD.getNombres() + " " + clienteBD.getApellidos());
+            } else {
+                System.out.println("No se pudo recuperar el cliente insertado.");
+            }
+
+            // ==================================================
+            // 9. MASCOTA
+            // ==================================================
+            imprimirSeccion("9. INSERTAR MASCOTA");
+
+            Mascota mascotaBD = null;
+
+            if (clienteBD != null) {
+                Mascota mascota = new Mascota();
+                mascota.setNombre("Firulais");
+                mascota.setEspecie("Perro");
+                mascota.setRaza("Mestizo");
+                mascota.setFechaNacimiento(LocalDate.of(2021, 5, 10));
+                mascota.setEsterilizado(true);
+                mascota.setActivo(true);
+                mascota.setCliente(clienteBD);
+                mascota.setCreatedOn(ahora);
+                mascota.setModifiedBy(adminBD);
+
+                int resultadoMascota = mascotaDAO.insertar(mascota);
+                System.out.println("Resultado insertar mascota: " + resultadoMascota);
+                System.out.println("Mascota insertada con ID real: " + mascota.getId());
+
+                if (mascota.getId() > 0) {
+                    mascotaBD = mascotaDAO.buscarPorId(mascota.getId());
+                }
+
+                if (mascotaBD != null) {
+                    System.out.println("Mascota buscada: " + mascotaBD.getId() + " - " + mascotaBD.getNombre());
+                } else {
+                    System.out.println("No se pudo recuperar la mascota insertada.");
+                }
+            } else {
+                System.out.println("No se puede registrar mascota porque el cliente no existe.");
+            }
+
+            // ==================================================
+            // 10. SERVICIO
+            // ==================================================
+            imprimirSeccion("10. INSERTAR SERVICIO");
+
+            Servicio servicio = new Servicio();
+            servicio.setNombre("Consulta General");
+            servicio.setTipoServicio(TipoServicio.CLINICA);
+            servicio.setDuracionMinutos(30);
+            servicio.setPrecioReferencial(80.0);
+            servicio.setActivo(true);
+            servicio.setCreatedOn(ahora);
+            servicio.setModifiedBy(adminBD);
+
+            int idServicio = servicioDAO.insertar(servicio);
+            System.out.println("Servicio insertado con ID: " + idServicio);
+
+            Servicio servicioBD = null;
+            if (idServicio > 0) {
+                servicioBD = servicioDAO.buscarPorId(idServicio);
+            }
+
+            if (servicioBD != null) {
+                System.out.println("Servicio buscado: " + servicioBD.getId() + " - " + servicioBD.getNombre());
+            } else {
+                System.out.println("No se pudo recuperar el servicio insertado.");
+            }
+
+            // ==================================================
+            // 11. CITA
+            // ==================================================
+            imprimirSeccion("11. INSERTAR CITA");
+
+            int idCita = 0;
+            Cita citaBD = null;
+
+            if (mascotaBD != null && vetBD != null && servicioBD != null) {
+                LocalDate proximoLunes = obtenerProximaFecha(DayOfWeek.MONDAY);
+                LocalDateTime fechaCita = LocalDateTime.of(proximoLunes, LocalTime.of(10, 0));
+
+                Cita cita = new Cita();
+                cita.setFechaHoraInicio(fechaCita);
+                cita.setEstado(EstadoCita.PENDIENTE);
+                cita.setMascota(mascotaBD);
+                cita.setVeterinario(vetBD);
+                cita.setServicio(servicioBD);
+                cita.setCreatedOn(ahora);
+
+                idCita = citaDAO.insertar(cita);
+                System.out.println("Cita insertada con ID: " + idCita);
+
+                if (idCita > 0) {
+                    citaBD = citaDAO.buscarPorId(idCita);
+                }
+                imprimirCita(citaBD);
+
+                // ==================================================
+                // 12. PROBAR SOLAPAMIENTO
+                // ==================================================
+                imprimirSeccion("12. PROBAR SOLAPAMIENTO DE CITA");
+
+                try {
+                    Cita citaSolapada = new Cita();
+                    citaSolapada.setFechaHoraInicio(LocalDateTime.of(proximoLunes, LocalTime.of(10, 15)));
+                    citaSolapada.setEstado(EstadoCita.PENDIENTE);
+                    citaSolapada.setMascota(mascotaBD);
+                    citaSolapada.setVeterinario(vetBD);
+                    citaSolapada.setServicio(servicioBD);
+                    citaSolapada.setCreatedOn(ahora);
+
+                    int idSolapada = citaDAO.insertar(citaSolapada);
+                    if (idSolapada > 0) {
+                        System.out.println("ERROR: la cita solapada no debió insertarse.");
+                    } else {
+                        System.out.println("La inserción de cita solapada no se completó, como se esperaba.");
+                    }
+                } catch (Exception ex) {
+                    System.out.println("Correcto, se rechazó la cita solapada.");
+                    System.out.println("Detalle: " + ex.getMessage());
+                }
+
+                // ==================================================
+                // 13. CONFIRMAR / MODIFICAR / ATENDER CITA
+                // ==================================================
+                imprimirSeccion("13. CAMBIOS DE ESTADO DE CITA");
+
+                citaDAO.confirmarCita(idCita, idAdmin);
+                System.out.println("Cita confirmada.");
+
+                Cita citaParaModificar = citaDAO.buscarPorId(idCita);
+                if (citaParaModificar != null) {
+                    citaParaModificar.setFechaHoraInicio(LocalDateTime.of(proximoLunes, LocalTime.of(11, 0)));
+                    citaParaModificar.setEstado(EstadoCita.CONFIRMADA);
+                    citaParaModificar.setMascota(mascotaBD);
+                    citaParaModificar.setVeterinario(vetBD);
+                    citaParaModificar.setServicio(servicioBD);
+                    citaParaModificar.setModifiedOn(LocalDateTime.now());
+                    citaParaModificar.setModifiedBy(adminBD);
+
+                    citaDAO.modificar(citaParaModificar);
+                    System.out.println("Cita reprogramada a las 11:00.");
+                } else {
+                    System.out.println("No se pudo recuperar la cita para modificar.");
+                }
+
+                citaDAO.marcarAtendida(idCita, idVet);
+                System.out.println("Cita marcada como atendida.");
+
+                List<Cita> citasVetDia = citaDAO.listarPorVeterinarioYFecha(idVet, proximoLunes);
+                System.out.println("Citas del veterinario para ese día: " + citasVetDia.size());
+                for (Cita c : citasVetDia) {
+                    imprimirCita(c);
+                }
+            } else {
+                System.out.println("No se puede registrar cita porque faltan mascota, veterinario o servicio.");
+            }
+
+            // ==================================================
+            // 14. MODIFICAR RECEPCIONISTA
+            // ==================================================
+            imprimirSeccion("14. MODIFICAR RECEPCIONISTA");
+
+            if (recepBD != null) {
+                recepBD.setArea("Agenda y Caja");
+                recepBD.setModifiedBy(adminBD);
+                recepcionistaDAO.modificar(recepBD);
+
+                Recepcionista recepModificada = recepcionistaDAO.buscarPorId(idRecep);
+                imprimirRecepcionista(recepModificada);
+            } else {
+                System.out.println("No se puede modificar recepcionista porque no fue recuperada.");
+            }
+
+            // ==================================================
+            // 15. LISTADOS GENERALES
+            // ==================================================
+            imprimirSeccion("15. LISTADOS GENERALES");
+
+            System.out.println("Administradores: " + administradorDAO.listarTodas().size());
+            System.out.println("Veterinarios: " + veterinarioDAO.listarTodas().size());
+            System.out.println("Recepcionistas: " + recepcionistaDAO.listarTodas().size());
+            System.out.println("Horarios: " + horarioDAO.listarTodas().size());
+            System.out.println("Citas: " + citaDAO.listarTodas().size());
+            System.out.println("Permisos: " + permisoDAO.listarTodas().size());
+            System.out.println("Configuraciones: " + configuracionDAO.listarTodas().size());
+
+            // ==================================================
+            // 16. ELIMINACIONES LÓGICAS CONTROLADAS
+            // ==================================================
+            imprimirSeccion("16. ELIMINACIONES LÓGICAS CONTROLADAS");
+
+            if (idPermiso > 0) {
+                permisoDAO.eliminar(idPermiso);
+                System.out.println("Permiso de prueba eliminado lógicamente.");
+            } else {
+                System.out.println("No se eliminó permiso porque no se insertó correctamente.");
+            }
+
+            if (idRecep > 0) {
+                recepcionistaDAO.eliminar(idRecep);
+                System.out.println("Recepcionista eliminada lógicamente.");
+            } else {
+                System.out.println("No se eliminó recepcionista porque no se insertó correctamente.");
+            }
+
+            System.out.println("\n==================================================");
+            System.out.println(" TODAS LAS PRUEBAS FINALIZARON");
+            System.out.println("==================================================");
+
+        } catch (Exception ex) {
+            System.out.println("==============================================");
+            System.out.println("ERROR GENERAL EN LAS PRUEBAS");
+            System.out.println(ex.getMessage());
+            ex.printStackTrace();
+            System.out.println("==============================================");
         }
-
-        // Buscar por ID
-        System.out.println("\n=== PRUEBA 8: BUSCAR RECORDATORIO POR ID ===");
-        Recordatorio recBuscado = recDAO.buscarPorId(idRec);
-        if (recBuscado != null) {
-            System.out.println("Encontrado: ID " + recBuscado.getId()
-                    + " | Mensaje: " + recBuscado.getMensaje()
-                    + " | Estado: " + recBuscado.getEstadoSeguimiento());
-        } else {
-            System.out.println("No se encontro el recordatorio con ID: " + idRec);
+    }
+    private static LocalDate obtenerProximaFecha(DayOfWeek diaObjetivo) {
+        LocalDate fecha = LocalDate.now().plusDays(1);
+        while (fecha.getDayOfWeek() != diaObjetivo) {
+            fecha = fecha.plusDays(1);
         }
+        return fecha;
+    }
 
-        // Modificar recordatorio
-        System.out.println("\n=== PRUEBA 9: MODIFICAR RECORDATORIO ===");
-        rec.setEstadoSeguimiento(EstadoSeguimiento.ENVIADO);
-        rec.setMensaje("Recordatorio actualizado: cita confirmada para manana");
-        int resModRec = recDAO.modificar(rec);
-        System.out.println("Resultado modificar recordatorio: " + resModRec);
-        Recordatorio recModificado = recDAO.buscarPorId(idRec);
-        if (recModificado != null) {
-            System.out.println("Estado actualizado: " + recModificado.getEstadoSeguimiento()
-                    + " | Mensaje: " + recModificado.getMensaje());
+    private static void imprimirSeccion(String titulo) {
+        System.out.println("\n--------------------------------------------------");
+        System.out.println(titulo);
+        System.out.println("--------------------------------------------------");
+    }
+
+    private static void imprimirAdministrador(Administrador admin) {
+        if (admin == null) {
+            System.out.println("Administrador: null");
+            return;
         }
+        System.out.println("Administrador -> ID: " + admin.getId()
+                + ", Username: " + admin.getUsername()
+                + ", Nombre: " + admin.getNombres() + " " + admin.getApellidos()
+                + ", Área: " + admin.getArea());
+    }
 
-        // Eliminar recordatorio (delete fisico)
-        System.out.println("\n=== PRUEBA 10: ELIMINAR RECORDATORIO ===");
-        int resElimRec = recDAO.eliminar(idRec);
-        System.out.println("Resultado eliminar recordatorio: " + resElimRec);
-        Recordatorio recEliminado = recDAO.buscarPorId(idRec);
-        System.out.println("Buscar despues de eliminar: " + (recEliminado == null ? "No encontrado (OK)" : "Aun existe"));
-
-        System.out.println("\n=== FIN DE PRUEBAS ===");
-
-
-        // =========================================================
-        // PRUEBAS: ATENCION
-        // =========================================================
-        System.out.println("\n==============================================");
-        System.out.println("INICIANDO PRUEBAS DE ATENCION");
-        System.out.println("==============================================");
-
-        IAtencionDAO daoAtencion = new AtencionImpl();
-
-        // Cambiar este número por un ID de Cita existente
-        int idCitaExistente = 1;
-
-        // 1. Insertar Atención
-        System.out.println("\n1. Probando Inserción de Atención...");
-        Atencion nuevaAtencion = new Atencion();
-        nuevaAtencion.setFechaHora(LocalDateTime.now());
-        nuevaAtencion.setNotaClinica("El paciente presenta leve irritación en la piel. Se aplicó crema.");
-        nuevaAtencion.setNotaPreOperatoria("");
-        nuevaAtencion.setNotaPostOperatoria("");
-        nuevaAtencion.setRecomendacionControl("Evitar que se lama la herida por 3 días.");
-        nuevaAtencion.setMontoReferencial(150.00);
-        nuevaAtencion.setDescuentoAplicado(10.00); // S/. 10 de descuento
-
-        Cita citaAsociada = new Cita();
-        citaAsociada.setId(idCitaExistente);
-        nuevaAtencion.setCita(citaAsociada);
-
-        int resultadoAtencion = daoAtencion.insertar(nuevaAtencion);
-        if (resultadoAtencion != 0) {
-            System.out.println("EXITO: Atención insertada con ID: " + resultadoAtencion);
-            nuevaAtencion.setId(resultadoAtencion);
-        } else {
-            System.out.println("ERROR: No se pudo insertar la atención (Verifica que la cita con ID " + idCitaExistente + " exista).");
+    private static void imprimirVeterinario(Veterinario vet) {
+        if (vet == null) {
+            System.out.println("Veterinario: null");
+            return;
         }
+        System.out.println("Veterinario -> ID: " + vet.getId()
+                + ", Username: " + vet.getUsername()
+                + ", Nombre: " + vet.getNombres() + " " + vet.getApellidos()
+                + ", CMPV: " + vet.getCmpv()
+                + ", Especialidad: " + vet.getEspecialidad());
+    }
 
-        // 2. Buscar Atención por ID de Cita
-        System.out.println("\n2. Probando Búsqueda de Atención por Cita...");
-        Atencion atencionPorCita = daoAtencion.buscarPorCita(idCitaExistente);
-        if (atencionPorCita != null) {
-            System.out.println("Atención encontrada para la Cita " + idCitaExistente + ": " + atencionPorCita.getNotaClinica());
-        } else {
-            System.out.println("No se encontró atención para esa cita.");
+    private static void imprimirRecepcionista(Recepcionista recep) {
+        if (recep == null) {
+            System.out.println("Recepcionista: null");
+            return;
         }
+        System.out.println("Recepcionista -> ID: " + recep.getId()
+                + ", Username: " + recep.getUsername()
+                + ", Nombre: " + recep.getNombres() + " " + recep.getApellidos()
+                + ", Área: " + recep.getArea());
+    }
 
-        // 3. Modificar Atención
-        System.out.println("\n3. Probando Modificación de Atención...");
-        if (nuevaAtencion.getId() != 0) {
-            nuevaAtencion.setNotaClinica("El paciente presenta leve irritación en la piel. Se aplicó crema. Actualización: Se recetan pastillas.");
-            int atencionModificada = daoAtencion.modificar(nuevaAtencion);
-            System.out.println(atencionModificada > 0 ? "EXITO: Atención modificada." : "ERROR al modificar atención.");
+    private static void imprimirHorario(HorarioVeterinario horario) {
+        if (horario == null) {
+            System.out.println("Horario: null");
+            return;
         }
+        System.out.println("Horario -> ID: " + horario.getId()
+                + ", Vet ID: " + (horario.getVeterinario() != null ? horario.getVeterinario().getId() : 0)
+                + ", Día: " + horario.getDiaSemana()
+                + ", Inicio: " + horario.getHoraInicio()
+                + ", Fin: " + horario.getHoraFin()
+                + ", Descanso: " + horario.getHoraDescansoInicio() + " - " + horario.getHoraDescansoFin());
+    }
 
-        // ============================================================
-        // PRUEBA CLIENTE: Eliminar cliente (SOFT DELETE)
-        // ============================================================
-        System.out.println("\n=== PRUEBA CLIENTE: ELIMINAR CLIENTE (SOFT DELETE) ===");
-        int resultadoElim = clienteDAO.eliminar(clienteNuevo.getId());
-        System.out.println("Resultado eliminar cliente: " + resultadoElim);
-
-        Cliente clienteEliminado = clienteDAO.buscarPorId(clienteNuevo.getId());
-        if (clienteEliminado != null) {
-            System.out.println("Cliente encontrado luego del soft delete:");
-            System.out.println("ID: " + clienteEliminado.getId());
-            System.out.println("Nombres: " + clienteEliminado.getNombres());
-            System.out.println("Apellidos: " + clienteEliminado.getApellidos());
-            System.out.println("Activo? " + clienteEliminado.isActivo());
-        } else {
-            System.out.println("No se encontro el cliente.");
+    private static void imprimirCita(Cita cita) {
+        if (cita == null) {
+            System.out.println("Cita: null");
+            return;
         }
-
-        System.out.println("\n==============================================");
-        System.out.println("FIN DE LAS PRUEBAS");
-        System.out.println("==============================================");
+        System.out.println("Cita -> ID: " + cita.getId()
+                + ", Inicio: " + cita.getFechaHoraInicio()
+                + ", Fin: " + cita.getFechaHoraFin()
+                + ", Estado: " + cita.getEstado()
+                + ", Mascota: " + (cita.getMascota() != null ? cita.getMascota().getNombre() : "null")
+                + ", Vet ID: " + (cita.getVeterinario() != null ? cita.getVeterinario().getId() : 0)
+                + ", Servicio: " + (cita.getServicio() != null ? cita.getServicio().getNombre() : "null"));
     }
 }
+
+

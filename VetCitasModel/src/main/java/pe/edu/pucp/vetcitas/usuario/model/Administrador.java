@@ -1,24 +1,24 @@
 package pe.edu.pucp.vetcitas.usuario.model;
 
-import pe.edu.pucp.vetcitas.common.enums.Rol;
+import pe.edu.pucp.vetcitas.common.enums.CodigoRol;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 public class Administrador extends Usuario{
     private String area;
-
     public Administrador() {
         super();
         this.area = "";
     }
 
     public Administrador(int id, String username, String contrasenaHash, String nombres,
-                         String apellidos, boolean activo, Rol rol, String telefono,
-                         List<Permiso> permisos, String area,LocalDateTime createdOn, LocalDateTime modifiedOn,
+                         String apellidos, boolean activo, String telefono,
+                         List<RolSistema> roles, String area,
+                         LocalDateTime createdOn, LocalDateTime modifiedOn,
                          Usuario modifiedBy) {
-        super(id, username, contrasenaHash, nombres, apellidos, activo, rol, telefono,
-                permisos, createdOn, modifiedOn, modifiedBy);
+        super(id, username, contrasenaHash, nombres, apellidos, activo, telefono,
+                roles, createdOn, modifiedOn, modifiedBy);
         this.area = area;
     }
 
@@ -28,7 +28,7 @@ public class Administrador extends Usuario{
     }
 
     public String getArea() {
-        return this.area;
+        return area;
     }
 
     public void setArea(String area) {

@@ -13,22 +13,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MascotaImpl implements MascotaDAO {
-    private Connection con;
-    private CallableStatement cs;
-    private ResultSet rs;
-
     @Override
     public int insertar(Mascota mascota) {
         int resultado = 0;
-        try{
+        Connection con = null;
+        CallableStatement cs = null;
+        try {
             con = DBManager.getInstance().getConnection();
             String sql = "{CALL insertar_mascota(?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)}";
             cs = con.prepareCall(sql);
 
-            cs.setString(1,mascota.getNombre());
+            cs.setString(1, mascota.getNombre());
             cs.setString(2, mascota.getEspecie());
             cs.setString(3, mascota.getRaza());
-
 
             if (mascota.getFechaNacimiento() != null) {
                 cs.setDate(4, Date.valueOf(mascota.getFechaNacimiento()));
@@ -63,19 +60,19 @@ public class MascotaImpl implements MascotaDAO {
                 cs.setNull(10, java.sql.Types.INTEGER);
             }
             cs.registerOutParameter(11, java.sql.Types.INTEGER);
+
             resultado = cs.executeUpdate();
             int idNuevo = cs.getInt(11);
             mascota.setId(idNuevo);
 
-
-        }catch (Exception ex){
-            System.out.println("ERROR: "+ex.getMessage());
-        }finally {
-            try{
+        } catch (Exception ex) {
+            System.out.println("ERROR: " + ex.getMessage());
+        } finally {
+            try {
                 if (cs != null) cs.close();
                 if (con != null) con.close();
-            }catch (Exception ex){
-                System.out.println("ERROR: "+ex.getMessage());
+            } catch (Exception ex) {
+                System.out.println("ERROR: " + ex.getMessage());
             }
         }
         return resultado;
@@ -84,6 +81,8 @@ public class MascotaImpl implements MascotaDAO {
     @Override
     public int modificar(Mascota mascota) {
         int resultado = 0;
+        Connection con = null;
+        CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
             String sql = "{CALL modificar_mascota(?, ?, ?, ?, ?, ?, ?, ?, ?)}";
@@ -138,6 +137,8 @@ public class MascotaImpl implements MascotaDAO {
     @Override
     public int eliminar(int idMascota) {
         int resultado = 0;
+        Connection con = null;
+        CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
             String sql = "{CALL eliminar_mascota(?, ?, ?)}";
@@ -153,7 +154,6 @@ public class MascotaImpl implements MascotaDAO {
             System.out.println("ERROR: " + ex.getMessage());
         } finally {
             try {
-                if (rs != null) rs.close();
                 if (cs != null) cs.close();
                 if (con != null) con.close();
             } catch (Exception ex) {
@@ -166,6 +166,9 @@ public class MascotaImpl implements MascotaDAO {
     @Override
     public Mascota buscarPorId(int idMascota) {
         Mascota mascota = null;
+        Connection con = null;
+        CallableStatement cs = null;
+        ResultSet rs = null;
         try {
             con = DBManager.getInstance().getConnection();
             String sql = "{CALL buscar_mascota_por_id(?)}";
@@ -211,6 +214,9 @@ public class MascotaImpl implements MascotaDAO {
     @Override
     public List<Mascota> listarTodas() {
         List<Mascota> mascotas = new ArrayList<>();
+        Connection con = null;
+        CallableStatement cs = null;
+        ResultSet rs = null;
         try {
             con = DBManager.getInstance().getConnection();
             String sql = "{CALL listar_mascotas_activas()}";

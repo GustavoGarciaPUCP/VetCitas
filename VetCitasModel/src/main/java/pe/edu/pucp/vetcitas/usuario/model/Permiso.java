@@ -24,15 +24,16 @@ public class Permiso {
     }
 
     public int getId() {
-        return this.id;
+        return id;
     }
 
     public void setId(int id) {
         this.id = id;
     }
 
+
     public String getNombre() {
-        return this.nombre;
+        return nombre;
     }
 
     public void setNombre(String nombre) {
@@ -40,7 +41,7 @@ public class Permiso {
     }
 
     public String getDescripcion() {
-        return this.descripcion;
+        return descripcion;
     }
 
     public void setDescripcion(String descripcion) {
