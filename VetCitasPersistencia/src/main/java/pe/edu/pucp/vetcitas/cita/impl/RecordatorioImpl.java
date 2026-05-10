@@ -12,14 +12,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RecordatorioImpl implements IRecordatorioDAO {
-
-    private Connection con;
-    private CallableStatement cs;
-    private ResultSet rs;
-
     @Override
     public int insertar(Recordatorio objeto) {
         int resultado = 0;
+        Connection con = null;
+        CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
             cs = con.prepareCall("{CALL insertar_recordatorio(?,?,?,?,?,?,?)}");
@@ -49,6 +46,8 @@ public class RecordatorioImpl implements IRecordatorioDAO {
     @Override
     public int modificar(Recordatorio objeto) {
         int resultado = 0;
+        Connection con = null;
+        CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
             cs = con.prepareCall("{CALL modificar_recordatorio(?,?,?,?,?,?,?)}");
@@ -76,6 +75,8 @@ public class RecordatorioImpl implements IRecordatorioDAO {
     @Override
     public int eliminar(int id) {
         int resultado = 0;
+        Connection con = null;
+        CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
             cs = con.prepareCall("{CALL eliminar_recordatorio(?)}");
@@ -93,6 +94,9 @@ public class RecordatorioImpl implements IRecordatorioDAO {
     @Override
     public Recordatorio buscarPorId(int id) {
         Recordatorio recordatorio = null;
+        Connection con = null;
+        CallableStatement cs = null;
+        ResultSet rs = null;
         try {
             con = DBManager.getInstance().getConnection();
             cs = con.prepareCall("{CALL buscar_recordatorio_por_id(?)}");
@@ -126,13 +130,15 @@ public class RecordatorioImpl implements IRecordatorioDAO {
 
     @Override
     public List<Recordatorio> listarTodas() {
-        List<Recordatorio> recordatorios = null;
+        List<Recordatorio> recordatorios = new ArrayList<>();
+        Connection con = null;
+        CallableStatement cs = null;
+        ResultSet rs = null;
         try {
             con = DBManager.getInstance().getConnection();
             cs = con.prepareCall("{CALL listar_recordatorios()}");
             rs = cs.executeQuery();
             while (rs.next()) {
-                if (recordatorios == null) recordatorios = new ArrayList<>();
                 Recordatorio recordatorio = new Recordatorio();
                 recordatorio.setId(rs.getInt("id_recordatorio"));
                 recordatorio.setFechaProgramada(rs.getTimestamp("fecha_programada").toLocalDateTime());

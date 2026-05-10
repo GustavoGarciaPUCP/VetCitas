@@ -11,14 +11,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ServicioImpl implements IServicioDAO {
-
-    private Connection con;
-    private CallableStatement cs;
-    private ResultSet rs;
-
     @Override
     public int insertar(Servicio servicio) {
         int resultado = 0;
+        Connection con = null;
+        CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
             cs = con.prepareCall("{call insertar_servicio(?,?,?,?,?,?)}");
@@ -33,8 +30,8 @@ public class ServicioImpl implements IServicioDAO {
         } catch (Exception ex) {
             System.out.println("ERROR: " + ex.getMessage());
         } finally {
-            try { cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (cs != null) cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (con != null) con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
         }
         return resultado;
     }
@@ -42,6 +39,8 @@ public class ServicioImpl implements IServicioDAO {
     @Override
     public int modificar(Servicio servicio) {
         int resultado = 0;
+        Connection con = null;
+        CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
             cs = con.prepareCall("{call modificar_servicio(?,?,?,?,?,?,?)}");
@@ -60,8 +59,8 @@ public class ServicioImpl implements IServicioDAO {
         } catch (Exception ex) {
             System.out.println("ERROR: " + ex.getMessage());
         } finally {
-            try { cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (cs != null) cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (con != null) con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
         }
         return resultado;
     }
@@ -69,6 +68,8 @@ public class ServicioImpl implements IServicioDAO {
     @Override
     public int eliminar(int id) {
         int resultado = 0;
+        Connection con = null;
+        CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
             cs = con.prepareCall("{call eliminar_servicio(?,?,?)}");
@@ -80,8 +81,8 @@ public class ServicioImpl implements IServicioDAO {
         } catch (Exception ex) {
             System.out.println("ERROR: " + ex.getMessage());
         } finally {
-            try { cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (cs != null) cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (con != null) con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
         }
         return resultado;
     }
@@ -89,19 +90,21 @@ public class ServicioImpl implements IServicioDAO {
     @Override
     public int deshabilitar(int id) {
         int resultado = 0;
+        Connection con = null;
+        CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
             cs = con.prepareCall("{call deshabilitar_servicio(?,?,?)}");
             cs.setInt("p_id_servicio", id);
             cs.setTimestamp("p_modified_on", Timestamp.valueOf(LocalDateTime.now()));
-            cs.setNull("p_modified_by", Types.INTEGER); // O puedes recibir el usuario que deshabilita si lo ajustas
+            cs.setNull("p_modified_by", Types.INTEGER);
 
             resultado = cs.executeUpdate();
         } catch (Exception ex) {
             System.out.println("ERROR: " + ex.getMessage());
         } finally {
-            try { cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (cs != null) cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (con != null) con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
         }
         return resultado;
     }
@@ -109,6 +112,9 @@ public class ServicioImpl implements IServicioDAO {
     @Override
     public Servicio buscarPorId(int id) {
         Servicio servicio = null;
+        Connection con = null;
+        CallableStatement cs = null;
+        ResultSet rs = null;
         try {
             con = DBManager.getInstance().getConnection();
             cs = con.prepareCall("{call buscar_servicio_por_id(?)}");
@@ -122,14 +128,13 @@ public class ServicioImpl implements IServicioDAO {
                 servicio.setDuracionMinutos(rs.getInt("duracion_minutos"));
                 servicio.setPrecioReferencial(rs.getDouble("precio_referencial"));
                 servicio.setActivo(rs.getBoolean("activo"));
-                // Aquí podrías setear los datos de auditoría (created_on, etc) si los necesitas
             }
         } catch (Exception ex) {
             System.out.println("ERROR: " + ex.getMessage());
         } finally {
-            try { rs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (rs != null) rs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (cs != null) cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (con != null) con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
         }
         return servicio;
     }
@@ -137,6 +142,9 @@ public class ServicioImpl implements IServicioDAO {
     @Override
     public List<Servicio> listarTodas() {
         List<Servicio> servicios = null;
+        Connection con = null;
+        CallableStatement cs = null;
+        ResultSet rs = null;
         try {
             servicios = new ArrayList<>();
             con = DBManager.getInstance().getConnection();
@@ -156,9 +164,9 @@ public class ServicioImpl implements IServicioDAO {
         } catch (Exception ex) {
             System.out.println("ERROR: " + ex.getMessage());
         } finally {
-            try { rs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (rs != null) rs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (cs != null) cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (con != null) con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
         }
         return servicios;
     }

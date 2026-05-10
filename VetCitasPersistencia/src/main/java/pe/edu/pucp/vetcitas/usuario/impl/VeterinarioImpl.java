@@ -1,77 +1,94 @@
 package pe.edu.pucp.vetcitas.usuario.impl;
 
+import pe.edu.pucp.vetcitas.common.enums.CodigoRol;
 import pe.edu.pucp.vetcitas.config.DBManager;
 import pe.edu.pucp.vetcitas.usuario.dao.IVeterinarioDAO;
 import pe.edu.pucp.vetcitas.usuario.model.Veterinario;
-import pe.edu.pucp.vetcitas.common.enums.Rol;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 public class VeterinarioImpl implements IVeterinarioDAO {
-
-    private Connection con;
-    private CallableStatement cs;
-    private ResultSet rs;
-
     @Override
-    public int insertar(Veterinario objeto) {
-        int resultado = 0;
+    public int insertar(Veterinario veterinario) {
+        int idGenerado = 0;
+        Connection con = null;
+        CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{CALL insertar_veterinario(?,?,?,?,?,?,?,?,?,?)}");
-            cs.setString(1, objeto.getUsername());
-            cs.setString(2, objeto.getContrasenaHash());
-            cs.setString(3, objeto.getNombres());
-            cs.setString(4, objeto.getApellidos());
-            cs.setString(5, objeto.getTelefono());
-            cs.setString(6, objeto.getRol().name());
-            cs.setString(7, objeto.getCmpv());
-            cs.setString(8, objeto.getEspecialidad());
-            if (objeto.getModifiedBy() != null) {
-                cs.setInt(9, objeto.getModifiedBy().getId());
+            cs = con.prepareCall("{CALL insertar_veterinario(?, ?, ?, ?, ?, ?, ?, ?, ?)}");
+
+            cs.setString(1, veterinario.getUsername());
+            cs.setString(2, veterinario.getContrasenaHash());
+            cs.setString(3, veterinario.getNombres());
+            cs.setString(4, veterinario.getApellidos());
+            cs.setString(5, veterinario.getTelefono());
+            cs.setString(6, veterinario.getCmpv());
+            cs.setString(7, veterinario.getEspecialidad());
+
+            if (veterinario.getModifiedBy() != null) {
+                cs.setInt(8, veterinario.getModifiedBy().getId());
             } else {
-                cs.setNull(9, Types.INTEGER);
+                cs.setNull(8, Types.INTEGER);
             }
-            cs.registerOutParameter(10, Types.INTEGER);
+
+            cs.registerOutParameter(9, Types.INTEGER);
             cs.executeUpdate();
-            resultado = cs.getInt(10);
-            objeto.setId(resultado);
+
+            idGenerado = cs.getInt(9);
+            veterinario.setId(idGenerado);
+
         } catch (Exception ex) {
-            System.out.println("ERROR: " + ex.getMessage());
+            System.out.println("ERROR insertando veterinario: " + ex.getMessage());
         } finally {
-            try { if (cs != null) cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { if (con != null) con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try {
+                if (cs != null) cs.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("ERROR cerrando recursos en insertar: " + ex.getMessage());
+            }
         }
-        return resultado;
+        return idGenerado;
     }
 
     @Override
-    public int modificar(Veterinario objeto) {
+    public int modificar(Veterinario veterinario) {
         int resultado = 0;
+        Connection con = null;
+        CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{CALL modificar_veterinario(?,?,?,?,?,?,?,?,?)}");
-            cs.setInt(1, objeto.getId());
-            cs.setString(2, objeto.getUsername());
-            cs.setString(3, objeto.getContrasenaHash());
-            cs.setString(4, objeto.getNombres());
-            cs.setString(5, objeto.getApellidos());
-            cs.setString(6, objeto.getTelefono());
-            cs.setString(7, objeto.getCmpv());
-            cs.setString(8, objeto.getEspecialidad());
-            if (objeto.getModifiedBy() != null) {
-                cs.setInt(9, objeto.getModifiedBy().getId());
+            cs = con.prepareCall("{CALL modificar_veterinario(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}");
+
+            cs.setInt(1, veterinario.getId());
+            cs.setString(2, veterinario.getUsername());
+            cs.setString(3, veterinario.getContrasenaHash());
+            cs.setString(4, veterinario.getNombres());
+            cs.setString(5, veterinario.getApellidos());
+            cs.setString(6, veterinario.getTelefono());
+            cs.setBoolean(7, veterinario.isActivo());
+            cs.setString(8, veterinario.getCmpv());
+            cs.setString(9, veterinario.getEspecialidad());
+
+            if (veterinario.getModifiedBy() != null) {
+                cs.setInt(10, veterinario.getModifiedBy().getId());
             } else {
-                cs.setNull(9, Types.INTEGER);
+                cs.setNull(10, Types.INTEGER);
             }
+
             resultado = cs.executeUpdate();
+
         } catch (Exception ex) {
-            System.out.println("ERROR: " + ex.getMessage());
+            System.out.println("ERROR modificando veterinario: " + ex.getMessage());
         } finally {
-            try { if (cs != null) cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { if (con != null) con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try {
+                if (cs != null) cs.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("ERROR cerrando recursos en modificar: " + ex.getMessage());
+            }
         }
         return resultado;
     }
@@ -79,16 +96,24 @@ public class VeterinarioImpl implements IVeterinarioDAO {
     @Override
     public int eliminar(int id) {
         int resultado = 0;
+        Connection con = null;
+        CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{CALL eliminar_veterinario(?)}");
+            cs = con.prepareCall("{CALL eliminar_usuario_logico(?, ?)}");
             cs.setInt(1, id);
+            cs.setNull(2, Types.INTEGER);
             resultado = cs.executeUpdate();
+
         } catch (Exception ex) {
-            System.out.println("ERROR: " + ex.getMessage());
+            System.out.println("ERROR eliminando veterinario: " + ex.getMessage());
         } finally {
-            try { if (cs != null) cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { if (con != null) con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try {
+                if (cs != null) cs.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("ERROR cerrando recursos en eliminar: " + ex.getMessage());
+            }
         }
         return resultado;
     }
@@ -96,11 +121,15 @@ public class VeterinarioImpl implements IVeterinarioDAO {
     @Override
     public Veterinario buscarPorId(int id) {
         Veterinario veterinario = null;
+        Connection con = null;
+        CallableStatement cs = null;
+        ResultSet rs = null;
         try {
             con = DBManager.getInstance().getConnection();
             cs = con.prepareCall("{CALL buscar_veterinario_por_id(?)}");
             cs.setInt(1, id);
             rs = cs.executeQuery();
+
             if (rs.next()) {
                 veterinario = new Veterinario();
                 veterinario.setId(rs.getInt("id_usuario"));
@@ -110,59 +139,104 @@ public class VeterinarioImpl implements IVeterinarioDAO {
                 veterinario.setApellidos(rs.getString("apellidos"));
                 veterinario.setTelefono(rs.getString("telefono"));
                 veterinario.setActivo(rs.getBoolean("activo"));
-                veterinario.setRol(Rol.valueOf(rs.getString("rol")));
                 veterinario.setCmpv(rs.getString("cmpv"));
                 veterinario.setEspecialidad(rs.getString("especialidad"));
-                veterinario.setCreatedOn(rs.getTimestamp("created_on").toLocalDateTime());
-                Timestamp modifiedOn = rs.getTimestamp("modified_on");
-                if (modifiedOn != null) {
-                    veterinario.setModifiedOn(modifiedOn.toLocalDateTime());
-                }
+                veterinario.setRoles(UsuarioPersistenciaHelper.cargarRolesDeUsuario(id));
             }
+
         } catch (Exception ex) {
-            System.out.println("ERROR: " + ex.getMessage());
+            System.out.println("ERROR buscando veterinario por id: " + ex.getMessage());
         } finally {
-            try { if (rs != null) rs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { if (cs != null) cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { if (con != null) con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try {
+                if (rs != null) rs.close();
+                if (cs != null) cs.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("ERROR cerrando recursos en buscarPorId: " + ex.getMessage());
+            }
         }
         return veterinario;
     }
 
     @Override
     public List<Veterinario> listarTodas() {
-        List<Veterinario> veterinarios = null;
+        List<Veterinario> lista = new ArrayList<>();
+        Connection con = null;
+        CallableStatement cs = null;
+        ResultSet rs = null;
         try {
             con = DBManager.getInstance().getConnection();
             cs = con.prepareCall("{CALL listar_veterinarios()}");
             rs = cs.executeQuery();
+
             while (rs.next()) {
-                if (veterinarios == null) veterinarios = new ArrayList<>();
                 Veterinario veterinario = new Veterinario();
-                veterinario.setId(rs.getInt("id_usuario"));
+                int id = rs.getInt("id_usuario");
+                veterinario.setId(id);
                 veterinario.setUsername(rs.getString("username"));
                 veterinario.setContrasenaHash(rs.getString("contrasena_hash"));
                 veterinario.setNombres(rs.getString("nombres"));
                 veterinario.setApellidos(rs.getString("apellidos"));
                 veterinario.setTelefono(rs.getString("telefono"));
                 veterinario.setActivo(rs.getBoolean("activo"));
-                veterinario.setRol(Rol.valueOf(rs.getString("rol")));
                 veterinario.setCmpv(rs.getString("cmpv"));
                 veterinario.setEspecialidad(rs.getString("especialidad"));
-                veterinario.setCreatedOn(rs.getTimestamp("created_on").toLocalDateTime());
-                Timestamp modifiedOn = rs.getTimestamp("modified_on");
-                if (modifiedOn != null) {
-                    veterinario.setModifiedOn(modifiedOn.toLocalDateTime());
-                }
-                veterinarios.add(veterinario);
+                veterinario.setRoles(UsuarioPersistenciaHelper.cargarRolesDeUsuario(id));
+                lista.add(veterinario);
             }
+
         } catch (Exception ex) {
-            System.out.println("ERROR: " + ex.getMessage());
+            System.out.println("ERROR listando veterinarios: " + ex.getMessage());
         } finally {
-            try { if (rs != null) rs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { if (cs != null) cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { if (con != null) con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try {
+                if (rs != null) rs.close();
+                if (cs != null) cs.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("ERROR cerrando recursos en listarTodas: " + ex.getMessage());
+            }
         }
-        return veterinarios;
+        return lista;
+    }
+
+    @Override
+    public List<Veterinario> listarDisponibles(LocalDateTime fechaHoraInicio, int idServicio) {
+        List<Veterinario> lista = new ArrayList<>();
+        Connection con = null;
+        CallableStatement cs = null;
+        ResultSet rs = null;
+        try {
+            con = DBManager.getInstance().getConnection();
+            cs = con.prepareCall("{CALL listar_veterinarios_disponibles(?, ?)}");
+            cs.setTimestamp(1, Timestamp.valueOf(fechaHoraInicio));
+            cs.setInt(2, idServicio);
+            rs = cs.executeQuery();
+
+            while (rs.next()) {
+                Veterinario veterinario = new Veterinario();
+                int id = rs.getInt("id_usuario");
+                veterinario.setId(id);
+                veterinario.setUsername(rs.getString("username"));
+                veterinario.setNombres(rs.getString("nombres"));
+                veterinario.setApellidos(rs.getString("apellidos"));
+                veterinario.setTelefono(rs.getString("telefono"));
+                veterinario.setCmpv(rs.getString("cmpv"));
+                veterinario.setEspecialidad(rs.getString("especialidad"));
+                veterinario.setRoles(UsuarioPersistenciaHelper.cargarRolesDeUsuario(id));
+                lista.add(veterinario);
+            }
+
+        } catch (Exception ex) {
+            System.out.println("ERROR listando veterinarios disponibles: " + ex.getMessage());
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (cs != null) cs.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("ERROR cerrando recursos en listarDisponibles: " + ex.getMessage());
+            }
+        }
+        return lista;
     }
 }

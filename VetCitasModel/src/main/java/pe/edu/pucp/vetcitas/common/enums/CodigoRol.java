@@ -1,6 +1,7 @@
 package pe.edu.pucp.vetcitas.common.enums;
 
-public enum Rol {
+public enum CodigoRol {
     ADMINISTRADOR,
-    VETERINARIO
+    VETERINARIO,
+    RECEPCIONISTA
 }

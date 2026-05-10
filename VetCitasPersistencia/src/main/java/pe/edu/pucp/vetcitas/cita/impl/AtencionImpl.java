@@ -11,14 +11,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AtencionImpl implements IAtencionDAO {
-
-    private Connection con;
-    private CallableStatement cs;
-    private ResultSet rs;
-
     @Override
     public int insertar(Atencion atencion) {
         int resultado = 0;
+        Connection con = null;
+        CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
             cs = con.prepareCall("{call insertar_atencion(?,?,?,?,?,?,?,?,?,?)}");
@@ -38,8 +35,8 @@ public class AtencionImpl implements IAtencionDAO {
         } catch (Exception ex) {
             System.out.println("ERROR: " + ex.getMessage());
         } finally {
-            try { cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (cs != null) cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (con != null) con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
         }
         return resultado;
     }
@@ -47,6 +44,8 @@ public class AtencionImpl implements IAtencionDAO {
     @Override
     public int modificar(Atencion atencion) {
         int resultado = 0;
+        Connection con = null;
+        CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
             cs = con.prepareCall("{call modificar_atencion(?,?,?,?,?,?,?,?,?,?)}");
@@ -68,8 +67,8 @@ public class AtencionImpl implements IAtencionDAO {
         } catch (Exception ex) {
             System.out.println("ERROR: " + ex.getMessage());
         } finally {
-            try { cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (cs != null) cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (con != null) con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
         }
         return resultado;
     }
@@ -77,6 +76,8 @@ public class AtencionImpl implements IAtencionDAO {
     @Override
     public int eliminar(int id) {
         int resultado = 0;
+        Connection con = null;
+        CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
             cs = con.prepareCall("{call eliminar_atencion(?,?,?)}");
@@ -88,8 +89,8 @@ public class AtencionImpl implements IAtencionDAO {
         } catch (Exception ex) {
             System.out.println("ERROR: " + ex.getMessage());
         } finally {
-            try { cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (cs != null) cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (con != null) con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
         }
         return resultado;
     }
@@ -97,6 +98,9 @@ public class AtencionImpl implements IAtencionDAO {
     @Override
     public Atencion buscarPorId(int id) {
         Atencion atencion = null;
+        Connection con = null;
+        CallableStatement cs = null;
+        ResultSet rs = null;
         try {
             con = DBManager.getInstance().getConnection();
             cs = con.prepareCall("{call buscar_atencion_por_id(?)}");
@@ -108,9 +112,9 @@ public class AtencionImpl implements IAtencionDAO {
         } catch (Exception ex) {
             System.out.println("ERROR: " + ex.getMessage());
         } finally {
-            try { rs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (rs != null) rs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (cs != null) cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (con != null) con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
         }
         return atencion;
     }
@@ -118,6 +122,9 @@ public class AtencionImpl implements IAtencionDAO {
     @Override
     public Atencion buscarPorCita(int idCita) {
         Atencion atencion = null;
+        Connection con = null;
+        CallableStatement cs = null;
+        ResultSet rs = null;
         try {
             con = DBManager.getInstance().getConnection();
             cs = con.prepareCall("{call buscar_atencion_por_cita(?)}");
@@ -129,9 +136,9 @@ public class AtencionImpl implements IAtencionDAO {
         } catch (Exception ex) {
             System.out.println("ERROR: " + ex.getMessage());
         } finally {
-            try { rs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (rs != null) rs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (cs != null) cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (con != null) con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
         }
         return atencion;
     }
@@ -139,6 +146,9 @@ public class AtencionImpl implements IAtencionDAO {
     @Override
     public List<Atencion> listarTodas() {
         List<Atencion> atenciones = new ArrayList<>();
+        Connection con = null;
+        CallableStatement cs = null;
+        ResultSet rs = null;
         try {
             con = DBManager.getInstance().getConnection();
             cs = con.prepareCall("{call listar_atenciones()}");
@@ -149,14 +159,13 @@ public class AtencionImpl implements IAtencionDAO {
         } catch (Exception ex) {
             System.out.println("ERROR: " + ex.getMessage());
         } finally {
-            try { rs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
-            try { con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (rs != null) rs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (cs != null) cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (con != null) con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
         }
         return atenciones;
     }
 
-    // Método auxiliar privado para no repetir código al leer el ResultSet
     private Atencion mapearAtencionDesdeResultSet(ResultSet rs) throws SQLException {
         Atencion atencion = new Atencion();
         atencion.setId(rs.getInt("id_atencion"));

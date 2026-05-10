@@ -4,7 +4,7 @@ import pe.edu.pucp.vetcitas.cita.model.Atencion;
 import pe.edu.pucp.vetcitas.cita.model.Cita;
 import pe.edu.pucp.vetcitas.cita.model.Recordatorio;
 import pe.edu.pucp.vetcitas.cliente.model.Mascota;
-import pe.edu.pucp.vetcitas.common.enums.Rol;
+import pe.edu.pucp.vetcitas.common.enums.CodigoRol;
 import pe.edu.pucp.vetcitas.servicio.model.Servicio;
 
 import java.time.LocalDateTime;
@@ -21,12 +21,12 @@ public class Veterinario extends Usuario{
     }
 
     public Veterinario(int id, String username, String contrasenaHash, String nombres,
-                       String apellidos, boolean activo, Rol rol, String telefono,
-                       List<Permiso> permisos, String cmpv, String especialidad,LocalDateTime createdOn,
-                       LocalDateTime modifiedOn,
+                       String apellidos, boolean activo, String telefono,
+                       List<RolSistema> roles, String cmpv, String especialidad,
+                       LocalDateTime createdOn, LocalDateTime modifiedOn,
                        Usuario modifiedBy) {
-        super(id, username, contrasenaHash, nombres, apellidos, activo, rol, telefono,
-                permisos, createdOn, modifiedOn, modifiedBy);
+        super(id, username, contrasenaHash, nombres, apellidos, activo, telefono,
+                roles, createdOn, modifiedOn, modifiedBy);
         this.cmpv = cmpv;
         this.especialidad = especialidad;
     }
@@ -38,7 +38,7 @@ public class Veterinario extends Usuario{
     }
 
     public String getCmpv() {
-        return this.cmpv;
+        return cmpv;
     }
 
     public void setCmpv(String cmpv) {
@@ -46,7 +46,7 @@ public class Veterinario extends Usuario{
     }
 
     public String getEspecialidad() {
-        return this.especialidad;
+        return especialidad;
     }
 
     public void setEspecialidad(String especialidad) {

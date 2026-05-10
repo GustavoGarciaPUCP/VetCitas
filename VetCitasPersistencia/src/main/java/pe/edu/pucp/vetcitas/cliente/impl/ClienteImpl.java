@@ -11,14 +11,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ClienteImpl implements ClienteDAO {
-
-    private Connection con;
-    private CallableStatement cs;
-    private ResultSet rs;
-
     @Override
     public int insertar(Cliente cliente) {
         int resultado = 0;
+        Connection con = null;
+        CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
             String sql = "{CALL insertar_cliente(?, ?, ?, ?, ?, ?, ?, ?, ?)}";
@@ -30,20 +27,17 @@ public class ClienteImpl implements ClienteDAO {
             cs.setString(4, cliente.getObservaciones());
             cs.setBoolean(5, cliente.isActivo());
 
-
             if (cliente.getCreatedOn() != null) {
                 cs.setTimestamp(6, java.sql.Timestamp.valueOf(cliente.getCreatedOn()));
             } else {
                 cs.setTimestamp(6, null);
             }
 
-
             if (cliente.getModifiedOn() != null) {
                 cs.setTimestamp(7, java.sql.Timestamp.valueOf(cliente.getModifiedOn()));
             } else {
                 cs.setTimestamp(7, null);
             }
-
 
             if (cliente.getModifiedBy() != null) {
                 cs.setInt(8, cliente.getModifiedBy().getId());
@@ -74,6 +68,8 @@ public class ClienteImpl implements ClienteDAO {
     @Override
     public int modificar(Cliente cliente) {
         int resultado = 0;
+        Connection con = null;
+        CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
             String sql = "{CALL modificar_cliente(?, ?, ?, ?, ?, ?, ?, ?)}";
@@ -116,6 +112,8 @@ public class ClienteImpl implements ClienteDAO {
     @Override
     public int eliminar(int idCliente) {
         int resultado = 0;
+        Connection con = null;
+        CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
             String sql = "{CALL eliminar_cliente(?, ?, ?)}";
@@ -131,7 +129,6 @@ public class ClienteImpl implements ClienteDAO {
             System.out.println("ERROR: " + ex.getMessage());
         } finally {
             try {
-                if (rs != null) rs.close();
                 if (cs != null) cs.close();
                 if (con != null) con.close();
             } catch (Exception ex) {
@@ -144,6 +141,9 @@ public class ClienteImpl implements ClienteDAO {
     @Override
     public Cliente buscarPorId(int idCliente) {
         Cliente cliente = null;
+        Connection con = null;
+        CallableStatement cs = null;
+        ResultSet rs = null;
         try {
             con = DBManager.getInstance().getConnection();
             String sql = "{CALL buscar_cliente_por_id(?)}";
@@ -179,6 +179,9 @@ public class ClienteImpl implements ClienteDAO {
     @Override
     public List<Cliente> listarTodas() {
         List<Cliente> clientes = new ArrayList<>();
+        Connection con = null;
+        CallableStatement cs = null;
+        ResultSet rs = null;
         try {
             con = DBManager.getInstance().getConnection();
             String sql = "{CALL listar_clientes_activos()}";
