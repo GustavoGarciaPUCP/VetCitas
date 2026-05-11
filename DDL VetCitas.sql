@@ -68,6 +68,7 @@ CREATE TABLE rol_permiso (
 CREATE TABLE administrador (
     id_administrador INT PRIMARY KEY,
     area VARCHAR(100) NOT NULL,
+    es_super_admin TINYINT(1) NOT NULL DEFAULT 0,
     CONSTRAINT fk_administrador_usuario FOREIGN KEY (id_administrador) REFERENCES usuario(id_usuario)
 ) ENGINE=InnoDB;
 
@@ -222,3 +223,14 @@ WHERE
 
 INSERT INTO configuracion(umbral_cliente_frecuente, descuento_maximo_permitido)
 VALUES (5, 20.00);
+
+INSERT INTO usuario(username, contrasena_hash, nombres, apellidos, telefono, activo, created_on, modified_on, modified_by)
+VALUES ('superadmin', 'hash_superadmin_inicial', 'Super', 'Admin', '000000000', 1, NOW(), NOW(), NULL);
+
+INSERT INTO administrador(id_administrador, area, es_super_admin)
+SELECT id_usuario, 'Sistema', 1 FROM usuario WHERE username = 'superadmin';
+
+INSERT INTO usuario_rol(id_usuario, id_rol)
+SELECT u.id_usuario, r.id_rol
+FROM usuario u JOIN rol_sistema r ON r.codigo = 'ADMINISTRADOR'
+WHERE u.username = 'superadmin';

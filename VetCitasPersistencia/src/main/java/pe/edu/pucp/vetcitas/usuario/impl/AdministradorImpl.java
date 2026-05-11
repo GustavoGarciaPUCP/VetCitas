@@ -24,7 +24,7 @@ public class AdministradorImpl implements IAdministradorDAO {
         CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{CALL insertar_administrador(?, ?, ?, ?, ?, ?, ?, ?)}");
+            cs = con.prepareCall("{CALL insertar_administrador(?, ?, ?, ?, ?, ?, ?, ?, ?)}");
 
             cs.setString(1, administrador.getUsername());
             cs.setString(2, administrador.getContrasenaHash());
@@ -32,17 +32,18 @@ public class AdministradorImpl implements IAdministradorDAO {
             cs.setString(4, administrador.getApellidos());
             cs.setString(5, administrador.getTelefono());
             cs.setString(6, administrador.getArea());
+            cs.setBoolean(7, administrador.isEsSuperAdmin());
 
             if (administrador.getModifiedBy() != null) {
-                cs.setInt(7, administrador.getModifiedBy().getId());
+                cs.setInt(8, administrador.getModifiedBy().getId());
             } else {
-                cs.setNull(7, Types.INTEGER);
+                cs.setNull(8, Types.INTEGER);
             }
 
-            cs.registerOutParameter(8, Types.INTEGER);
+            cs.registerOutParameter(9, Types.INTEGER);
             cs.executeUpdate();
 
-            idGenerado = cs.getInt(8);
+            idGenerado = cs.getInt(9);
             administrador.setId(idGenerado);
 
         } catch (Exception ex) {
@@ -144,6 +145,7 @@ public class AdministradorImpl implements IAdministradorDAO {
                 administrador.setTelefono(rs.getString("telefono"));
                 administrador.setActivo(rs.getBoolean("activo"));
                 administrador.setArea(rs.getString("area"));
+                administrador.setEsSuperAdmin(rs.getBoolean("es_super_admin"));
                 administrador.setRoles(UsuarioPersistenciaHelper.cargarRolesDeUsuario(id));
             }
 
@@ -183,6 +185,7 @@ public class AdministradorImpl implements IAdministradorDAO {
                 administrador.setTelefono(rs.getString("telefono"));
                 administrador.setActivo(rs.getBoolean("activo"));
                 administrador.setArea(rs.getString("area"));
+                administrador.setEsSuperAdmin(rs.getBoolean("es_super_admin"));
                 administrador.setRoles(UsuarioPersistenciaHelper.cargarRolesDeUsuario(id));
                 lista.add(administrador);
             }

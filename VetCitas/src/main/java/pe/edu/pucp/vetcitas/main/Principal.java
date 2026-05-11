@@ -501,6 +501,71 @@ public class Principal {
                 System.out.println("No se eliminó recepcionista porque no se insertó correctamente.");
             }
 
+            // ==================================================
+            // 17. SUPERADMIN Y REGLAS DE ROLES
+            // ==================================================
+            imprimirSeccion("17. SUPERADMIN Y REGLAS DE ROLES");
+
+            Administrador superAdmin = null;
+            for (Administrador a : administradorDAO.listarTodas()) {
+                if (a.isEsSuperAdmin()) {
+                    superAdmin = a;
+                    break;
+                }
+            }
+
+            if (superAdmin == null) {
+                System.out.println("No se encontró ningún SuperAdmin en la BD (¿corriste la DDL con el seed?).");
+            } else {
+                System.out.println("SuperAdmin encontrado:");
+                imprimirAdministrador(superAdmin);
+                System.out.println("esSuperAdmin = " + superAdmin.isEsSuperAdmin());
+
+                // 17.1 Asignar el 3er rol al veterinario (ya tiene VET y RECEP de la sección 4)
+                System.out.println("\n17.1 Asignar ADMINISTRADOR al veterinario (debería completar los 3 roles):");
+                administradorDAO.asignarRol(idVet, CodigoRol.ADMINISTRADOR.name());
+                List<RolSistema> rolesVet = administradorDAO.listarRolesDeUsuario(idVet);
+                System.out.println("Roles del veterinario: " + rolesVet.size() + " (esperado 3)");
+                for (RolSistema rol : rolesVet) {
+                    System.out.println("- " + rol.getCodigo());
+                }
+
+                // 17.2 Intentar un rol duplicado (no hay 4° rol en el catálogo;
+                //      el límite de 3 queda implícito porque el catálogo es de 3)
+                System.out.println("\n17.2 Intentar asignar un rol que ya tiene (debería fallar):");
+                int rolesAntes = administradorDAO.listarRolesDeUsuario(idVet).size();
+                administradorDAO.asignarRol(idVet, CodigoRol.VETERINARIO.name());
+                int rolesDespues = administradorDAO.listarRolesDeUsuario(idVet).size();
+                if (rolesDespues == rolesAntes) {
+                    System.out.println("La asignación duplicada no se completó, como se esperaba.");
+                } else {
+                    System.out.println("ERROR: el rol duplicado se asignó (antes=" + rolesAntes + ", después=" + rolesDespues + ").");
+                }
+
+                // 17.3 Intentar eliminar al SuperAdmin (debe fallar)
+                System.out.println("\n17.3 Intentar eliminar al SuperAdmin (debería fallar):");
+                int resultadoElim = administradorDAO.eliminar(superAdmin.getId());
+                Administrador verificarSuper = administradorDAO.buscarPorId(superAdmin.getId());
+                if (resultadoElim == 0 && verificarSuper != null && verificarSuper.isActivo()) {
+                    System.out.println("La eliminación del SuperAdmin no se completó, como se esperaba.");
+                } else {
+                    System.out.println("ERROR: el SuperAdmin fue afectado (resultado=" + resultadoElim
+                            + ", activo=" + (verificarSuper != null ? verificarSuper.isActivo() : "null") + ").");
+                }
+
+                // 17.4 Intentar revocar ADMINISTRADOR al SuperAdmin (debe fallar)
+                System.out.println("\n17.4 Intentar revocar ADMINISTRADOR al SuperAdmin (debería fallar):");
+                int rolesSuperAntes = administradorDAO.listarRolesDeUsuario(superAdmin.getId()).size();
+                administradorDAO.revocarRol(superAdmin.getId(), CodigoRol.ADMINISTRADOR.name());
+                int rolesSuperDespues = administradorDAO.listarRolesDeUsuario(superAdmin.getId()).size();
+                if (rolesSuperAntes == rolesSuperDespues) {
+                    System.out.println("La revocación del rol ADMINISTRADOR al SuperAdmin no se completó, como se esperaba.");
+                } else {
+                    System.out.println("ERROR: se revocó ADMINISTRADOR al SuperAdmin (antes=" + rolesSuperAntes
+                            + ", después=" + rolesSuperDespues + ").");
+                }
+            }
+
             System.out.println("\n==================================================");
             System.out.println(" TODAS LAS PRUEBAS FINALIZARON");
             System.out.println("==================================================");

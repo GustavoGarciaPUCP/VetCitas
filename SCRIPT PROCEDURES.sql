@@ -105,8 +105,6 @@ END $$
 CREATE PROCEDURE asignar_rol_a_usuario(IN p_id_usuario INT, IN p_codigo_rol VARCHAR(30))
 BEGIN
     DECLARE v_id_rol INT;
-    DECLARE v_tiene_admin INT DEFAULT 0;
-    DECLARE v_tiene_vet INT DEFAULT 0;
     DECLARE v_cantidad_roles INT DEFAULT 0;
 
     SELECT id_rol INTO v_id_rol
@@ -121,27 +119,11 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El usuario ya tiene ese rol';
     END IF;
 
-    SELECT COUNT(*) INTO v_tiene_admin
-    FROM usuario_rol ur JOIN rol_sistema r ON r.id_rol = ur.id_rol
-    WHERE ur.id_usuario = p_id_usuario AND r.codigo = 'ADMINISTRADOR';
-
-    SELECT COUNT(*) INTO v_tiene_vet
-    FROM usuario_rol ur JOIN rol_sistema r ON r.id_rol = ur.id_rol
-    WHERE ur.id_usuario = p_id_usuario AND r.codigo = 'VETERINARIO';
-
     SELECT COUNT(*) INTO v_cantidad_roles
     FROM usuario_rol WHERE id_usuario = p_id_usuario;
 
-    IF p_codigo_rol = 'ADMINISTRADOR' AND v_tiene_vet > 0 THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se permite ADMINISTRADOR + VETERINARIO';
-    END IF;
-
-    IF p_codigo_rol = 'VETERINARIO' AND v_tiene_admin > 0 THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se permite VETERINARIO + ADMINISTRADOR';
-    END IF;
-
-    IF v_cantidad_roles >= 2 THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se permite mas de 2 roles por usuario';
+    IF v_cantidad_roles >= 3 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se permite mas de 3 roles por usuario';
     END IF;
 
     INSERT INTO usuario_rol(id_usuario, id_rol) VALUES(p_id_usuario, v_id_rol);
@@ -151,12 +133,23 @@ CREATE PROCEDURE revocar_rol_de_usuario(IN p_id_usuario INT, IN p_codigo_rol VAR
 BEGIN
     DECLARE v_id_rol INT;
     DECLARE v_total_roles INT;
+    DECLARE v_es_super_admin TINYINT DEFAULT 0;
 
     SELECT id_rol INTO v_id_rol FROM rol_sistema WHERE codigo = p_codigo_rol;
     SELECT COUNT(*) INTO v_total_roles FROM usuario_rol WHERE id_usuario = p_id_usuario;
 
     IF v_total_roles <= 1 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede dejar al usuario sin roles';
+    END IF;
+
+    IF p_codigo_rol = 'ADMINISTRADOR' THEN
+        SELECT COALESCE(es_super_admin, 0) INTO v_es_super_admin
+        FROM administrador
+        WHERE id_administrador = p_id_usuario;
+
+        IF v_es_super_admin = 1 THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede revocar el rol ADMINISTRADOR a un SuperAdmin';
+        END IF;
     END IF;
 
     DELETE FROM usuario_rol WHERE id_usuario = p_id_usuario AND id_rol = v_id_rol;
@@ -193,6 +186,16 @@ END $$
 
 CREATE PROCEDURE eliminar_usuario_logico(IN p_id_usuario INT, IN p_modified_by INT)
 BEGIN
+    DECLARE v_es_super_admin TINYINT DEFAULT 0;
+
+    SELECT COALESCE(es_super_admin, 0) INTO v_es_super_admin
+    FROM administrador
+    WHERE id_administrador = p_id_usuario;
+
+    IF v_es_super_admin = 1 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede eliminar a un SuperAdmin';
+    END IF;
+
     UPDATE usuario
     SET activo = 0, modified_on = NOW(), modified_by = p_modified_by
     WHERE id_usuario = p_id_usuario;
@@ -201,12 +204,22 @@ END $$
 CREATE PROCEDURE insertar_administrador(
     IN p_username VARCHAR(50), IN p_contrasena_hash VARCHAR(255), IN p_nombres VARCHAR(100),
     IN p_apellidos VARCHAR(100), IN p_telefono VARCHAR(20), IN p_area VARCHAR(100),
-    IN p_modified_by INT, OUT p_id_usuario INT
+    IN p_es_super_admin TINYINT, IN p_modified_by INT, OUT p_id_usuario INT
 )
 BEGIN
+    DECLARE v_super_existente INT DEFAULT 0;
+
+    IF p_es_super_admin = 1 THEN
+        SELECT COUNT(*) INTO v_super_existente FROM administrador WHERE es_super_admin = 1;
+        IF v_super_existente > 0 THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Ya existe un SuperAdmin';
+        END IF;
+    END IF;
+
     START TRANSACTION;
     CALL insertar_usuario_base(p_username, p_contrasena_hash, p_nombres, p_apellidos, p_telefono, p_modified_by, p_id_usuario);
-    INSERT INTO administrador(id_administrador, area) VALUES(p_id_usuario, p_area);
+    INSERT INTO administrador(id_administrador, area, es_super_admin)
+        VALUES(p_id_usuario, p_area, COALESCE(p_es_super_admin, 0));
     CALL asignar_rol_a_usuario(p_id_usuario, 'ADMINISTRADOR');
     COMMIT;
 END $$
@@ -217,6 +230,16 @@ CREATE PROCEDURE modificar_administrador(
     IN p_activo TINYINT, IN p_area VARCHAR(100), IN p_modified_by INT
 )
 BEGIN
+    DECLARE v_es_super_admin TINYINT DEFAULT 0;
+
+    SELECT COALESCE(es_super_admin, 0) INTO v_es_super_admin
+    FROM administrador
+    WHERE id_administrador = p_id_administrador;
+
+    IF v_es_super_admin = 1 AND p_activo = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede desactivar a un SuperAdmin';
+    END IF;
+
     UPDATE usuario
     SET username = p_username, contrasena_hash = p_contrasena_hash, nombres = p_nombres,
         apellidos = p_apellidos, telefono = p_telefono, activo = p_activo,
@@ -228,12 +251,23 @@ END $$
 
 CREATE PROCEDURE eliminar_administrador_logico(IN p_id_administrador INT, IN p_modified_by INT)
 BEGIN
+    DECLARE v_es_super_admin TINYINT DEFAULT 0;
+
+    SELECT COALESCE(es_super_admin, 0) INTO v_es_super_admin
+    FROM administrador
+    WHERE id_administrador = p_id_administrador;
+
+    IF v_es_super_admin = 1 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede eliminar a un SuperAdmin';
+    END IF;
+
     CALL eliminar_usuario_logico(p_id_administrador, p_modified_by);
 END $$
 
 CREATE PROCEDURE buscar_administrador_por_id(IN p_id_usuario INT)
 BEGIN
-    SELECT u.id_usuario, u.username, u.contrasena_hash, u.nombres, u.apellidos, u.telefono, u.activo, a.area
+    SELECT u.id_usuario, u.username, u.contrasena_hash, u.nombres, u.apellidos, u.telefono, u.activo,
+           a.area, a.es_super_admin
     FROM usuario u
     JOIN administrador a ON a.id_administrador = u.id_usuario
     WHERE u.id_usuario = p_id_usuario;
@@ -241,7 +275,8 @@ END $$
 
 CREATE PROCEDURE listar_administradores()
 BEGIN
-    SELECT u.id_usuario, u.username, u.contrasena_hash, u.nombres, u.apellidos, u.telefono, u.activo, a.area
+    SELECT u.id_usuario, u.username, u.contrasena_hash, u.nombres, u.apellidos, u.telefono, u.activo,
+           a.area, a.es_super_admin
     FROM usuario u
     JOIN administrador a ON a.id_administrador = u.id_usuario
     ORDER BY u.nombres, u.apellidos;
