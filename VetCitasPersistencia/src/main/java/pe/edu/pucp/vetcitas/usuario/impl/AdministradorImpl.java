@@ -284,4 +284,38 @@ public class AdministradorImpl implements IAdministradorDAO {
         }
         return permisos;
     }
+
+    @Override
+    public boolean existeUsername(String username, Integer idExcluir) {
+        boolean existe = false;
+        Connection con = null;
+        CallableStatement cs = null;
+        try {
+            con = DBManager.getInstance().getConnection();
+            cs = con.prepareCall("{CALL verificar_username_existe(?, ?, ?)}");
+
+            cs.setString(1, username);
+            if (idExcluir != null) {
+                cs.setInt(2, idExcluir);
+            } else {
+                cs.setNull(2, java.sql.Types.INTEGER);
+            }
+
+            cs.registerOutParameter(3, java.sql.Types.TINYINT);
+            cs.execute();
+
+            existe = cs.getBoolean(3);
+
+        } catch (Exception ex) {
+            System.out.println("ERROR verificando username: " + ex.getMessage());
+        } finally {
+            try {
+                if (cs != null) cs.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("ERROR cerrando recursos en existeUsername: " + ex.getMessage());
+            }
+        }
+        return existe;
+    }
 }
