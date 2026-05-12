@@ -11,4 +11,5 @@ public interface IAdministradorDAO extends IDAO<Administrador> {
     void revocarRol(int idUsuario, String codigoRol);
     List<RolSistema> listarRolesDeUsuario(int idUsuario);
     List<String> listarPermisosDeUsuario(int idUsuario);
+    boolean existeUsername(String username, Integer idExcluir);
 }
