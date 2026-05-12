@@ -154,7 +154,6 @@ public class Principal {
                 for (RolSistema rol : rolesVet) {
                     System.out.println("- " + rol.getCodigo());
                 }
-
                 System.out.println("Permisos actuales del veterinario:");
                 for (String permiso : permisosVet) {
                     System.out.println("- " + permiso);
