@@ -1,0 +1,89 @@
+package pe.edu.pucp.vetcitas.servicio.bo;
+
+import pe.edu.pucp.vetcitas.servicio.boi.IServicioBO;
+import pe.edu.pucp.vetcitas.servicio.dao.IServicioDAO;
+import pe.edu.pucp.vetcitas.servicio.impl.ServicioImpl;
+import pe.edu.pucp.vetcitas.servicio.model.Servicio;
+
+import java.util.List;
+
+public class ServicioBOImpl implements IServicioBO {
+    private IServicioDAO servicioDAO;
+
+    public ServicioBOImpl() {
+        this.servicioDAO = new ServicioImpl();
+    }
+
+    @Override
+    public int insertar(Servicio servicio) throws Exception {
+        validar(servicio, false);
+        return servicioDAO.insertar(servicio);
+    }
+
+    @Override
+    public int modificar(Servicio servicio) throws Exception {
+        validar(servicio, true);
+        return servicioDAO.modificar(servicio);
+    }
+
+    @Override
+    public int eliminar(int id) throws Exception {
+        if (id <= 0) {
+            throw new Exception("El id del servicio debe ser mayor que cero.");
+        }
+        return servicioDAO.eliminar(id);
+    }
+
+    @Override
+    public List<Servicio> listarTodos() throws Exception {
+        return servicioDAO.listarTodas();
+    }
+
+    @Override
+    public Servicio buscarPorId(int id) throws Exception {
+        if (id <= 0) {
+            throw new Exception("El id del servicio debe ser mayor que cero.");
+        }
+        Servicio servicio = servicioDAO.buscarPorId(id);
+        if (servicio == null) {
+            throw new Exception("El servicio con id " + id + " no existe.");
+        }
+        return servicio;
+    }
+
+    @Override
+    public int deshabilitar(int id) throws Exception {
+        if (id <= 0) {
+            throw new Exception("El id del servicio debe ser mayor que cero.");
+        }
+        Servicio servicio = servicioDAO.buscarPorId(id);
+        if (servicio == null) {
+            throw new Exception("El servicio con id " + id + " no existe.");
+        }
+        if (!servicio.isActivo()) {
+            throw new Exception("El servicio ya se encuentra deshabilitado.");
+        }
+        return servicioDAO.deshabilitar(id);
+    }
+
+    private void validar(Servicio servicio, boolean esModificacion) throws Exception {
+        if (servicio == null) {
+            throw new Exception("El servicio no puede ser nulo.");
+        }
+        if (esModificacion && servicio.getId() <= 0) {
+            throw new Exception("El id del servicio es obligatorio para la modificación.");
+        }
+        if (servicio.getNombre() == null || servicio.getNombre().trim().isEmpty()) {
+            throw new Exception("El nombre del servicio es obligatorio.");
+        }
+        if (servicio.getTipoServicio() == null) {
+            throw new Exception("El tipo de servicio es obligatorio.");
+        }
+        if (servicio.getDuracionMinutos() <= 0) {
+            throw new Exception("La duración en minutos debe ser mayor que cero.");
+        }
+        if (servicio.getPrecioReferencial() < 0) {
+            throw new Exception("El precio referencial no puede ser negativo.");
+        }
+    }
+}
