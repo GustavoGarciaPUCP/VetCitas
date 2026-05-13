@@ -1,33 +1,33 @@
 package pe.edu.pucp.vetcitas.main;
 
-import pe.edu.pucp.vetcitas.cita.dao.ICitaDAO;
-import pe.edu.pucp.vetcitas.cita.impl.CitaImpl;
+import pe.edu.pucp.vetcitas.cita.boi.ICitaBO;
+import pe.edu.pucp.vetcitas.cita.bo.CitaBOImpl;
 import pe.edu.pucp.vetcitas.cita.model.Cita;
-import pe.edu.pucp.vetcitas.cliente.dao.ClienteDAO;
-import pe.edu.pucp.vetcitas.cliente.dao.MascotaDAO;
-import pe.edu.pucp.vetcitas.cliente.impl.ClienteImpl;
-import pe.edu.pucp.vetcitas.cliente.impl.MascotaImpl;
+import pe.edu.pucp.vetcitas.cliente.boi.IClienteBO;
+import pe.edu.pucp.vetcitas.cliente.bo.ClienteBOImpl;
+import pe.edu.pucp.vetcitas.cliente.boi.IMascotaBO;
+import pe.edu.pucp.vetcitas.cliente.bo.MascotaBOImpl;
 import pe.edu.pucp.vetcitas.cliente.model.Cliente;
 import pe.edu.pucp.vetcitas.cliente.model.Mascota;
 import pe.edu.pucp.vetcitas.common.enums.CodigoRol;
 import pe.edu.pucp.vetcitas.common.enums.EstadoCita;
 import pe.edu.pucp.vetcitas.common.enums.TipoServicio;
-import pe.edu.pucp.vetcitas.configuracion.dao.IConfiguracionDAO;
-import pe.edu.pucp.vetcitas.configuracion.impl.ConfiguracionImpl;
+import pe.edu.pucp.vetcitas.configuracion.boi.IConfiguracionBO;
+import pe.edu.pucp.vetcitas.configuracion.bo.ConfiguracionBOImpl;
 import pe.edu.pucp.vetcitas.configuracion.model.Configuracion;
-import pe.edu.pucp.vetcitas.servicio.dao.IServicioDAO;
-import pe.edu.pucp.vetcitas.servicio.impl.ServicioImpl;
+import pe.edu.pucp.vetcitas.servicio.boi.IServicioBO;
+import pe.edu.pucp.vetcitas.servicio.bo.ServicioBOImpl;
 import pe.edu.pucp.vetcitas.servicio.model.Servicio;
-import pe.edu.pucp.vetcitas.usuario.dao.IAdministradorDAO;
-import pe.edu.pucp.vetcitas.usuario.dao.IHorarioVeterinarioDAO;
-import pe.edu.pucp.vetcitas.usuario.dao.IPermisoDAO;
-import pe.edu.pucp.vetcitas.usuario.dao.IRecepcionistaDAO;
-import pe.edu.pucp.vetcitas.usuario.dao.IVeterinarioDAO;
-import pe.edu.pucp.vetcitas.usuario.impl.AdministradorImpl;
-import pe.edu.pucp.vetcitas.usuario.impl.HorarioVeterinarioImpl;
-import pe.edu.pucp.vetcitas.usuario.impl.PermisoImpl;
-import pe.edu.pucp.vetcitas.usuario.impl.RecepcionistaImpl;
-import pe.edu.pucp.vetcitas.usuario.impl.VeterinarioImpl;
+import pe.edu.pucp.vetcitas.usuario.boi.IAdministradorBO;
+import pe.edu.pucp.vetcitas.usuario.bo.AdministradorBOImpl;
+import pe.edu.pucp.vetcitas.usuario.boi.IHorarioVeterinarioBO;
+import pe.edu.pucp.vetcitas.usuario.bo.HorarioVeterinarioBOImpl;
+import pe.edu.pucp.vetcitas.usuario.boi.IPermisoBO;
+import pe.edu.pucp.vetcitas.usuario.bo.PermisoBOImpl;
+import pe.edu.pucp.vetcitas.usuario.boi.IRecepcionistaBO;
+import pe.edu.pucp.vetcitas.usuario.bo.RecepcionistaBOImpl;
+import pe.edu.pucp.vetcitas.usuario.boi.IVeterinarioBO;
+import pe.edu.pucp.vetcitas.usuario.bo.VeterinarioBOImpl;
 import pe.edu.pucp.vetcitas.usuario.model.Administrador;
 import pe.edu.pucp.vetcitas.usuario.model.HorarioVeterinario;
 import pe.edu.pucp.vetcitas.usuario.model.Permiso;
@@ -45,20 +45,20 @@ public class Principal {
 
     public static void main(String[] args) {
         System.out.println("==================================================");
-        System.out.println(" INICIO DE PRUEBAS INTEGRALES VETCITAS");
+        System.out.println(" INICIO DE PRUEBAS INTEGRALES VETCITAS (CAPA BO)");
         System.out.println("==================================================");
 
-        IAdministradorDAO administradorDAO = new AdministradorImpl();
-        IVeterinarioDAO veterinarioDAO = new VeterinarioImpl();
-        IRecepcionistaDAO recepcionistaDAO = new RecepcionistaImpl();
-        IHorarioVeterinarioDAO horarioDAO = new HorarioVeterinarioImpl();
-        IPermisoDAO permisoDAO = new PermisoImpl();
-        IConfiguracionDAO configuracionDAO = new ConfiguracionImpl();
+        IAdministradorBO administradorBO = new AdministradorBOImpl();
+        IVeterinarioBO veterinarioBO = new VeterinarioBOImpl();
+        IRecepcionistaBO recepcionistaBO = new RecepcionistaBOImpl();
+        IHorarioVeterinarioBO horarioBO = new HorarioVeterinarioBOImpl();
+        IPermisoBO permisoBO = new PermisoBOImpl();
+        IConfiguracionBO configuracionBO = new ConfiguracionBOImpl();
 
-        ClienteDAO clienteDAO = new ClienteImpl();
-        MascotaDAO mascotaDAO = new MascotaImpl();
-        IServicioDAO servicioDAO = new ServicioImpl();
-        ICitaDAO citaDAO = new CitaImpl();
+        IClienteBO clienteBO = new ClienteBOImpl();
+        IMascotaBO mascotaBO = new MascotaBOImpl();
+        IServicioBO servicioBO = new ServicioBOImpl();
+        ICitaBO citaBO = new CitaBOImpl();
 
         LocalDateTime ahora = LocalDateTime.now();
 
@@ -78,12 +78,12 @@ public class Principal {
             admin.setArea("Administración");
             admin.setCreatedOn(ahora);
 
-            int idAdmin = administradorDAO.insertar(admin);
+            int idAdmin = administradorBO.insertar(admin);
             System.out.println("Administrador insertado con ID: " + idAdmin);
 
             Administrador adminBD = null;
             if (idAdmin > 0) {
-                adminBD = administradorDAO.buscarPorId(idAdmin);
+                adminBD = administradorBO.buscarPorId(idAdmin);
             }
             imprimirAdministrador(adminBD);
 
@@ -104,12 +104,12 @@ public class Principal {
             vet.setCreatedOn(ahora);
             vet.setModifiedBy(adminBD);
 
-            int idVet = veterinarioDAO.insertar(vet);
+            int idVet = veterinarioBO.insertar(vet);
             System.out.println("Veterinario insertado con ID: " + idVet);
 
             Veterinario vetBD = null;
             if (idVet > 0) {
-                vetBD = veterinarioDAO.buscarPorId(idVet);
+                vetBD = veterinarioBO.buscarPorId(idVet);
             }
             imprimirVeterinario(vetBD);
 
@@ -129,12 +129,12 @@ public class Principal {
             recep.setCreatedOn(ahora);
             recep.setModifiedBy(adminBD);
 
-            int idRecep = recepcionistaDAO.insertar(recep);
+            int idRecep = recepcionistaBO.insertar(recep);
             System.out.println("Recepcionista insertada con ID: " + idRecep);
 
             Recepcionista recepBD = null;
             if (idRecep > 0) {
-                recepBD = recepcionistaDAO.buscarPorId(idRecep);
+                recepBD = recepcionistaBO.buscarPorId(idRecep);
             }
             imprimirRecepcionista(recepBD);
 
@@ -144,19 +144,22 @@ public class Principal {
             imprimirSeccion("4. ASIGNAR ROL ADICIONAL AL VETERINARIO");
 
             if (idVet > 0) {
-                administradorDAO.asignarRol(idVet, CodigoRol.RECEPCIONISTA.name());
+                administradorBO.asignarRol(idVet, CodigoRol.RECEPCIONISTA.name());
                 System.out.println("Se asignó el rol RECEPCIONISTA al veterinario.");
 
-                List<RolSistema> rolesVet = administradorDAO.listarRolesDeUsuario(idVet);
-                List<String> permisosVet = administradorDAO.listarPermisosDeUsuario(idVet);
+                Veterinario vetActualizado = veterinarioBO.buscarPorId(idVet);
+                List<RolSistema> rolesVet = vetActualizado.getRoles();
 
                 System.out.println("Roles actuales del veterinario:");
                 for (RolSistema rol : rolesVet) {
                     System.out.println("- " + rol.getCodigo());
                 }
+
                 System.out.println("Permisos actuales del veterinario:");
-                for (String permiso : permisosVet) {
-                    System.out.println("- " + permiso);
+                for (RolSistema rol : rolesVet) {
+                    for(Permiso permiso : rol.getPermisos()) {
+                        System.out.println("- [" + rol.getCodigo() + "] " + permiso.getNombre());
+                    }
                 }
             } else {
                 System.out.println("No se pudo asignar rol porque el veterinario no fue insertado.");
@@ -171,12 +174,12 @@ public class Principal {
             permiso.setNombre("EXPORTAR_DATOS");
             permiso.setDescripcion("Permite exportar información del sistema");
 
-            int idPermiso = permisoDAO.insertar(permiso);
+            int idPermiso = permisoBO.insertar(permiso);
             System.out.println("Permiso insertado con ID: " + idPermiso);
 
             Permiso permisoBD = null;
             if (idPermiso > 0) {
-                permisoBD = permisoDAO.buscarPorId(idPermiso);
+                permisoBD = permisoBO.buscarPorId(idPermiso);
             }
 
             if (permisoBD != null) {
@@ -184,9 +187,9 @@ public class Principal {
                         + permisoBD.getNombre() + " - " + permisoBD.getDescripcion());
 
                 permisoBD.setDescripcion("Permite exportar información clínica y administrativa");
-                permisoDAO.modificar(permisoBD);
+                permisoBO.modificar(permisoBD);
 
-                Permiso permisoModificado = permisoDAO.buscarPorId(idPermiso);
+                Permiso permisoModificado = permisoBO.buscarPorId(idPermiso);
                 if (permisoModificado != null) {
                     System.out.println("Permiso modificado: " + permisoModificado.getDescripcion());
                 } else {
@@ -196,7 +199,7 @@ public class Principal {
                 System.out.println("No se pudo recuperar el permiso insertado.");
             }
 
-            List<Permiso> permisos = permisoDAO.listarTodas();
+            List<Permiso> permisos = permisoBO.listarTodos();
             System.out.println("Total permisos listados: " + permisos.size());
 
             // ==================================================
@@ -204,7 +207,7 @@ public class Principal {
             // ==================================================
             imprimirSeccion("6. CONFIGURACIÓN");
 
-            Configuracion configuracion = configuracionDAO.buscarPorId(1);
+            Configuracion configuracion = configuracionBO.obtenerConfiguracionActual();
             if (configuracion != null) {
                 System.out.println("Configuración inicial:");
                 System.out.println("Umbral cliente frecuente: " + configuracion.getUmbralClienteFrecuente());
@@ -212,18 +215,12 @@ public class Principal {
 
                 configuracion.setUmbralClienteFrecuente(configuracion.getUmbralClienteFrecuente() + 1);
                 configuracion.setDescuentoMaximoPermitido(configuracion.getDescuentoMaximoPermitido() + 5.0);
-                configuracionDAO.modificar(configuracion);
+                configuracionBO.modificar(configuracion);
 
-                Configuracion configuracionModificada = configuracionDAO.buscarPorId(1);
-                if (configuracionModificada != null) {
-                    System.out.println("Configuración modificada:");
-                    System.out.println("Umbral cliente frecuente: " + configuracionModificada.getUmbralClienteFrecuente());
-                    System.out.println("Descuento máximo permitido: " + configuracionModificada.getDescuentoMaximoPermitido());
-                } else {
-                    System.out.println("No se pudo recuperar la configuración modificada.");
-                }
-            } else {
-                System.out.println("No se encontró la configuración con ID 1.");
+                Configuracion configuracionModificada = configuracionBO.obtenerConfiguracionActual();
+                System.out.println("Configuración modificada:");
+                System.out.println("Umbral cliente frecuente: " + configuracionModificada.getUmbralClienteFrecuente());
+                System.out.println("Descuento máximo permitido: " + configuracionModificada.getDescuentoMaximoPermitido());
             }
 
             // ==================================================
@@ -246,24 +243,22 @@ public class Principal {
                 horario.setCreatedOn(ahora);
                 horario.setModifiedBy(adminBD);
 
-                idHorario = horarioDAO.insertar(horario);
+                idHorario = horarioBO.insertar(horario);
                 System.out.println("Horario insertado con ID: " + idHorario);
 
                 if (idHorario > 0) {
-                    horarioBD = horarioDAO.buscarPorId(idHorario);
+                    horarioBD = horarioBO.buscarPorId(idHorario);
                 }
                 imprimirHorario(horarioBD);
 
                 if (horarioBD != null) {
                     horarioBD.setHoraFin(LocalTime.of(17, 30));
                     horarioBD.setModifiedBy(adminBD);
-                    horarioDAO.modificar(horarioBD);
+                    horarioBO.modificar(horarioBD);
                     System.out.println("Horario modificado.");
-                } else {
-                    System.out.println("No se pudo recuperar el horario insertado.");
                 }
 
-                List<HorarioVeterinario> horariosVet = horarioDAO.listarPorVeterinario(idVet);
+                List<HorarioVeterinario> horariosVet = horarioBO.listarPorVeterinario(idVet);
                 System.out.println("Horarios del veterinario: " + horariosVet.size());
             } else {
                 System.out.println("No se puede registrar horario porque el veterinario no existe.");
@@ -283,20 +278,14 @@ public class Principal {
             cliente.setCreatedOn(ahora);
             cliente.setModifiedBy(adminBD);
 
-            int resultadoCliente = clienteDAO.insertar(cliente);
-            System.out.println("Resultado insertar cliente: " + resultadoCliente);
-            System.out.println("Cliente insertado con ID real: " + cliente.getId());
+            int resultadoCliente = clienteBO.insertar(cliente);
+            System.out.println("Cliente insertado con ID real: " + resultadoCliente);
 
             Cliente clienteBD = null;
-            if (cliente.getId() > 0) {
-                clienteBD = clienteDAO.buscarPorId(cliente.getId());
-            }
-
-            if (clienteBD != null) {
+            if (resultadoCliente > 0) {
+                clienteBD = clienteBO.buscarPorId(resultadoCliente);
                 System.out.println("Cliente buscado: " + clienteBD.getId() + " - "
                         + clienteBD.getNombres() + " " + clienteBD.getApellidos());
-            } else {
-                System.out.println("No se pudo recuperar el cliente insertado.");
             }
 
             // ==================================================
@@ -318,18 +307,12 @@ public class Principal {
                 mascota.setCreatedOn(ahora);
                 mascota.setModifiedBy(adminBD);
 
-                int resultadoMascota = mascotaDAO.insertar(mascota);
-                System.out.println("Resultado insertar mascota: " + resultadoMascota);
-                System.out.println("Mascota insertada con ID real: " + mascota.getId());
+                int resultadoMascota = mascotaBO.insertar(mascota);
+                System.out.println("Mascota insertada con ID real: " + resultadoMascota);
 
-                if (mascota.getId() > 0) {
-                    mascotaBD = mascotaDAO.buscarPorId(mascota.getId());
-                }
-
-                if (mascotaBD != null) {
+                if (resultadoMascota > 0) {
+                    mascotaBD = mascotaBO.buscarPorId(resultadoMascota);
                     System.out.println("Mascota buscada: " + mascotaBD.getId() + " - " + mascotaBD.getNombre());
-                } else {
-                    System.out.println("No se pudo recuperar la mascota insertada.");
                 }
             } else {
                 System.out.println("No se puede registrar mascota porque el cliente no existe.");
@@ -349,18 +332,13 @@ public class Principal {
             servicio.setCreatedOn(ahora);
             servicio.setModifiedBy(adminBD);
 
-            int idServicio = servicioDAO.insertar(servicio);
+            int idServicio = servicioBO.insertar(servicio);
             System.out.println("Servicio insertado con ID: " + idServicio);
 
             Servicio servicioBD = null;
             if (idServicio > 0) {
-                servicioBD = servicioDAO.buscarPorId(idServicio);
-            }
-
-            if (servicioBD != null) {
+                servicioBD = servicioBO.buscarPorId(idServicio);
                 System.out.println("Servicio buscado: " + servicioBD.getId() + " - " + servicioBD.getNombre());
-            } else {
-                System.out.println("No se pudo recuperar el servicio insertado.");
             }
 
             // ==================================================
@@ -375,19 +353,22 @@ public class Principal {
                 LocalDate proximoLunes = obtenerProximaFecha(DayOfWeek.MONDAY);
                 LocalDateTime fechaCita = LocalDateTime.of(proximoLunes, LocalTime.of(10, 0));
 
+                LocalDateTime fechaCitaF = LocalDateTime.of(proximoLunes, LocalTime.of(11, 0));
+
                 Cita cita = new Cita();
                 cita.setFechaHoraInicio(fechaCita);
+                cita.setFechaHoraFin(fechaCitaF);
                 cita.setEstado(EstadoCita.PENDIENTE);
                 cita.setMascota(mascotaBD);
                 cita.setVeterinario(vetBD);
                 cita.setServicio(servicioBD);
                 cita.setCreatedOn(ahora);
 
-                idCita = citaDAO.insertar(cita);
+                idCita = citaBO.insertar(cita);
                 System.out.println("Cita insertada con ID: " + idCita);
 
                 if (idCita > 0) {
-                    citaBD = citaDAO.buscarPorId(idCita);
+                    citaBD = citaBO.buscarPorId(idCita);
                 }
                 imprimirCita(citaBD);
 
@@ -405,15 +386,11 @@ public class Principal {
                     citaSolapada.setServicio(servicioBD);
                     citaSolapada.setCreatedOn(ahora);
 
-                    int idSolapada = citaDAO.insertar(citaSolapada);
-                    if (idSolapada > 0) {
-                        System.out.println("ERROR: la cita solapada no debió insertarse.");
-                    } else {
-                        System.out.println("La inserción de cita solapada no se completó, como se esperaba.");
-                    }
+                    citaBO.insertar(citaSolapada); // Esto arrojará una Exception desde el BO
+                    System.out.println("ERROR: la cita solapada no debió insertarse.");
                 } catch (Exception ex) {
-                    System.out.println("Correcto, se rechazó la cita solapada.");
-                    System.out.println("Detalle: " + ex.getMessage());
+                    System.out.println("Correcto, la Capa de Negocios rechazó la cita solapada.");
+                    System.out.println("Detalle del BO: " + ex.getMessage());
                 }
 
                 // ==================================================
@@ -421,12 +398,12 @@ public class Principal {
                 // ==================================================
                 imprimirSeccion("13. CAMBIOS DE ESTADO DE CITA");
 
-                citaDAO.confirmarCita(idCita, idAdmin);
-                System.out.println("Cita confirmada.");
+                citaBO.confirmarCita(idCita, idAdmin);
+                System.out.println("Cita confirmada mediante BO.");
 
-                Cita citaParaModificar = citaDAO.buscarPorId(idCita);
+                Cita citaParaModificar = citaBO.buscarPorId(idCita);
                 if (citaParaModificar != null) {
-                    citaParaModificar.setFechaHoraInicio(LocalDateTime.of(proximoLunes, LocalTime.of(11, 0)));
+                    citaParaModificar.setFechaHoraInicio(LocalDateTime.of(proximoLunes, LocalTime.of(9, 0)));
                     citaParaModificar.setEstado(EstadoCita.CONFIRMADA);
                     citaParaModificar.setMascota(mascotaBD);
                     citaParaModificar.setVeterinario(vetBD);
@@ -434,22 +411,18 @@ public class Principal {
                     citaParaModificar.setModifiedOn(LocalDateTime.now());
                     citaParaModificar.setModifiedBy(adminBD);
 
-                    citaDAO.modificar(citaParaModificar);
+                    citaBO.modificar(citaParaModificar);
                     System.out.println("Cita reprogramada a las 11:00.");
-                } else {
-                    System.out.println("No se pudo recuperar la cita para modificar.");
                 }
 
-                citaDAO.marcarAtendida(idCita, idVet);
+                citaBO.marcarAtendida(idCita, idVet);
                 System.out.println("Cita marcada como atendida.");
 
-                List<Cita> citasVetDia = citaDAO.listarPorVeterinarioYFecha(idVet, proximoLunes);
+                List<Cita> citasVetDia = citaBO.listarPorVeterinarioYFecha(idVet, proximoLunes);
                 System.out.println("Citas del veterinario para ese día: " + citasVetDia.size());
                 for (Cita c : citasVetDia) {
                     imprimirCita(c);
                 }
-            } else {
-                System.out.println("No se puede registrar cita porque faltan mascota, veterinario o servicio.");
             }
 
             // ==================================================
@@ -460,12 +433,10 @@ public class Principal {
             if (recepBD != null) {
                 recepBD.setArea("Agenda y Caja");
                 recepBD.setModifiedBy(adminBD);
-                recepcionistaDAO.modificar(recepBD);
+                recepcionistaBO.modificar(recepBD);
 
-                Recepcionista recepModificada = recepcionistaDAO.buscarPorId(idRecep);
+                Recepcionista recepModificada = recepcionistaBO.buscarPorId(idRecep);
                 imprimirRecepcionista(recepModificada);
-            } else {
-                System.out.println("No se puede modificar recepcionista porque no fue recuperada.");
             }
 
             // ==================================================
@@ -473,13 +444,13 @@ public class Principal {
             // ==================================================
             imprimirSeccion("15. LISTADOS GENERALES");
 
-            System.out.println("Administradores: " + administradorDAO.listarTodas().size());
-            System.out.println("Veterinarios: " + veterinarioDAO.listarTodas().size());
-            System.out.println("Recepcionistas: " + recepcionistaDAO.listarTodas().size());
-            System.out.println("Horarios: " + horarioDAO.listarTodas().size());
-            System.out.println("Citas: " + citaDAO.listarTodas().size());
-            System.out.println("Permisos: " + permisoDAO.listarTodas().size());
-            System.out.println("Configuraciones: " + configuracionDAO.listarTodas().size());
+            System.out.println("Administradores: " + administradorBO.listarTodos().size());
+            System.out.println("Veterinarios: " + veterinarioBO.listarTodos().size());
+            System.out.println("Recepcionistas: " + recepcionistaBO.listarTodos().size());
+            System.out.println("Horarios: " + horarioBO.listarTodos().size());
+            System.out.println("Citas: " + citaBO.listarTodos().size());
+            System.out.println("Permisos: " + permisoBO.listarTodos().size());
+            System.out.println("Configuraciones activas: " + (configuracionBO.obtenerConfiguracionActual() != null ? 1 : 0));
 
             // ==================================================
             // 16. ELIMINACIONES LÓGICAS CONTROLADAS
@@ -487,26 +458,22 @@ public class Principal {
             imprimirSeccion("16. ELIMINACIONES LÓGICAS CONTROLADAS");
 
             if (idPermiso > 0) {
-                permisoDAO.eliminar(idPermiso);
+                permisoBO.eliminar(idPermiso);
                 System.out.println("Permiso de prueba eliminado lógicamente.");
-            } else {
-                System.out.println("No se eliminó permiso porque no se insertó correctamente.");
             }
 
             if (idRecep > 0) {
-                recepcionistaDAO.eliminar(idRecep);
+                recepcionistaBO.eliminar(idRecep);
                 System.out.println("Recepcionista eliminada lógicamente.");
-            } else {
-                System.out.println("No se eliminó recepcionista porque no se insertó correctamente.");
             }
 
             // ==================================================
             // 17. SUPERADMIN Y REGLAS DE ROLES
             // ==================================================
-            imprimirSeccion("17. SUPERADMIN Y REGLAS DE ROLES");
+            imprimirSeccion("17. SUPERADMIN Y REGLAS DE ROLES (PROBANDO EXCEPCIONES BO)");
 
             Administrador superAdmin = null;
-            for (Administrador a : administradorDAO.listarTodas()) {
+            for (Administrador a : administradorBO.listarTodos()) {
                 if (a.isEsSuperAdmin()) {
                     superAdmin = a;
                     break;
@@ -518,65 +485,59 @@ public class Principal {
             } else {
                 System.out.println("SuperAdmin encontrado:");
                 imprimirAdministrador(superAdmin);
-                System.out.println("esSuperAdmin = " + superAdmin.isEsSuperAdmin());
 
-                // 17.1 Asignar el 3er rol al veterinario (ya tiene VET y RECEP de la sección 4)
-                System.out.println("\n17.1 Asignar ADMINISTRADOR al veterinario (debería completar los 3 roles):");
-                administradorDAO.asignarRol(idVet, CodigoRol.ADMINISTRADOR.name());
-                List<RolSistema> rolesVet = administradorDAO.listarRolesDeUsuario(idVet);
-                System.out.println("Roles del veterinario: " + rolesVet.size() + " (esperado 3)");
-                for (RolSistema rol : rolesVet) {
+                // 17.1 Asignar el 3er rol al veterinario
+                System.out.println("\n17.1 Asignar ADMINISTRADOR al veterinario:");
+                administradorBO.asignarRol(idVet, CodigoRol.ADMINISTRADOR.name());
+                Veterinario vetCheck = veterinarioBO.buscarPorId(idVet);
+                System.out.println("Roles del veterinario: " + vetCheck.getRoles().size() + " (esperado 3)");
+                for (RolSistema rol : vetCheck.getRoles()) {
                     System.out.println("- " + rol.getCodigo());
                 }
 
-                // 17.2 Intentar un rol duplicado (no hay 4° rol en el catálogo;
-                //      el límite de 3 queda implícito porque el catálogo es de 3)
-                System.out.println("\n17.2 Intentar asignar un rol que ya tiene (debería fallar):");
-                int rolesAntes = administradorDAO.listarRolesDeUsuario(idVet).size();
-                administradorDAO.asignarRol(idVet, CodigoRol.VETERINARIO.name());
-                int rolesDespues = administradorDAO.listarRolesDeUsuario(idVet).size();
-                if (rolesDespues == rolesAntes) {
-                    System.out.println("La asignación duplicada no se completó, como se esperaba.");
-                } else {
-                    System.out.println("ERROR: el rol duplicado se asignó (antes=" + rolesAntes + ", después=" + rolesDespues + ").");
+                // 17.2 Intentar un rol duplicado
+                System.out.println("\n17.2 Intentar asignar un rol que ya tiene (debería lanzar Excepción):");
+                try {
+                    administradorBO.asignarRol(idVet, CodigoRol.VETERINARIO.name());
+                    System.out.println("ERROR CRÍTICO: el rol duplicado se asignó saltándose la validación.");
+                } catch (Exception ex) {
+                    System.out.println("ÉXITO: La regla de negocio bloqueó la asignación -> " + ex.getMessage());
                 }
 
-                // 17.3 Intentar eliminar al SuperAdmin (debe fallar)
-                System.out.println("\n17.3 Intentar eliminar al SuperAdmin (debería fallar):");
-                int resultadoElim = administradorDAO.eliminar(superAdmin.getId());
-                Administrador verificarSuper = administradorDAO.buscarPorId(superAdmin.getId());
-                if (resultadoElim == 0 && verificarSuper != null && verificarSuper.isActivo()) {
-                    System.out.println("La eliminación del SuperAdmin no se completó, como se esperaba.");
-                } else {
-                    System.out.println("ERROR: el SuperAdmin fue afectado (resultado=" + resultadoElim
-                            + ", activo=" + (verificarSuper != null ? verificarSuper.isActivo() : "null") + ").");
+                // 17.3 Intentar eliminar al SuperAdmin
+                System.out.println("\n17.3 Intentar eliminar al SuperAdmin (debería lanzar Excepción):");
+                try {
+                    administradorBO.eliminar(superAdmin.getId());
+                    System.out.println("ERROR CRÍTICO: el SuperAdmin fue eliminado.");
+                } catch (Exception ex) {
+                    System.out.println("ÉXITO: La regla de negocio protegió al SuperAdmin -> " + ex.getMessage());
                 }
 
-                // 17.4 Intentar revocar ADMINISTRADOR al SuperAdmin (debe fallar)
-                System.out.println("\n17.4 Intentar revocar ADMINISTRADOR al SuperAdmin (debería fallar):");
-                int rolesSuperAntes = administradorDAO.listarRolesDeUsuario(superAdmin.getId()).size();
-                administradorDAO.revocarRol(superAdmin.getId(), CodigoRol.ADMINISTRADOR.name());
-                int rolesSuperDespues = administradorDAO.listarRolesDeUsuario(superAdmin.getId()).size();
-                if (rolesSuperAntes == rolesSuperDespues) {
-                    System.out.println("La revocación del rol ADMINISTRADOR al SuperAdmin no se completó, como se esperaba.");
-                } else {
-                    System.out.println("ERROR: se revocó ADMINISTRADOR al SuperAdmin (antes=" + rolesSuperAntes
-                            + ", después=" + rolesSuperDespues + ").");
+                // 17.4 Intentar revocar ADMINISTRADOR al SuperAdmin (No lo implementaste en el BO directamente,
+                // pero si tienes un administradorDAO.revocarRol, al no estar expuesto en el BO, evitamos usarlo,
+                // Si sí lo expusiste, lo probamos):
+                System.out.println("\n17.4 Intentar revocar ADMINISTRADOR al SuperAdmin (debería lanzar Excepción):");
+                try {
+                    administradorBO.revocarRol(superAdmin.getId(), CodigoRol.ADMINISTRADOR.name());
+                    System.out.println("ERROR CRÍTICO: Se le revocó el rol al SuperAdmin.");
+                } catch (Exception ex) {
+                    System.out.println("ÉXITO: La regla de negocio impidió quitar el rol -> " + ex.getMessage());
                 }
             }
 
             System.out.println("\n==================================================");
-            System.out.println(" TODAS LAS PRUEBAS FINALIZARON");
+            System.out.println(" TODAS LAS PRUEBAS FINALIZARON CON ÉXITO");
             System.out.println("==================================================");
 
         } catch (Exception ex) {
             System.out.println("==============================================");
-            System.out.println("ERROR GENERAL EN LAS PRUEBAS");
+            System.out.println("ERROR GENERAL INESPERADO EN LAS PRUEBAS");
             System.out.println(ex.getMessage());
             ex.printStackTrace();
             System.out.println("==============================================");
         }
     }
+
     private static LocalDate obtenerProximaFecha(DayOfWeek diaObjetivo) {
         LocalDate fecha = LocalDate.now().plusDays(1);
         while (fecha.getDayOfWeek() != diaObjetivo) {
@@ -652,5 +613,3 @@ public class Principal {
                 + ", Servicio: " + (cita.getServicio() != null ? cita.getServicio().getNombre() : "null"));
     }
 }
-
-

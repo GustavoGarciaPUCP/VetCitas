@@ -1,6 +1,5 @@
-DROP DATABASE IF EXISTS vetcitas_db;
-CREATE DATABASE vetcitas_db;
 USE vetcitas_db;
+
 
 SET FOREIGN_KEY_CHECKS = 0;
 
@@ -234,3 +233,6 @@ INSERT INTO usuario_rol(id_usuario, id_rol)
 SELECT u.id_usuario, r.id_rol
 FROM usuario u JOIN rol_sistema r ON r.codigo = 'ADMINISTRADOR'
 WHERE u.username = 'superadmin';
+
+INSERT INTO configuracion (umbral_cliente_frecuente, descuento_maximo_permitido)
+VALUES (5, 20.00);
