@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface IHorarioVeterinarioBO extends IBaseBO<HorarioVeterinario> {
     List<HorarioVeterinario> listarPorVeterinario(int idVeterinario) throws Exception;
+    List<HorarioVeterinario> listarHorarioSemanalPorVeterinario(int idVeterinario) throws Exception;
 }

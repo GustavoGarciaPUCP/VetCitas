@@ -18,38 +18,39 @@ public class ClienteImpl implements ClienteDAO {
         CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
-            String sql = "{CALL insertar_cliente(?, ?, ?, ?, ?, ?, ?, ?, ?)}";
+            String sql = "{CALL insertar_cliente(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
             cs = con.prepareCall(sql);
 
-            cs.setString(1, cliente.getNombres());
-            cs.setString(2, cliente.getApellidos());
-            cs.setString(3, cliente.getTelefono());
-            cs.setString(4, cliente.getObservaciones());
-            cs.setBoolean(5, cliente.isActivo());
+            cs.setString(1, cliente.getDni());
+            cs.setString(2, cliente.getNombres());
+            cs.setString(3, cliente.getApellidos());
+            cs.setString(4, cliente.getTelefono());
+            cs.setString(5, cliente.getObservaciones());
+            cs.setBoolean(6, cliente.isActivo());
 
             if (cliente.getCreatedOn() != null) {
-                cs.setTimestamp(6, java.sql.Timestamp.valueOf(cliente.getCreatedOn()));
-            } else {
-                cs.setTimestamp(6, null);
-            }
-
-            if (cliente.getModifiedOn() != null) {
-                cs.setTimestamp(7, java.sql.Timestamp.valueOf(cliente.getModifiedOn()));
+                cs.setTimestamp(7, java.sql.Timestamp.valueOf(cliente.getCreatedOn()));
             } else {
                 cs.setTimestamp(7, null);
             }
 
-            if (cliente.getModifiedBy() != null) {
-                cs.setInt(8, cliente.getModifiedBy().getId());
+            if (cliente.getModifiedOn() != null) {
+                cs.setTimestamp(8, java.sql.Timestamp.valueOf(cliente.getModifiedOn()));
             } else {
-                cs.setNull(8, java.sql.Types.INTEGER);
+                cs.setTimestamp(8, null);
             }
 
-            cs.registerOutParameter(9, java.sql.Types.INTEGER);
+            if (cliente.getModifiedBy() != null) {
+                cs.setInt(9, cliente.getModifiedBy().getId());
+            } else {
+                cs.setNull(9, java.sql.Types.INTEGER);
+            }
+
+            cs.registerOutParameter(10, java.sql.Types.INTEGER);
 
             resultado = cs.executeUpdate();
 
-            int idNuevo = cs.getInt(9);
+            int idNuevo = cs.getInt(10);
             cliente.setId(idNuevo);
 
         } catch (Exception ex) {
@@ -72,26 +73,27 @@ public class ClienteImpl implements ClienteDAO {
         CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
-            String sql = "{CALL modificar_cliente(?, ?, ?, ?, ?, ?, ?, ?)}";
+            String sql = "{CALL modificar_cliente(?, ?, ?, ?, ?, ?, ?, ?, ?)}";
             cs = con.prepareCall(sql);
 
             cs.setInt(1, cliente.getId());
-            cs.setString(2, cliente.getNombres());
-            cs.setString(3, cliente.getApellidos());
-            cs.setString(4, cliente.getTelefono());
-            cs.setString(5, cliente.getObservaciones());
-            cs.setBoolean(6, cliente.isActivo());
+            cs.setString(2, cliente.getDni());
+            cs.setString(3, cliente.getNombres());
+            cs.setString(4, cliente.getApellidos());
+            cs.setString(5, cliente.getTelefono());
+            cs.setString(6, cliente.getObservaciones());
+            cs.setBoolean(7, cliente.isActivo());
 
             if (cliente.getModifiedOn() != null) {
-                cs.setTimestamp(7, java.sql.Timestamp.valueOf(cliente.getModifiedOn()));
+                cs.setTimestamp(8, java.sql.Timestamp.valueOf(cliente.getModifiedOn()));
             } else {
-                cs.setTimestamp(7, null);
+                cs.setTimestamp(8, null);
             }
 
             if (cliente.getModifiedBy() != null) {
-                cs.setInt(8, cliente.getModifiedBy().getId());
+                cs.setInt(9, cliente.getModifiedBy().getId());
             } else {
-                cs.setNull(8, java.sql.Types.INTEGER);
+                cs.setNull(9, java.sql.Types.INTEGER);
             }
 
             resultado = cs.executeUpdate();
@@ -155,6 +157,7 @@ public class ClienteImpl implements ClienteDAO {
             if (rs.next()) {
                 cliente = new Cliente();
                 cliente.setId(rs.getInt("id_cliente"));
+                cliente.setDni(rs.getString("dni"));
                 cliente.setNombres(rs.getString("nombres"));
                 cliente.setApellidos(rs.getString("apellidos"));
                 cliente.setTelefono(rs.getString("telefono"));
@@ -192,6 +195,7 @@ public class ClienteImpl implements ClienteDAO {
             while (rs.next()) {
                 Cliente cliente = new Cliente();
                 cliente.setId(rs.getInt("id_cliente"));
+                cliente.setDni(rs.getString("dni"));
                 cliente.setNombres(rs.getString("nombres"));
                 cliente.setApellidos(rs.getString("apellidos"));
                 cliente.setTelefono(rs.getString("telefono"));
@@ -214,4 +218,46 @@ public class ClienteImpl implements ClienteDAO {
         }
         return clientes;
     }
+
+    @Override
+    public List<Cliente> listarPorNombreApellidoODni(String texto) {
+        List<Cliente> clientes = new ArrayList<>();
+        Connection con = null;
+        CallableStatement cs = null;
+        ResultSet rs = null;
+
+        try {
+            con = DBManager.getInstance().getConnection();
+            String sql = "{CALL listar_clientes_por_nombre_apellido_dni(?)}";
+            cs = con.prepareCall(sql);
+            cs.setString(1, texto);
+            rs = cs.executeQuery();
+
+            while (rs.next()) {
+                Cliente cliente = new Cliente();
+                cliente.setId(rs.getInt("id_cliente"));
+                cliente.setDni(rs.getString("dni"));
+                cliente.setNombres(rs.getString("nombres"));
+                cliente.setApellidos(rs.getString("apellidos"));
+                cliente.setTelefono(rs.getString("telefono"));
+                cliente.setObservaciones(rs.getString("observaciones"));
+                cliente.setActivo(rs.getBoolean("activo"));
+                clientes.add(cliente);
+            }
+
+        } catch (Exception ex) {
+            System.out.println("ERROR listando clientes por nombre/apellido/dni: " + ex.getMessage());
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (cs != null) cs.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("ERROR cerrando recursos en ClienteImpl: " + ex.getMessage());
+            }
+        }
+
+        return clientes;
+    }
+
 }

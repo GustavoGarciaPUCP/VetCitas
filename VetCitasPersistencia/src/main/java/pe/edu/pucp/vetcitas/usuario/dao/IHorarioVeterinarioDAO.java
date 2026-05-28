@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface IHorarioVeterinarioDAO extends IDAO<HorarioVeterinario> {
     List<HorarioVeterinario> listarPorVeterinario(int idVeterinario);
+    List<HorarioVeterinario> listarHorarioSemanalPorVeterinario(int idVeterinario);
 }

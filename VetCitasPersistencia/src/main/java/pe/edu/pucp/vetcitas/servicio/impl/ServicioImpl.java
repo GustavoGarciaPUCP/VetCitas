@@ -170,4 +170,85 @@ public class ServicioImpl implements IServicioDAO {
         }
         return servicios;
     }
+
+    @Override
+    public List<Servicio> listarPorNombreOTipo(String texto) {
+        List<Servicio> servicios = new ArrayList<>();
+        Connection con = null;
+        CallableStatement cs = null;
+        ResultSet rs = null;
+
+        try {
+            con = DBManager.getInstance().getConnection();
+            String sql = "{CALL listar_servicios_por_nombre_o_tipo(?)}";
+            cs = con.prepareCall(sql);
+            cs.setString(1, texto);
+            rs = cs.executeQuery();
+
+            while (rs.next()) {
+                Servicio servicio = new Servicio();
+                servicio.setId(rs.getInt("id_servicio"));
+                servicio.setNombre(rs.getString("nombre"));
+                servicio.setTipoServicio(TipoServicio.valueOf(rs.getString("tipo_servicio")));
+                servicio.setDuracionMinutos(rs.getInt("duracion_minutos"));
+                servicio.setPrecioReferencial(rs.getDouble("precio_referencial"));
+                servicio.setActivo(rs.getBoolean("activo"));
+                servicios.add(servicio);
+            }
+
+        } catch (Exception ex) {
+            System.out.println("ERROR listando servicios por nombre o tipo: " + ex.getMessage());
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (cs != null) cs.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("ERROR cerrando recursos en ServicioImpl: " + ex.getMessage());
+            }
+        }
+
+        return servicios;
+    }
+
+    @Override
+    public List<Servicio> listarPorEstado(boolean activo) {
+        List<Servicio> servicios = new ArrayList<>();
+        Connection con = null;
+        CallableStatement cs = null;
+        ResultSet rs = null;
+
+        try {
+            con = DBManager.getInstance().getConnection();
+            String sql = "{CALL listar_servicios_por_estado(?)}";
+            cs = con.prepareCall(sql);
+            cs.setBoolean(1, activo);
+            rs = cs.executeQuery();
+
+            while (rs.next()) {
+                Servicio servicio = new Servicio();
+                servicio.setId(rs.getInt("id_servicio"));
+                servicio.setNombre(rs.getString("nombre"));
+                servicio.setTipoServicio(TipoServicio.valueOf(rs.getString("tipo_servicio")));
+                servicio.setDuracionMinutos(rs.getInt("duracion_minutos"));
+                servicio.setPrecioReferencial(rs.getDouble("precio_referencial"));
+                servicio.setActivo(rs.getBoolean("activo"));
+                servicios.add(servicio);
+            }
+
+        } catch (Exception ex) {
+            System.out.println("ERROR listando servicios por estado: " + ex.getMessage());
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (cs != null) cs.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("ERROR cerrando recursos en ServicioImpl: " + ex.getMessage());
+            }
+        }
+
+        return servicios;
+    }
+
 }

@@ -122,6 +122,33 @@ public class CitaBOImpl implements ICitaBO {
         return citaDAO.listarPorVeterinarioYFecha(idVeterinario, fecha);
     }
 
+    @Override
+    public List<Cita> listarFiltradas(Integer idVeterinario, LocalDate fechaInicio, LocalDate fechaFin, String estado, String textoBusqueda) throws Exception {
+        if (idVeterinario != null && idVeterinario <= 0) {
+            throw new Exception("El id del veterinario debe ser mayor que cero.");
+        }
+
+        if (fechaInicio != null && fechaFin != null && fechaInicio.isAfter(fechaFin)) {
+            throw new Exception("La fecha inicial no puede ser mayor que la fecha final.");
+        }
+
+        if (estado == null) estado = "";
+        estado = estado.trim();
+
+        if (!estado.isEmpty()) {
+            try {
+                EstadoCita.valueOf(estado);
+            } catch (Exception ex) {
+                throw new Exception("El estado de cita no es válido.");
+            }
+        }
+
+        if (textoBusqueda == null) textoBusqueda = "";
+        textoBusqueda = textoBusqueda.trim();
+
+        return citaDAO.listarFiltradas(idVeterinario, fechaInicio, fechaFin, estado, textoBusqueda);
+    }
+
     private void validar(Cita cita, boolean esModificacion) throws Exception {
         if (cita == null) {
             throw new Exception("La cita no puede ser nula.");

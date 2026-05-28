@@ -13,4 +13,5 @@ public interface ICitaDAO extends IDAO<Cita> {
     void marcarAtendida(int idCita, int modifiedBy);
     void marcarNoAsistio(int idCita, int modifiedBy);
     List<Cita> listarPorVeterinarioYFecha(int idVeterinario, LocalDate fecha);
+    List<Cita> listarFiltradas(Integer idVeterinario, LocalDate fechaInicio, LocalDate fechaFin, String estado, String textoBusqueda);
 }

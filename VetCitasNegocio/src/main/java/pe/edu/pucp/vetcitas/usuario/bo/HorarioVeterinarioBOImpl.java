@@ -60,6 +60,15 @@ public class HorarioVeterinarioBOImpl implements IHorarioVeterinarioBO {
         return horarioDAO.listarPorVeterinario(idVeterinario);
     }
 
+    @Override
+    public List<HorarioVeterinario> listarHorarioSemanalPorVeterinario(int idVeterinario) throws Exception {
+        if (idVeterinario <= 0) {
+            throw new Exception("El id del veterinario debe ser mayor que cero.");
+        }
+        return horarioDAO.listarHorarioSemanalPorVeterinario(idVeterinario);
+    }
+
+
     private void validar(HorarioVeterinario horario, boolean esModificacion) throws Exception {
         if (horario == null) {
             throw new Exception("El horario no puede ser nulo.");

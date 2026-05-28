@@ -4,10 +4,12 @@ import pe.edu.pucp.vetcitas.cita.boi.IAtencionBO;
 import pe.edu.pucp.vetcitas.cita.dao.IAtencionDAO;
 import pe.edu.pucp.vetcitas.cita.impl.AtencionImpl;
 import pe.edu.pucp.vetcitas.cita.model.Atencion;
+import pe.edu.pucp.vetcitas.common.enums.EstadoCita;
 import pe.edu.pucp.vetcitas.configuracion.bo.ConfiguracionBOImpl;
 import pe.edu.pucp.vetcitas.configuracion.boi.IConfiguracionBO;
 import pe.edu.pucp.vetcitas.configuracion.model.Configuracion;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public class AtencionBOImpl implements IAtencionBO {
@@ -62,6 +64,37 @@ public class AtencionBOImpl implements IAtencionBO {
             throw new Exception("El id de la cita debe ser mayor que cero.");
         }
         return atencionDAO.buscarPorCita(idCita);
+    }
+
+    @Override
+    public List<Atencion> listarFiltradas(Integer idVeterinario, String estadoCita, LocalDate fecha, String textoBusqueda) throws Exception {
+        if (idVeterinario != null && idVeterinario <= 0) {
+            throw new Exception("El id del veterinario debe ser mayor que cero.");
+        }
+
+        if (estadoCita == null) estadoCita = "";
+        estadoCita = estadoCita.trim();
+
+        if (!estadoCita.isEmpty()) {
+            try {
+                EstadoCita.valueOf(estadoCita);
+            } catch (Exception ex) {
+                throw new Exception("El estado de cita no es válido.");
+            }
+        }
+
+        if (textoBusqueda == null) textoBusqueda = "";
+        textoBusqueda = textoBusqueda.trim();
+
+        return atencionDAO.listarFiltradas(idVeterinario, estadoCita, fecha, textoBusqueda);
+    }
+
+    @Override
+    public List<Atencion> listarHistorialPorMascota(int idMascota) throws Exception {
+        if (idMascota <= 0) {
+            throw new Exception("El id de la mascota debe ser mayor que cero.");
+        }
+        return atencionDAO.listarHistorialPorMascota(idMascota);
     }
 
     private void validar(Atencion atencion, boolean esModificacion) throws Exception {
