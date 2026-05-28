@@ -51,12 +51,26 @@ public class ClienteBOImpl implements IClienteBO {
         return cliente;
     }
 
+    @Override
+    public List<Cliente> listarPorNombreApellidoODni(String texto) throws Exception {
+        if (texto == null) texto = "";
+        texto = texto.trim();
+        return clienteDAO.listarPorNombreApellidoODni(texto);
+    }
+
+
     private void validar(Cliente cliente, boolean esModificacion) throws Exception {
         if (cliente == null) {
             throw new Exception("El cliente no puede ser nulo.");
         }
         if (esModificacion && cliente.getId() <= 0) {
             throw new Exception("El id del cliente es obligatorio para la modificación.");
+        }
+        if (cliente.getDni() == null || cliente.getDni().trim().isEmpty()) {
+            throw new Exception("El DNI es obligatorio.");
+        }
+        if (!cliente.getDni().matches("\\d{8}")) {
+            throw new Exception("El DNI debe tener exactamente 8 dígitos.");
         }
         if (cliente.getNombres() == null || cliente.getNombres().trim().isEmpty()) {
             throw new Exception("Los nombres son obligatorios.");

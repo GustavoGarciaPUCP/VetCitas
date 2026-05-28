@@ -1,16 +1,20 @@
 package pe.edu.pucp.vetcitas.usuario.impl;
 
+import pe.edu.pucp.vetcitas.common.enums.CodigoRol;
 import pe.edu.pucp.vetcitas.config.DBManager;
 import pe.edu.pucp.vetcitas.usuario.dao.IAdministradorDAO;
 import pe.edu.pucp.vetcitas.usuario.model.Administrador;
 import pe.edu.pucp.vetcitas.usuario.model.RolSistema;
+import pe.edu.pucp.vetcitas.usuario.model.Usuario;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class AdministradorImpl implements IAdministradorDAO {
     private Connection con;
@@ -317,5 +321,77 @@ public class AdministradorImpl implements IAdministradorDAO {
             }
         }
         return existe;
+    }
+    @Override
+    public List<Usuario> listarUsuariosFiltrados(String texto, String codigoRol, Boolean activo) {
+        List<Usuario> usuarios = new ArrayList<>();
+        Connection con = null;
+        CallableStatement cs = null;
+        ResultSet rs = null;
+
+        try {
+            con = DBManager.getInstance().getConnection();
+            String sql = "{CALL listar_usuarios_filtrados(?, ?, ?)}";
+            cs = con.prepareCall(sql);
+            cs.setString(1, texto);
+            cs.setString(2, codigoRol);
+
+            if (activo != null) cs.setBoolean(3, activo);
+            else cs.setNull(3, java.sql.Types.TINYINT);
+
+            rs = cs.executeQuery();
+
+            Map<Integer, Usuario> mapa = new LinkedHashMap<>();
+
+            while (rs.next()) {
+                int idUsuario = rs.getInt("id_usuario");
+
+                Usuario usuario = mapa.get(idUsuario);
+                if (usuario == null) {
+                    usuario = new Usuario();
+                    usuario.setId(idUsuario);
+                    usuario.setUsername(rs.getString("username"));
+                    usuario.setNombres(rs.getString("nombres"));
+                    usuario.setApellidos(rs.getString("apellidos"));
+                    usuario.setTelefono(rs.getString("telefono"));
+                    usuario.setActivo(rs.getBoolean("activo"));
+                    usuario.setRoles(new ArrayList<>());
+                    mapa.put(idUsuario, usuario);
+                }
+
+                if (rs.getObject("id_rol") != null) {
+                    RolSistema rol = new RolSistema();
+                    rol.setId(rs.getInt("id_rol"));
+                    rol.setCodigo(CodigoRol.valueOf(rs.getString("codigo_rol")));
+                    rol.setDescripcion(rs.getString("descripcion_rol"));
+
+                    boolean existe = false;
+                    for (RolSistema r : usuario.getRoles()) {
+                        if (r.getId() == rol.getId()) {
+                            existe = true;
+                            break;
+                        }
+                    }
+                    if (!existe) {
+                        usuario.getRoles().add(rol);
+                    }
+                }
+            }
+
+            usuarios.addAll(mapa.values());
+
+        } catch (Exception ex) {
+            System.out.println("ERROR listando usuarios filtrados: " + ex.getMessage());
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (cs != null) cs.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("ERROR cerrando recursos en AdministradorImpl: " + ex.getMessage());
+            }
+        }
+
+        return usuarios;
     }
 }

@@ -246,4 +246,58 @@ public class HorarioVeterinarioImpl implements IHorarioVeterinarioDAO {
         horario.setActivo(rs.getBoolean("activo"));
         return horario;
     }
+
+    @Override
+    public List<HorarioVeterinario> listarHorarioSemanalPorVeterinario(int idVeterinario) {
+        List<HorarioVeterinario> horarios = new ArrayList<>();
+        Connection con = null;
+        CallableStatement cs = null;
+        ResultSet rs = null;
+
+        try {
+            con = DBManager.getInstance().getConnection();
+            String sql = "{CALL listar_horario_semanal_por_veterinario(?)}";
+            cs = con.prepareCall(sql);
+            cs.setInt(1, idVeterinario);
+            rs = cs.executeQuery();
+
+            while (rs.next()) {
+                HorarioVeterinario hv = new HorarioVeterinario();
+                hv.setId(rs.getInt("id_horario"));
+                hv.setDiaSemana(rs.getInt("dia_semana"));
+                hv.setHoraInicio(rs.getTime("hora_inicio").toLocalTime());
+                hv.setHoraFin(rs.getTime("hora_fin").toLocalTime());
+
+                if (rs.getTime("hora_descanso_inicio") != null)
+                    hv.setHoraDescansoInicio(rs.getTime("hora_descanso_inicio").toLocalTime());
+
+                if (rs.getTime("hora_descanso_fin") != null)
+                    hv.setHoraDescansoFin(rs.getTime("hora_descanso_fin").toLocalTime());
+
+                hv.setActivo(rs.getBoolean("activo"));
+
+                Veterinario vet = new Veterinario();
+                vet.setId(rs.getInt("id_veterinario"));
+                vet.setNombres(rs.getString("nombres"));
+                vet.setApellidos(rs.getString("apellidos"));
+
+                hv.setVeterinario(vet);
+                horarios.add(hv);
+            }
+
+        } catch (Exception ex) {
+            System.out.println("ERROR listando horario semanal por veterinario: " + ex.getMessage());
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (cs != null) cs.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("ERROR cerrando recursos en HorarioVeterinarioImpl: " + ex.getMessage());
+            }
+        }
+
+        return horarios;
+    }
+
 }

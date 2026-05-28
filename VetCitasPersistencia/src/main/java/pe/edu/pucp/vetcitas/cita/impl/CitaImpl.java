@@ -301,4 +301,79 @@ public class CitaImpl implements ICitaDAO {
 
         return cita;
     }
+
+    @Override
+    public List<Cita> listarFiltradas(Integer idVeterinario, LocalDate fechaInicio, LocalDate fechaFin, String estado, String textoBusqueda) {
+        List<Cita> citas = new ArrayList<>();
+        Connection con = null;
+        CallableStatement cs = null;
+        ResultSet rs = null;
+
+        try {
+            con = DBManager.getInstance().getConnection();
+            String sql = "{CALL listar_citas_filtradas(?, ?, ?, ?, ?)}";
+            cs = con.prepareCall(sql);
+
+            if (idVeterinario != null) cs.setInt(1, idVeterinario);
+            else cs.setNull(1, java.sql.Types.INTEGER);
+
+            if (fechaInicio != null) cs.setDate(2, java.sql.Date.valueOf(fechaInicio));
+            else cs.setNull(2, java.sql.Types.DATE);
+
+            if (fechaFin != null) cs.setDate(3, java.sql.Date.valueOf(fechaFin));
+            else cs.setNull(3, java.sql.Types.DATE);
+
+            cs.setString(4, estado);
+            cs.setString(5, textoBusqueda);
+
+            rs = cs.executeQuery();
+
+            while (rs.next()) {
+                Cita cita = new Cita();
+                cita.setId(rs.getInt("id_cita"));
+                cita.setFechaHoraInicio(rs.getTimestamp("fecha_hora_inicio").toLocalDateTime());
+                cita.setFechaHoraFin(rs.getTimestamp("fecha_hora_fin").toLocalDateTime());
+                cita.setEstado(EstadoCita.valueOf(rs.getString("estado")));
+
+                Mascota mascota = new Mascota();
+                mascota.setId(rs.getInt("id_mascota"));
+                mascota.setNombre(rs.getString("nombre_mascota"));
+
+                Cliente cliente = new Cliente();
+                cliente.setId(rs.getInt("id_cliente"));
+                cliente.setNombres(rs.getString("nombres_cliente"));
+                cliente.setApellidos(rs.getString("apellidos_cliente"));
+                mascota.setCliente(cliente);
+
+                Veterinario veterinario = new Veterinario();
+                veterinario.setId(rs.getInt("id_veterinario"));
+                veterinario.setNombres(rs.getString("nombres_veterinario"));
+                veterinario.setApellidos(rs.getString("apellidos_veterinario"));
+
+                Servicio servicio = new Servicio();
+                servicio.setId(rs.getInt("id_servicio"));
+                servicio.setNombre(rs.getString("nombre_servicio"));
+                servicio.setTipoServicio(TipoServicio.valueOf(rs.getString("tipo_servicio")));
+
+                cita.setMascota(mascota);
+                cita.setVeterinario(veterinario);
+                cita.setServicio(servicio);
+
+                citas.add(cita);
+            }
+
+        } catch (Exception ex) {
+            System.out.println("ERROR listando citas filtradas: " + ex.getMessage());
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (cs != null) cs.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("ERROR cerrando recursos en CitaImpl: " + ex.getMessage());
+            }
+        }
+
+        return citas;
+    }
 }

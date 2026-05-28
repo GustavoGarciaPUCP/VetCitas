@@ -86,6 +86,7 @@ CREATE TABLE recepcionista (
 
 CREATE TABLE cliente (
     id_cliente INT AUTO_INCREMENT PRIMARY KEY,
+    dni VARCHAR(8) NOT NULL UNIQUE,
     nombres VARCHAR(100) NOT NULL,
     apellidos VARCHAR(100) NOT NULL,
     telefono VARCHAR(20),

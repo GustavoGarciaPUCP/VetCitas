@@ -399,24 +399,33 @@ BEGIN
 END $$
 
 CREATE PROCEDURE insertar_cliente(
-    IN p_nombres VARCHAR(100), IN p_apellidos VARCHAR(100), IN p_telefono VARCHAR(20), IN p_observaciones VARCHAR(255),
-    IN p_activo TINYINT, IN p_created_on DATETIME, IN p_modified_on DATETIME, IN p_modified_by INT,
+    IN p_dni VARCHAR(8),IN p_nombres VARCHAR(100),
+    IN p_apellidos VARCHAR(100),IN p_telefono VARCHAR(20),IN p_observaciones VARCHAR(255),
+    IN p_activo TINYINT,IN p_created_on DATETIME,IN p_modified_on DATETIME,IN p_modified_by INT,
     OUT p_id_generado INT
 )
 BEGIN
-    INSERT INTO cliente(nombres, apellidos, telefono, observaciones, activo, created_on, modified_on, modified_by)
-    VALUES(p_nombres, p_apellidos, p_telefono, p_observaciones, p_activo, p_created_on, p_modified_on, p_modified_by);
+    INSERT INTO cliente(dni, nombres, apellidos, telefono, observaciones, activo, created_on, modified_on, modified_by)
+    VALUES(p_dni, p_nombres, p_apellidos, p_telefono, p_observaciones, p_activo, p_created_on, p_modified_on, p_modified_by);
+
     SET p_id_generado = LAST_INSERT_ID();
 END $$
 
 CREATE PROCEDURE modificar_cliente(
-    IN p_id_cliente INT, IN p_nombres VARCHAR(100), IN p_apellidos VARCHAR(100), IN p_telefono VARCHAR(20),
-    IN p_observaciones VARCHAR(255), IN p_activo TINYINT, IN p_modified_on DATETIME, IN p_modified_by INT
+    IN p_id_cliente INT,IN p_dni VARCHAR(8),IN p_nombres VARCHAR(100),IN p_apellidos VARCHAR(100),
+    IN p_telefono VARCHAR(20),IN p_observaciones VARCHAR(255),IN p_activo TINYINT,IN p_modified_on DATETIME,
+    IN p_modified_by INT
 )
 BEGIN
     UPDATE cliente
-    SET nombres = p_nombres, apellidos = p_apellidos, telefono = p_telefono, observaciones = p_observaciones,
-        activo = p_activo, modified_on = p_modified_on, modified_by = p_modified_by
+    SET dni = p_dni,
+        nombres = p_nombres,
+        apellidos = p_apellidos,
+        telefono = p_telefono,
+        observaciones = p_observaciones,
+        activo = p_activo,
+        modified_on = p_modified_on,
+        modified_by = p_modified_by
     WHERE id_cliente = p_id_cliente;
 END $$
 
@@ -429,14 +438,14 @@ END $$
 
 CREATE PROCEDURE buscar_cliente_por_id(IN p_id_cliente INT)
 BEGIN
-    SELECT id_cliente, nombres, apellidos, telefono, observaciones, activo
+    SELECT id_cliente, dni, nombres, apellidos, telefono, observaciones, activo
     FROM cliente
     WHERE id_cliente = p_id_cliente;
 END $$
 
 CREATE PROCEDURE listar_clientes_activos()
 BEGIN
-    SELECT id_cliente, nombres, apellidos, telefono, observaciones, activo
+    SELECT id_cliente, dni, nombres, apellidos, telefono, observaciones, activo
     FROM cliente
     WHERE activo = 1
     ORDER BY nombres, apellidos;
@@ -920,5 +929,480 @@ BEGIN
     WHERE username = p_username
       AND (id_usuario != p_id_excluir OR p_id_excluir IS NULL);
 END$$
+
+USE vetcitas_db;
+DELIMITER $$
+
+/* =========================================================
+   DROPS DE PROCEDURES NUEVOS
+   ========================================================= */
+
+DROP PROCEDURE IF EXISTS listar_clientes_por_nombre_apellido_dni $$
+DROP PROCEDURE IF EXISTS listar_mascotas_por_nombre_o_dueno $$
+DROP PROCEDURE IF EXISTS listar_mascotas_por_cliente $$
+DROP PROCEDURE IF EXISTS listar_servicios_por_nombre_o_tipo $$
+DROP PROCEDURE IF EXISTS listar_servicios_por_estado $$
+DROP PROCEDURE IF EXISTS listar_recordatorios_por_mascota_o_cliente $$
+DROP PROCEDURE IF EXISTS listar_recordatorios_por_estado_fecha $$
+DROP PROCEDURE IF EXISTS listar_atenciones_filtradas $$
+DROP PROCEDURE IF EXISTS listar_historial_visitas_por_mascota $$
+DROP PROCEDURE IF EXISTS listar_horario_semanal_por_veterinario $$
+DROP PROCEDURE IF EXISTS listar_usuarios_filtrados $$
+DROP PROCEDURE IF EXISTS listar_citas_filtradas $$
+
+
+/* =========================================================
+   1. CLIENTES
+   Buscar por nombre, apellido o dni
+   Requiere que exista cliente.dni
+   ========================================================= */
+CREATE PROCEDURE listar_clientes_por_nombre_apellido_dni(
+    IN p_texto VARCHAR(100)
+)
+BEGIN
+    SELECT
+        c.id_cliente,
+        c.dni,
+        c.nombres,
+        c.apellidos,
+        c.telefono,
+        c.observaciones,
+        c.activo
+    FROM cliente c
+    WHERE c.activo = 1
+      AND (
+            p_texto IS NULL
+            OR TRIM(p_texto) = ''
+            OR c.nombres LIKE CONCAT('%', p_texto, '%')
+            OR c.apellidos LIKE CONCAT('%', p_texto, '%')
+            OR c.dni LIKE CONCAT('%', p_texto, '%')
+          )
+    ORDER BY c.apellidos, c.nombres;
+END $$
+
+
+/* =========================================================
+   2. MASCOTAS
+   Buscar por nombre de mascota o dueño (nombre/apellido)
+   ========================================================= */
+CREATE PROCEDURE listar_mascotas_por_nombre_o_dueno(
+    IN p_texto VARCHAR(100)
+)
+BEGIN
+    SELECT
+        m.id_mascota,
+        m.nombre AS nombre_mascota,
+        m.especie,
+        m.raza,
+        m.fecha_nacimiento,
+        m.esterilizado,
+        m.activo,
+        c.id_cliente,
+        c.nombres AS nombres_dueno,
+        c.apellidos AS apellidos_dueno
+    FROM mascota m
+    INNER JOIN cliente c ON c.id_cliente = m.id_cliente
+    WHERE m.activo = 1
+      AND c.activo = 1
+      AND (
+            p_texto IS NULL
+            OR TRIM(p_texto) = ''
+            OR m.nombre LIKE CONCAT('%', p_texto, '%')
+            OR c.nombres LIKE CONCAT('%', p_texto, '%')
+            OR c.apellidos LIKE CONCAT('%', p_texto, '%')
+            OR CONCAT(c.nombres, ' ', c.apellidos) LIKE CONCAT('%', p_texto, '%')
+          )
+    ORDER BY m.nombre;
+END $$
+
+
+/* =========================================================
+   3. MASCOTAS DE UN SOLO CLIENTE
+   Para perfil del cliente / mascotas asociadas
+   ========================================================= */
+CREATE PROCEDURE listar_mascotas_por_cliente(
+    IN p_id_cliente INT
+)
+BEGIN
+    SELECT
+        m.id_mascota,
+        m.nombre AS nombre_mascota,
+        m.especie,
+        m.raza,
+        m.fecha_nacimiento,
+        TIMESTAMPDIFF(YEAR, m.fecha_nacimiento, CURDATE()) AS edad_aprox,
+        m.esterilizado,
+        m.activo,
+        c.id_cliente,
+        c.nombres AS nombres_dueno,
+        c.apellidos AS apellidos_dueno
+    FROM mascota m
+    INNER JOIN cliente c ON c.id_cliente = m.id_cliente
+    WHERE m.id_cliente = p_id_cliente
+      AND m.activo = 1
+      AND c.activo = 1
+    ORDER BY m.nombre;
+END $$
+
+
+/* =========================================================
+   4. SERVICIOS
+   Buscar por nombre o tipo
+   ========================================================= */
+CREATE PROCEDURE listar_servicios_por_nombre_o_tipo(
+    IN p_texto VARCHAR(100)
+)
+BEGIN
+    SELECT
+        s.id_servicio,
+        s.nombre,
+        s.tipo_servicio,
+        s.duracion_minutos,
+        s.precio_referencial,
+        s.activo
+    FROM servicio s
+    WHERE (
+            p_texto IS NULL
+            OR TRIM(p_texto) = ''
+            OR s.nombre LIKE CONCAT('%', p_texto, '%')
+            OR s.tipo_servicio LIKE CONCAT('%', p_texto, '%')
+          )
+    ORDER BY s.nombre;
+END $$
+
+
+/* =========================================================
+   5. SERVICIOS POR ESTADO
+   ========================================================= */
+CREATE PROCEDURE listar_servicios_por_estado(
+    IN p_activo TINYINT
+)
+BEGIN
+    SELECT
+        s.id_servicio,
+        s.nombre,
+        s.tipo_servicio,
+        s.duracion_minutos,
+        s.precio_referencial,
+        s.activo
+    FROM servicio s
+    WHERE s.activo = p_activo
+    ORDER BY s.nombre;
+END $$
+
+
+/* =========================================================
+   6. RECORDATORIOS
+   Buscar por mascota o cliente
+   ========================================================= */
+CREATE PROCEDURE listar_recordatorios_por_mascota_o_cliente(
+    IN p_texto VARCHAR(100)
+)
+BEGIN
+    SELECT
+        r.id_recordatorio,
+        r.fecha_programada,
+        r.canal,
+        r.estado_seguimiento,
+        r.mensaje,
+        ci.id_cita,
+        m.id_mascota,
+        m.nombre AS nombre_mascota,
+        c.id_cliente,
+        c.nombres AS nombres_cliente,
+        c.apellidos AS apellidos_cliente
+    FROM recordatorio r
+    INNER JOIN cita ci ON ci.id_cita = r.id_cita
+    INNER JOIN mascota m ON m.id_mascota = ci.id_mascota
+    INNER JOIN cliente c ON c.id_cliente = m.id_cliente
+    WHERE (
+            p_texto IS NULL
+            OR TRIM(p_texto) = ''
+            OR m.nombre LIKE CONCAT('%', p_texto, '%')
+            OR c.nombres LIKE CONCAT('%', p_texto, '%')
+            OR c.apellidos LIKE CONCAT('%', p_texto, '%')
+            OR CONCAT(c.nombres, ' ', c.apellidos) LIKE CONCAT('%', p_texto, '%')
+          )
+    ORDER BY r.fecha_programada DESC;
+END $$
+
+
+/* =========================================================
+   7. RECORDATORIOS POR ESTADO Y/O FECHA
+   ========================================================= */
+CREATE PROCEDURE listar_recordatorios_por_estado_fecha(
+    IN p_estado VARCHAR(20),
+    IN p_fecha DATE
+)
+BEGIN
+    SELECT
+        r.id_recordatorio,
+        r.fecha_programada,
+        r.canal,
+        r.estado_seguimiento,
+        r.mensaje,
+        ci.id_cita,
+        m.nombre AS nombre_mascota,
+        c.nombres AS nombres_cliente,
+        c.apellidos AS apellidos_cliente
+    FROM recordatorio r
+    INNER JOIN cita ci ON ci.id_cita = r.id_cita
+    INNER JOIN mascota m ON m.id_mascota = ci.id_mascota
+    INNER JOIN cliente c ON c.id_cliente = m.id_cliente
+    WHERE (
+            p_estado IS NULL
+            OR TRIM(p_estado) = ''
+            OR r.estado_seguimiento = p_estado
+          )
+      AND (
+            p_fecha IS NULL
+            OR DATE(r.fecha_programada) = p_fecha
+          )
+    ORDER BY r.fecha_programada DESC;
+END $$
+
+
+/* =========================================================
+   8. ATENCIONES FILTRADAS
+   Soporta:
+   - veterinario
+   - estado de cita
+   - fecha
+   - texto de búsqueda por mascota o dueño
+   ========================================================= */
+CREATE PROCEDURE listar_atenciones_filtradas(
+    IN p_id_veterinario INT,
+    IN p_estado_cita VARCHAR(20),
+    IN p_fecha DATE,
+    IN p_texto VARCHAR(100)
+)
+BEGIN
+    SELECT
+        a.id_atencion,
+        a.fecha_hora,
+        a.nota_clinica,
+        a.nota_pre_operatoria,
+        a.nota_post_operatoria,
+        a.recomendacion_control,
+        a.monto_referencial,
+        a.descuento_aplicado,
+        a.activo,
+        ci.id_cita,
+        ci.estado AS estado_cita,
+        ci.fecha_hora_inicio,
+        ci.fecha_hora_fin,
+        m.id_mascota,
+        m.nombre AS nombre_mascota,
+        c.id_cliente,
+        c.nombres AS nombres_cliente,
+        c.apellidos AS apellidos_cliente,
+        s.id_servicio,
+        s.nombre AS nombre_servicio,
+        v.id_veterinario,
+        u.nombres AS nombres_veterinario,
+        u.apellidos AS apellidos_veterinario
+    FROM atencion a
+    INNER JOIN cita ci ON ci.id_cita = a.id_cita
+    INNER JOIN mascota m ON m.id_mascota = ci.id_mascota
+    INNER JOIN cliente c ON c.id_cliente = m.id_cliente
+    INNER JOIN servicio s ON s.id_servicio = ci.id_servicio
+    INNER JOIN veterinario v ON v.id_veterinario = ci.id_veterinario
+    INNER JOIN usuario u ON u.id_usuario = v.id_veterinario
+    WHERE a.activo = 1
+      AND (
+            p_id_veterinario IS NULL
+            OR ci.id_veterinario = p_id_veterinario
+          )
+      AND (
+            p_estado_cita IS NULL
+            OR TRIM(p_estado_cita) = ''
+            OR ci.estado = p_estado_cita
+          )
+      AND (
+            p_fecha IS NULL
+            OR DATE(a.fecha_hora) = p_fecha
+          )
+      AND (
+            p_texto IS NULL
+            OR TRIM(p_texto) = ''
+            OR m.nombre LIKE CONCAT('%', p_texto, '%')
+            OR c.nombres LIKE CONCAT('%', p_texto, '%')
+            OR c.apellidos LIKE CONCAT('%', p_texto, '%')
+            OR CONCAT(c.nombres, ' ', c.apellidos) LIKE CONCAT('%', p_texto, '%')
+          )
+    ORDER BY a.fecha_hora DESC;
+END $$
+
+
+/* =========================================================
+   9. HISTORIAL / VISITAS DE UNA MASCOTA
+   Para pantalla detalle mascota
+   ========================================================= */
+CREATE PROCEDURE listar_historial_visitas_por_mascota(
+    IN p_id_mascota INT
+)
+BEGIN
+    SELECT
+        ci.id_cita,
+        ci.fecha_hora_inicio,
+        ci.fecha_hora_fin,
+        ci.estado,
+        s.nombre AS nombre_servicio,
+        a.id_atencion,
+        a.fecha_hora AS fecha_atencion,
+        a.nota_clinica,
+        a.recomendacion_control,
+        a.monto_referencial,
+        a.descuento_aplicado,
+        (a.monto_referencial - a.descuento_aplicado) AS monto_final
+    FROM cita ci
+    INNER JOIN servicio s ON s.id_servicio = ci.id_servicio
+    LEFT JOIN atencion a ON a.id_cita = ci.id_cita AND a.activo = 1
+    WHERE ci.id_mascota = p_id_mascota
+    ORDER BY ci.fecha_hora_inicio DESC;
+END $$
+
+
+/* =========================================================
+   10. HORARIO SEMANAL POR VETERINARIO
+   Para vista de recepcionista / resumen semanal
+   ========================================================= */
+CREATE PROCEDURE listar_horario_semanal_por_veterinario(
+    IN p_id_veterinario INT
+)
+BEGIN
+    SELECT
+        hv.id_horario,
+        hv.id_veterinario,
+        hv.dia_semana,
+        CASE hv.dia_semana
+            WHEN 1 THEN 'Lunes'
+            WHEN 2 THEN 'Martes'
+            WHEN 3 THEN 'Miércoles'
+            WHEN 4 THEN 'Jueves'
+            WHEN 5 THEN 'Viernes'
+            WHEN 6 THEN 'Sábado'
+            WHEN 7 THEN 'Domingo'
+        END AS nombre_dia,
+        hv.hora_inicio,
+        hv.hora_fin,
+        hv.hora_descanso_inicio,
+        hv.hora_descanso_fin,
+        hv.activo,
+        u.nombres,
+        u.apellidos
+    FROM horario_veterinario hv
+    INNER JOIN veterinario v ON v.id_veterinario = hv.id_veterinario
+    INNER JOIN usuario u ON u.id_usuario = v.id_veterinario
+    WHERE hv.id_veterinario = p_id_veterinario
+    ORDER BY hv.dia_semana;
+END $$
+
+
+/* =========================================================
+   11. USUARIOS FILTRADOS
+   Por username, nombre/apellido, rol y estado
+   ========================================================= */
+CREATE PROCEDURE listar_usuarios_filtrados(
+    IN p_texto VARCHAR(100),
+    IN p_codigo_rol VARCHAR(30),
+    IN p_activo TINYINT
+)
+BEGIN
+    SELECT DISTINCT
+        u.id_usuario,
+        u.username,
+        u.nombres,
+        u.apellidos,
+        u.telefono,
+        u.activo,
+        rs.id_rol,
+        rs.codigo AS codigo_rol,
+        rs.descripcion AS descripcion_rol
+    FROM usuario u
+    LEFT JOIN usuario_rol ur ON ur.id_usuario = u.id_usuario
+    LEFT JOIN rol_sistema rs ON rs.id_rol = ur.id_rol
+    WHERE (
+            p_texto IS NULL
+            OR TRIM(p_texto) = ''
+            OR u.username LIKE CONCAT('%', p_texto, '%')
+            OR u.nombres LIKE CONCAT('%', p_texto, '%')
+            OR u.apellidos LIKE CONCAT('%', p_texto, '%')
+            OR CONCAT(u.nombres, ' ', u.apellidos) LIKE CONCAT('%', p_texto, '%')
+          )
+      AND (
+            p_codigo_rol IS NULL
+            OR TRIM(p_codigo_rol) = ''
+            OR rs.codigo = p_codigo_rol
+          )
+      AND (
+            p_activo IS NULL
+            OR u.activo = p_activo
+          )
+    ORDER BY u.apellidos, u.nombres, u.username;
+END $$
+
+
+/* =========================================================
+   12. CITAS FILTRADAS
+   Para agenda/lista diaria/semana y búsquedas
+   ========================================================= */
+CREATE PROCEDURE listar_citas_filtradas(
+    IN p_id_veterinario INT,
+    IN p_fecha_inicio DATE,
+    IN p_fecha_fin DATE,
+    IN p_estado VARCHAR(20),
+    IN p_texto VARCHAR(100)
+)
+BEGIN
+    SELECT
+        ci.id_cita,
+        ci.fecha_hora_inicio,
+        ci.fecha_hora_fin,
+        ci.estado,
+        m.id_mascota,
+        m.nombre AS nombre_mascota,
+        c.id_cliente,
+        c.nombres AS nombres_cliente,
+        c.apellidos AS apellidos_cliente,
+        v.id_veterinario,
+        u.nombres AS nombres_veterinario,
+        u.apellidos AS apellidos_veterinario,
+        s.id_servicio,
+        s.nombre AS nombre_servicio,
+        s.tipo_servicio
+    FROM cita ci
+    INNER JOIN mascota m ON m.id_mascota = ci.id_mascota
+    INNER JOIN cliente c ON c.id_cliente = m.id_cliente
+    INNER JOIN veterinario v ON v.id_veterinario = ci.id_veterinario
+    INNER JOIN usuario u ON u.id_usuario = v.id_veterinario
+    INNER JOIN servicio s ON s.id_servicio = ci.id_servicio
+    WHERE (
+            p_id_veterinario IS NULL
+            OR ci.id_veterinario = p_id_veterinario
+          )
+      AND (
+            p_fecha_inicio IS NULL
+            OR DATE(ci.fecha_hora_inicio) >= p_fecha_inicio
+          )
+      AND (
+            p_fecha_fin IS NULL
+            OR DATE(ci.fecha_hora_inicio) <= p_fecha_fin
+          )
+      AND (
+            p_estado IS NULL
+            OR TRIM(p_estado) = ''
+            OR ci.estado = p_estado
+          )
+      AND (
+            p_texto IS NULL
+            OR TRIM(p_texto) = ''
+            OR m.nombre LIKE CONCAT('%', p_texto, '%')
+            OR c.nombres LIKE CONCAT('%', p_texto, '%')
+            OR c.apellidos LIKE CONCAT('%', p_texto, '%')
+            OR CONCAT(c.nombres, ' ', c.apellidos) LIKE CONCAT('%', p_texto, '%')
+          )
+    ORDER BY ci.fecha_hora_inicio ASC;
+END $$
 
 DELIMITER ;

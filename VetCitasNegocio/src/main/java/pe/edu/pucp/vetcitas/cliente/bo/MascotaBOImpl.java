@@ -52,6 +52,21 @@ public class MascotaBOImpl implements IMascotaBO {
         return mascota;
     }
 
+    @Override
+    public List<Mascota> listarPorNombreODueno(String texto) throws Exception {
+        if (texto == null) texto = "";
+        texto = texto.trim();
+        return mascotaDAO.listarPorNombreODueno(texto);
+    }
+
+    @Override
+    public List<Mascota> listarPorCliente(int idCliente) throws Exception {
+        if (idCliente <= 0) {
+            throw new Exception("El id del cliente debe ser mayor que cero.");
+        }
+        return mascotaDAO.listarPorCliente(idCliente);
+    }
+
     private void validar(Mascota mascota, boolean esModificacion) throws Exception {
         if (mascota == null) {
             throw new Exception("La mascota no puede ser nula.");

@@ -4,7 +4,9 @@ import pe.edu.pucp.vetcitas.cita.boi.IRecordatorioBO;
 import pe.edu.pucp.vetcitas.cita.dao.IRecordatorioDAO;
 import pe.edu.pucp.vetcitas.cita.impl.RecordatorioImpl;
 import pe.edu.pucp.vetcitas.cita.model.Recordatorio;
+import pe.edu.pucp.vetcitas.common.enums.EstadoSeguimiento;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public class RecordatorioBOImpl implements IRecordatorioBO {
@@ -50,6 +52,30 @@ public class RecordatorioBOImpl implements IRecordatorioBO {
         }
         return recordatorio;
     }
+
+    @Override
+    public List<Recordatorio> listarPorMascotaOCliente(String texto) throws Exception {
+        if (texto == null) texto = "";
+        texto = texto.trim();
+        return recordatorioDAO.listarPorMascotaOCliente(texto);
+    }
+
+    @Override
+    public List<Recordatorio> listarPorEstadoYFecha(String estado, LocalDate fecha) throws Exception {
+        if (estado == null) estado = "";
+        estado = estado.trim();
+
+        if (!estado.isEmpty()) {
+            try {
+                EstadoSeguimiento.valueOf(estado);
+            } catch (Exception ex) {
+                throw new Exception("El estado de seguimiento no es válido.");
+            }
+        }
+
+        return recordatorioDAO.listarPorEstadoYFecha(estado, fecha);
+    }
+
 
     private void validar(Recordatorio recordatorio, boolean esModificacion) throws Exception {
         if (recordatorio == null) {

@@ -3,9 +3,15 @@ package pe.edu.pucp.vetcitas.cita.impl;
 import pe.edu.pucp.vetcitas.cita.dao.IAtencionDAO;
 import pe.edu.pucp.vetcitas.cita.model.Atencion;
 import pe.edu.pucp.vetcitas.cita.model.Cita;
+import pe.edu.pucp.vetcitas.cliente.model.Cliente;
+import pe.edu.pucp.vetcitas.cliente.model.Mascota;
+import pe.edu.pucp.vetcitas.common.enums.EstadoCita;
 import pe.edu.pucp.vetcitas.config.DBManager;
+import pe.edu.pucp.vetcitas.servicio.model.Servicio;
+import pe.edu.pucp.vetcitas.usuario.model.Veterinario;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -183,4 +189,146 @@ public class AtencionImpl implements IAtencionDAO {
 
         return atencion;
     }
+
+    @Override
+    public List<Atencion> listarFiltradas(Integer idVeterinario, String estadoCita, LocalDate fecha, String textoBusqueda) {
+        List<Atencion> atenciones = new ArrayList<>();
+        Connection con = null;
+        CallableStatement cs = null;
+        ResultSet rs = null;
+
+        try {
+            con = DBManager.getInstance().getConnection();
+            String sql = "{CALL listar_atenciones_filtradas(?, ?, ?, ?)}";
+            cs = con.prepareCall(sql);
+
+            if (idVeterinario != null) cs.setInt(1, idVeterinario);
+            else cs.setNull(1, java.sql.Types.INTEGER);
+
+            cs.setString(2, estadoCita);
+
+            if (fecha != null) cs.setDate(3, java.sql.Date.valueOf(fecha));
+            else cs.setNull(3, java.sql.Types.DATE);
+
+            cs.setString(4, textoBusqueda);
+
+            rs = cs.executeQuery();
+
+            while (rs.next()) {
+                Atencion a = new Atencion();
+                a.setId(rs.getInt("id_atencion"));
+                a.setFechaHora(rs.getTimestamp("fecha_hora").toLocalDateTime());
+                a.setNotaClinica(rs.getString("nota_clinica"));
+                a.setNotaPreOperatoria(rs.getString("nota_pre_operatoria"));
+                a.setNotaPostOperatoria(rs.getString("nota_post_operatoria"));
+                a.setRecomendacionControl(rs.getString("recomendacion_control"));
+                a.setMontoReferencial(rs.getDouble("monto_referencial"));
+                a.setDescuentoAplicado(rs.getDouble("descuento_aplicado"));
+
+
+                Cita cita = new Cita();
+                cita.setId(rs.getInt("id_cita"));
+                cita.setEstado(EstadoCita.valueOf(rs.getString("estado_cita")));
+                cita.setFechaHoraInicio(rs.getTimestamp("fecha_hora_inicio").toLocalDateTime());
+                cita.setFechaHoraFin(rs.getTimestamp("fecha_hora_fin").toLocalDateTime());
+
+                Mascota mascota = new Mascota();
+                mascota.setId(rs.getInt("id_mascota"));
+                mascota.setNombre(rs.getString("nombre_mascota"));
+
+                Cliente cliente = new Cliente();
+                cliente.setId(rs.getInt("id_cliente"));
+                cliente.setNombres(rs.getString("nombres_cliente"));
+                cliente.setApellidos(rs.getString("apellidos_cliente"));
+
+                Veterinario veterinario = new Veterinario();
+                veterinario.setId(rs.getInt("id_veterinario"));
+                veterinario.setNombres(rs.getString("nombres_veterinario"));
+                veterinario.setApellidos(rs.getString("apellidos_veterinario"));
+
+                Servicio servicio = new Servicio();
+                servicio.setId(rs.getInt("id_servicio"));
+                servicio.setNombre(rs.getString("nombre_servicio"));
+
+                mascota.setCliente(cliente);
+                cita.setMascota(mascota);
+                cita.setVeterinario(veterinario);
+                cita.setServicio(servicio);
+                a.setCita(cita);
+
+                atenciones.add(a);
+            }
+
+        } catch (Exception ex) {
+            System.out.println("ERROR listando atenciones filtradas: " + ex.getMessage());
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (cs != null) cs.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("ERROR cerrando recursos en AtencionImpl: " + ex.getMessage());
+            }
+        }
+
+        return atenciones;
+    }
+
+    @Override
+    public List<Atencion> listarHistorialPorMascota(int idMascota) {
+        List<Atencion> atenciones = new ArrayList<>();
+        Connection con = null;
+        CallableStatement cs = null;
+        ResultSet rs = null;
+
+        try {
+            con = DBManager.getInstance().getConnection();
+            String sql = "{CALL listar_historial_visitas_por_mascota(?)}";
+            cs = con.prepareCall(sql);
+            cs.setInt(1, idMascota);
+            rs = cs.executeQuery();
+
+            while (rs.next()) {
+                Atencion a = new Atencion();
+
+                if (rs.getObject("id_atencion") != null) {
+                    a.setId(rs.getInt("id_atencion"));
+                    if (rs.getTimestamp("fecha_atencion") != null) {
+                        a.setFechaHora(rs.getTimestamp("fecha_atencion").toLocalDateTime());
+                    }
+                    a.setNotaClinica(rs.getString("nota_clinica"));
+                    a.setRecomendacionControl(rs.getString("recomendacion_control"));
+                    a.setMontoReferencial(rs.getDouble("monto_referencial"));
+                    a.setDescuentoAplicado(rs.getDouble("descuento_aplicado"));
+                }
+
+                Cita cita = new Cita();
+                cita.setId(rs.getInt("id_cita"));
+                cita.setEstado(EstadoCita.valueOf(rs.getString("estado")));
+                cita.setFechaHoraInicio(rs.getTimestamp("fecha_hora_inicio").toLocalDateTime());
+                cita.setFechaHoraFin(rs.getTimestamp("fecha_hora_fin").toLocalDateTime());
+
+                Servicio servicio = new Servicio();
+                servicio.setNombre(rs.getString("nombre_servicio"));
+                cita.setServicio(servicio);
+
+                a.setCita(cita);
+                atenciones.add(a);
+            }
+
+        } catch (Exception ex) {
+            System.out.println("ERROR listando historial por mascota: " + ex.getMessage());
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (cs != null) cs.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("ERROR cerrando recursos en AtencionImpl: " + ex.getMessage());
+            }
+        }
+
+        return atenciones;
+    }
+
 }

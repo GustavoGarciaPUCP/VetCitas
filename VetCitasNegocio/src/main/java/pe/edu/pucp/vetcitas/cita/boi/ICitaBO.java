@@ -12,4 +12,5 @@ public interface ICitaBO extends IBaseBO<Cita> {
     void marcarAtendida(int idCita, int modifiedBy) throws Exception;
     void marcarNoAsistio(int idCita, int modifiedBy) throws Exception;
     List<Cita> listarPorVeterinarioYFecha(int idVeterinario, LocalDate fecha) throws Exception;
+    List<Cita> listarFiltradas(Integer idVeterinario, LocalDate fechaInicio, LocalDate fechaFin, String estado, String textoBusqueda) throws Exception;
 }

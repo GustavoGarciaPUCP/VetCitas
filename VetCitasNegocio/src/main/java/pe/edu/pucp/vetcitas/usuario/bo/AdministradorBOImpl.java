@@ -1,10 +1,12 @@
 package pe.edu.pucp.vetcitas.usuario.bo;
 
+import pe.edu.pucp.vetcitas.common.enums.CodigoRol;
 import pe.edu.pucp.vetcitas.usuario.boi.IAdministradorBO;
 import pe.edu.pucp.vetcitas.usuario.dao.IAdministradorDAO;
 import pe.edu.pucp.vetcitas.usuario.impl.AdministradorImpl;
 import pe.edu.pucp.vetcitas.usuario.model.Administrador;
 import pe.edu.pucp.vetcitas.usuario.model.RolSistema;
+import pe.edu.pucp.vetcitas.usuario.model.Usuario;
 
 import java.util.List;
 
@@ -108,6 +110,25 @@ public class AdministradorBOImpl implements IAdministradorBO {
             throw new Exception("El usuario no tiene asignado el rol: " + codigoRol);
         }
         administradorDAO.revocarRol(idUsuario, codigoRol);
+    }
+
+    @Override
+    public List<Usuario> listarUsuariosFiltrados(String texto, String codigoRol, Boolean activo) throws Exception {
+        if (texto == null) texto = "";
+        texto = texto.trim();
+
+        if (codigoRol == null) codigoRol = "";
+        codigoRol = codigoRol.trim();
+
+        if (!codigoRol.isEmpty()) {
+            try {
+                CodigoRol.valueOf(codigoRol);
+            } catch (Exception ex) {
+                throw new Exception("El código de rol no es válido.");
+            }
+        }
+
+        return administradorDAO.listarUsuariosFiltrados(texto, codigoRol, activo);
     }
 
     private void validar(Administrador admin, boolean esModificacion) throws Exception {

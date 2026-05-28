@@ -9,6 +9,7 @@ import java.util.List;
 
 public class Cliente extends EntidadAuditable {
     private int id;
+    private String dni;
     private String nombres;
     private String apellidos;
     private String telefono;
@@ -20,6 +21,7 @@ public class Cliente extends EntidadAuditable {
         super();
         this.id = 0;
         this.nombres = "";
+        this.dni = "";
         this.apellidos = "";
         this.telefono = "";
         this.observaciones = "";
@@ -27,12 +29,13 @@ public class Cliente extends EntidadAuditable {
         this.mascotas = new ArrayList<>();
     }
 
-    public Cliente(int id, String nombres, String apellidos, String telefono,
+    public Cliente(int id,String dni, String nombres, String apellidos, String telefono,
                    String observaciones, boolean activo, List<Mascota> mascotas,
                    LocalDateTime createdOn, LocalDateTime modifiedOn,
                    Usuario modifiedBy) {
         super(createdOn, modifiedOn, modifiedBy);
         this.id = id;
+        this.dni = dni;
         this.nombres = nombres;
         this.apellidos = apellidos;
         this.telefono = telefono;
@@ -50,6 +53,7 @@ public class Cliente extends EntidadAuditable {
     public Cliente(Cliente otro) {
         super(otro);
         this.id = otro.id;
+        this.dni = otro.dni;
         this.nombres = otro.nombres;
         this.apellidos = otro.apellidos;
         this.telefono = otro.telefono;
@@ -62,6 +66,14 @@ public class Cliente extends EntidadAuditable {
                 this.mascotas.add(new Mascota(mascota));
             }
         }
+    }
+
+    public String getDni() {
+        return dni;
+    }
+
+    public void setDni(String dni) {
+        this.dni = dni;
     }
 
     public int getId() {

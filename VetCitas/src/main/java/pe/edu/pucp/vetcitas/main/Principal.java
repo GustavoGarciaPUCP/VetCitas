@@ -1,17 +1,21 @@
 package pe.edu.pucp.vetcitas.main;
 
+import pe.edu.pucp.vetcitas.cita.bo.AtencionBOImpl;
+import pe.edu.pucp.vetcitas.cita.bo.RecordatorioBOImpl;
+import pe.edu.pucp.vetcitas.cita.boi.IAtencionBO;
 import pe.edu.pucp.vetcitas.cita.boi.ICitaBO;
 import pe.edu.pucp.vetcitas.cita.bo.CitaBOImpl;
+import pe.edu.pucp.vetcitas.cita.boi.IRecordatorioBO;
+import pe.edu.pucp.vetcitas.cita.model.Atencion;
 import pe.edu.pucp.vetcitas.cita.model.Cita;
+import pe.edu.pucp.vetcitas.cita.model.Recordatorio;
 import pe.edu.pucp.vetcitas.cliente.boi.IClienteBO;
 import pe.edu.pucp.vetcitas.cliente.bo.ClienteBOImpl;
 import pe.edu.pucp.vetcitas.cliente.boi.IMascotaBO;
 import pe.edu.pucp.vetcitas.cliente.bo.MascotaBOImpl;
 import pe.edu.pucp.vetcitas.cliente.model.Cliente;
 import pe.edu.pucp.vetcitas.cliente.model.Mascota;
-import pe.edu.pucp.vetcitas.common.enums.CodigoRol;
-import pe.edu.pucp.vetcitas.common.enums.EstadoCita;
-import pe.edu.pucp.vetcitas.common.enums.TipoServicio;
+import pe.edu.pucp.vetcitas.common.enums.*;
 import pe.edu.pucp.vetcitas.configuracion.boi.IConfiguracionBO;
 import pe.edu.pucp.vetcitas.configuracion.bo.ConfiguracionBOImpl;
 import pe.edu.pucp.vetcitas.configuracion.model.Configuracion;
@@ -28,12 +32,7 @@ import pe.edu.pucp.vetcitas.usuario.boi.IRecepcionistaBO;
 import pe.edu.pucp.vetcitas.usuario.bo.RecepcionistaBOImpl;
 import pe.edu.pucp.vetcitas.usuario.boi.IVeterinarioBO;
 import pe.edu.pucp.vetcitas.usuario.bo.VeterinarioBOImpl;
-import pe.edu.pucp.vetcitas.usuario.model.Administrador;
-import pe.edu.pucp.vetcitas.usuario.model.HorarioVeterinario;
-import pe.edu.pucp.vetcitas.usuario.model.Permiso;
-import pe.edu.pucp.vetcitas.usuario.model.Recepcionista;
-import pe.edu.pucp.vetcitas.usuario.model.RolSistema;
-import pe.edu.pucp.vetcitas.usuario.model.Veterinario;
+import pe.edu.pucp.vetcitas.usuario.model.*;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -59,6 +58,8 @@ public class Principal {
         IMascotaBO mascotaBO = new MascotaBOImpl();
         IServicioBO servicioBO = new ServicioBOImpl();
         ICitaBO citaBO = new CitaBOImpl();
+        IAtencionBO atencionBO = new AtencionBOImpl();
+        IRecordatorioBO recordatorioBO = new RecordatorioBOImpl();
 
         LocalDateTime ahora = LocalDateTime.now();
 
@@ -270,6 +271,7 @@ public class Principal {
             imprimirSeccion("8. INSERTAR CLIENTE");
 
             Cliente cliente = new Cliente();
+            cliente.setDni("12345678");
             cliente.setNombres("Mariana");
             cliente.setApellidos("Gómez");
             cliente.setTelefono("966123123");
@@ -285,7 +287,7 @@ public class Principal {
             if (resultadoCliente > 0) {
                 clienteBD = clienteBO.buscarPorId(resultadoCliente);
                 System.out.println("Cliente buscado: " + clienteBD.getId() + " - "
-                        + clienteBD.getNombres() + " " + clienteBD.getApellidos());
+                        +clienteBD.getDni() +" - " + clienteBD.getNombres() + " " + clienteBD.getApellidos());
             }
 
             // ==================================================
@@ -418,6 +420,81 @@ public class Principal {
                 citaBO.marcarAtendida(idCita, idVet);
                 System.out.println("Cita marcada como atendida.");
 
+                // ==================================================
+                // ===== NUEVO ===== 13.1 REGISTRAR ATENCIÓN DE LA CITA
+                // ==================================================
+                imprimirSeccion("13.1 REGISTRAR ATENCIÓN");
+
+                Atencion atencionBD = null;
+                int idAtencion = 0;
+
+                if (citaBD != null) {
+                    Atencion atencion = new Atencion();
+                    atencion.setFechaHora(LocalDateTime.now());
+                    atencion.setNotaClinica("Paciente estable. Presenta leve tos y buena respuesta al examen clínico.");
+                    atencion.setNotaPreOperatoria("No aplica para consulta clínica.");
+                    atencion.setNotaPostOperatoria("No aplica para consulta clínica.");
+                    atencion.setRecomendacionControl("Reposo 48 horas y control en 7 días.");
+                    atencion.setMontoReferencial(80.0);
+                    atencion.setDescuentoAplicado(5.0); // debe respetar la configuración máxima
+                    atencion.setCita(citaBD);
+                    atencion.setCreatedOn(LocalDateTime.now());
+                    atencion.setModifiedBy(vetBD);
+
+                    idAtencion = atencionBO.insertar(atencion);
+                    System.out.println("Atención insertada con ID: " + idAtencion);
+
+                    if (idAtencion > 0) {
+                        atencionBD = atencionBO.buscarPorId(idAtencion);
+                        System.out.println("Atención buscada -> ID: " + atencionBD.getId()
+                                + ", Fecha: " + atencionBD.getFechaHora()
+                                + ", Nota clínica: " + atencionBD.getNotaClinica());
+                    }
+
+                    Atencion atencionPorCita = atencionBO.buscarPorCita(citaBD.getId());
+                    if (atencionPorCita != null) {
+                        System.out.println("Atención encontrada por cita -> ID Atención: " + atencionPorCita.getId()
+                                + ", ID Cita: " + atencionPorCita.getCita().getId());
+                    } else {
+                        System.out.println("No se encontró atención por cita.");
+                    }
+                }
+
+                // ==================================================
+                // ===== NUEVO ===== 13.2 REGISTRAR RECORDATORIO DE LA CITA
+                // ==================================================
+                imprimirSeccion("13.2 REGISTRAR RECORDATORIO");
+
+                Recordatorio recordatorioBD = null;
+                int idRecordatorio = 0;
+
+                if (citaBD != null) {
+                    Recordatorio recordatorio = new Recordatorio();
+                    recordatorio.setFechaProgramada(LocalDateTime.now().plusDays(3));
+                    recordatorio.setCanal(CanalRecordatorio.WHATSAPP);
+                    recordatorio.setEstadoSeguimiento(EstadoSeguimiento.PENDIENTE);
+                    recordatorio.setMensaje("Recordatorio de control para la mascota "
+                            + (mascotaBD != null ? mascotaBD.getNombre() : "N/A")
+                            + " en 3 días.");
+                    recordatorio.setCita(citaBD);
+                    recordatorio.setCreatedOn(LocalDateTime.now());
+                    recordatorio.setModifiedBy(adminBD);
+
+                    idRecordatorio = recordatorioBO.insertar(recordatorio);
+                    System.out.println("Recordatorio insertado con ID: " + idRecordatorio);
+
+                    if (idRecordatorio > 0) {
+                        recordatorioBD = recordatorioBO.buscarPorId(idRecordatorio);
+                        if (recordatorioBD != null) {
+                            System.out.println("Recordatorio buscado -> ID: " + recordatorioBD.getId()
+                                    + ", Fecha: " + recordatorioBD.getFechaProgramada()
+                                    + ", Estado: " + recordatorioBD.getEstadoSeguimiento()
+                                    + ", Mensaje: " + recordatorioBD.getMensaje());
+                        }
+                    }
+                }
+
+
                 List<Cita> citasVetDia = citaBO.listarPorVeterinarioYFecha(idVet, proximoLunes);
                 System.out.println("Citas del veterinario para ese día: " + citasVetDia.size());
                 for (Cita c : citasVetDia) {
@@ -529,6 +606,206 @@ public class Principal {
             System.out.println(" TODAS LAS PRUEBAS FINALIZARON CON ÉXITO");
             System.out.println("==================================================");
 
+            // ==================================================
+            // ===== NUEVO ===== 18. PRUEBAS DE FILTROS Y LISTADOS
+            // ==================================================
+            imprimirSeccion("18. PRUEBAS DE FILTROS Y LISTADOS NUEVOS");
+
+            // ------------------------------
+            // ===== NUEVO ===== 18.1 CLIENTES
+            // Buscar por nombre, apellido o DNI
+            // ------------------------------
+            System.out.println("\n18.1 CLIENTES - Buscar por nombre/apellido/dni");
+            List<Cliente> clientesFiltrados = clienteBO.listarPorNombreApellidoODni("Mariana");
+            System.out.println("Clientes encontrados con 'Mariana': " + clientesFiltrados.size());
+            for (Cliente c : clientesFiltrados) {
+                System.out.println("Cliente -> ID: " + c.getId()
+                        + ", DNI: " + c.getDni()
+                        + ", Nombre: " + c.getNombres() + " " + c.getApellidos());
+            }
+
+            List<Cliente> clientesPorDni = clienteBO.listarPorNombreApellidoODni("12345678");
+            System.out.println("Clientes encontrados con DNI '12345678': " + clientesPorDni.size());
+            for (Cliente c : clientesPorDni) {
+                System.out.println("Cliente DNI -> " + c.getDni() + " - " + c.getNombres());
+            }
+
+            // ------------------------------
+            // ===== NUEVO ===== 18.2 MASCOTAS
+            // Buscar por nombre o dueño
+            // ------------------------------
+            System.out.println("\n18.2 MASCOTAS - Buscar por nombre o dueño");
+            List<Mascota> mascotasPorTexto = mascotaBO.listarPorNombreODueno("Firulais");
+            System.out.println("Mascotas encontradas con 'Firulais': " + mascotasPorTexto.size());
+            for (Mascota m : mascotasPorTexto) {
+                System.out.println("Mascota -> ID: " + m.getId()
+                        + ", Nombre: " + m.getNombre()
+                        + ", Dueño: " + (m.getCliente() != null
+                        ? m.getCliente().getNombres() + " " + m.getCliente().getApellidos()
+                        : "null"));
+            }
+
+            List<Mascota> mascotasPorDueno = mascotaBO.listarPorNombreODueno("Gómez");
+            System.out.println("Mascotas encontradas con dueño 'Gómez': " + mascotasPorDueno.size());
+            for (Mascota m : mascotasPorDueno) {
+                System.out.println("Mascota/Dueño -> " + m.getNombre() + " / "
+                        + (m.getCliente() != null
+                        ? m.getCliente().getNombres() + " " + m.getCliente().getApellidos()
+                        : "null"));
+            }
+
+            // ------------------------------
+            // ===== NUEVO ===== 18.3 MASCOTAS DE UN CLIENTE
+            // ------------------------------
+            System.out.println("\n18.3 MASCOTAS DE UN CLIENTE");
+            if (clienteBD != null) {
+                List<Mascota> mascotasCliente = mascotaBO.listarPorCliente(clienteBD.getId());
+                System.out.println("Mascotas del cliente " + clienteBD.getNombres() + ": " + mascotasCliente.size());
+                for (Mascota m : mascotasCliente) {
+                    System.out.println("- " + m.getNombre() + " (" + m.getEspecie() + ")");
+                }
+            }
+
+            // ------------------------------
+            // ===== NUEVO ===== 18.4 SERVICIOS
+            // Buscar por nombre o tipo
+            // ------------------------------
+            System.out.println("\n18.4 SERVICIOS - Buscar por nombre o tipo");
+            List<Servicio> serviciosPorTexto = servicioBO.listarPorNombreOTipo("Consulta");
+            System.out.println("Servicios encontrados con 'Consulta': " + serviciosPorTexto.size());
+            for (Servicio s : serviciosPorTexto) {
+                System.out.println("Servicio -> ID: " + s.getId()
+                        + ", Nombre: " + s.getNombre()
+                        + ", Tipo: " + s.getTipoServicio());
+            }
+
+            List<Servicio> serviciosActivos = servicioBO.listarPorEstado(true);
+            System.out.println("Servicios activos encontrados: " + serviciosActivos.size());
+
+            // ------------------------------
+            // ===== NUEVO ===== 18.5 CITAS FILTRADAS
+            // ------------------------------
+            System.out.println("\n18.5 CITAS FILTRADAS");
+            if (vetBD != null) {
+                LocalDate hoy = LocalDate.now();
+                LocalDate desde = hoy.minusDays(7);
+                LocalDate hasta = hoy.plusDays(30);
+
+                List<Cita> citasFiltradas = citaBO.listarFiltradas(
+                        vetBD.getId(),
+                        desde,
+                        hasta,
+                        "",
+                        "Firulais"
+                );
+
+                System.out.println("Citas filtradas del veterinario con texto 'Firulais': " + citasFiltradas.size());
+                for (Cita c : citasFiltradas) {
+                    imprimirCita(c);
+                }
+            }
+
+            // ------------------------------
+            // ===== NUEVO ===== 18.6 HORARIO SEMANAL POR VETERINARIO
+            // ------------------------------
+            System.out.println("\n18.6 HORARIO SEMANAL POR VETERINARIO");
+            if (vetBD != null) {
+                List<HorarioVeterinario> horarioSemanal = horarioBO.listarHorarioSemanalPorVeterinario(vetBD.getId());
+                System.out.println("Cantidad de horarios semanales: " + horarioSemanal.size());
+                for (HorarioVeterinario h : horarioSemanal) {
+                    imprimirHorario(h);
+                }
+            }
+
+            // ------------------------------
+            // ===== NUEVO ===== 18.7 USUARIOS FILTRADOS
+            // Buscar por texto, rol y estado
+            // ------------------------------
+            System.out.println("\n18.7 USUARIOS FILTRADOS");
+            List<Usuario> usuariosPorTexto = administradorBO.listarUsuariosFiltrados("admin_lab", "", null);
+            System.out.println("Usuarios encontrados por texto 'admin_lab': " + usuariosPorTexto.size());
+            for (Usuario u : usuariosPorTexto) {
+                System.out.println("Usuario -> ID: " + u.getId()
+                        + ", Username: " + u.getUsername()
+                        + ", Nombre: " + u.getNombres() + " " + u.getApellidos()
+                        + ", Activo: " + u.isActivo());
+            }
+
+            List<Usuario> usuariosPorRol = administradorBO.listarUsuariosFiltrados("", CodigoRol.VETERINARIO.name(), true);
+            System.out.println("Usuarios activos con rol VETERINARIO: " + usuariosPorRol.size());
+            for (Usuario u : usuariosPorRol) {
+                System.out.println("Usuario con rol veterinario -> " + u.getUsername());
+                if (u.getRoles() != null) {
+                    for (RolSistema rol : u.getRoles()) {
+                        System.out.println("   Rol: " + rol.getCodigo());
+                    }
+                }
+            }
+
+            // ------------------------------
+            // ===== NUEVO ===== 18.8 RECORDATORIOS
+            // SOLO SI YA TIENES recordatorioBO instanciado
+            // ------------------------------
+            System.out.println("\n18.8 RECORDATORIOS FILTRADOS");
+
+
+            List<Recordatorio> recordatoriosTexto = recordatorioBO.listarPorMascotaOCliente("Firulais");
+            System.out.println("Recordatorios encontrados con texto 'Firulais': " + recordatoriosTexto.size());
+            for (Recordatorio r : recordatoriosTexto) {
+                System.out.println("Recordatorio -> ID: " + r.getId()
+                        + ", Fecha: " + r.getFechaProgramada()
+                        + ", Estado: " + r.getEstadoSeguimiento()
+                        + ", Mensaje: " + r.getMensaje());
+            }
+
+            List<Recordatorio> recordatoriosEstado = recordatorioBO.listarPorEstadoYFecha(
+                    EstadoSeguimiento.PENDIENTE.name(),
+                    null
+            );
+            System.out.println("Recordatorios PENDIENTES: " + recordatoriosEstado.size());
+
+            // ------------------------------
+            // ===== NUEVO ===== 18.9 ATENCIONES FILTRADAS
+            // SOLO SI YA TIENES atencionBO implementado
+            // ------------------------------
+            System.out.println("\n18.9 ATENCIONES FILTRADAS");
+
+            List<Atencion> atencionesFiltradas = atencionBO.listarFiltradas(
+                    vetBD != null ? vetBD.getId() : null,
+                    "",
+                    null,
+                    "Firulais"
+            );
+            System.out.println("Atenciones filtradas por veterinario/texto: " + atencionesFiltradas.size());
+            for (Atencion a : atencionesFiltradas) {
+                System.out.println("Atención -> ID: " + a.getId()
+                        + ", Fecha: " + a.getFechaHora()
+                        + ", Nota: " + a.getNotaClinica());
+                if (a.getCita() != null && a.getCita().getMascota() != null) {
+                    System.out.println("   Mascota: " + a.getCita().getMascota().getNombre());
+                }
+            }
+
+            // ------------------------------
+            // ===== NUEVO ===== 18.10 HISTORIAL DE VISITAS DE UNA MASCOTA
+            // ------------------------------
+            System.out.println("\n18.10 HISTORIAL DE VISITAS DE UNA MASCOTA");
+            if (mascotaBD != null) {
+                List<Atencion> historialMascota = atencionBO.listarHistorialPorMascota(mascotaBD.getId());
+                System.out.println("Historial de la mascota " + mascotaBD.getNombre() + ": " + historialMascota.size());
+                for (Atencion a : historialMascota) {
+                    System.out.println("Historial -> Atención ID: " + a.getId()
+                            + ", Fecha: " + a.getFechaHora());
+                    if (a.getCita() != null && a.getCita().getServicio() != null) {
+                        System.out.println("   Servicio: " + a.getCita().getServicio().getNombre());
+                    }
+                }
+            }
+
+            // ==================================================
+            // ===== FIN NUEVO ===== 18. PRUEBAS DE FILTROS Y LISTADOS
+            // ==================================================
+
         } catch (Exception ex) {
             System.out.println("==============================================");
             System.out.println("ERROR GENERAL INESPERADO EN LAS PRUEBAS");
@@ -537,6 +814,8 @@ public class Principal {
             System.out.println("==============================================");
         }
     }
+
+
 
     private static LocalDate obtenerProximaFecha(DayOfWeek diaObjetivo) {
         LocalDate fecha = LocalDate.now().plusDays(1);

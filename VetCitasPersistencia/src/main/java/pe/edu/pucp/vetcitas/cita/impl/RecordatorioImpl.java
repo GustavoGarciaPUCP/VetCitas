@@ -3,11 +3,14 @@ package pe.edu.pucp.vetcitas.cita.impl;
 import pe.edu.pucp.vetcitas.cita.dao.IRecordatorioDAO;
 import pe.edu.pucp.vetcitas.cita.model.Cita;
 import pe.edu.pucp.vetcitas.cita.model.Recordatorio;
+import pe.edu.pucp.vetcitas.cliente.model.Cliente;
+import pe.edu.pucp.vetcitas.cliente.model.Mascota;
 import pe.edu.pucp.vetcitas.common.enums.CanalRecordatorio;
 import pe.edu.pucp.vetcitas.common.enums.EstadoSeguimiento;
 import pe.edu.pucp.vetcitas.config.DBManager;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -162,6 +165,123 @@ public class RecordatorioImpl implements IRecordatorioDAO {
             try { if (cs != null) cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
             try { if (con != null) con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
         }
+        return recordatorios;
+    }
+
+    @Override
+    public List<Recordatorio> listarPorMascotaOCliente(String texto) {
+        List<Recordatorio> recordatorios = new ArrayList<>();
+        Connection con = null;
+        CallableStatement cs = null;
+        ResultSet rs = null;
+
+        try {
+            con = DBManager.getInstance().getConnection();
+            String sql = "{CALL listar_recordatorios_por_mascota_o_cliente(?)}";
+            cs = con.prepareCall(sql);
+            cs.setString(1, texto);
+            rs = cs.executeQuery();
+
+            while (rs.next()) {
+                Recordatorio r = new Recordatorio();
+                r.setId(rs.getInt("id_recordatorio"));
+                r.setFechaProgramada(rs.getTimestamp("fecha_programada").toLocalDateTime());
+                r.setMensaje(rs.getString("mensaje"));
+                r.setEstadoSeguimiento(EstadoSeguimiento.valueOf(rs.getString("estado_seguimiento")));
+                r.setCanal(CanalRecordatorio.valueOf(rs.getString("canal")));
+
+                Cita cita = new Cita();
+                cita.setId(rs.getInt("id_cita"));
+
+                Mascota mascota = new Mascota();
+                mascota.setId(rs.getInt("id_mascota"));
+                mascota.setNombre(rs.getString("nombre_mascota"));
+
+                Cliente cliente = new Cliente();
+                cliente.setId(rs.getInt("id_cliente"));
+                cliente.setNombres(rs.getString("nombres_cliente"));
+                cliente.setApellidos(rs.getString("apellidos_cliente"));
+
+                mascota.setCliente(cliente);
+                cita.setMascota(mascota);
+                r.setCita(cita);
+
+                recordatorios.add(r);
+            }
+
+        } catch (Exception ex) {
+            System.out.println("ERROR listando recordatorios por mascota o cliente: " + ex.getMessage());
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (cs != null) cs.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("ERROR cerrando recursos en RecordatorioImpl: " + ex.getMessage());
+            }
+        }
+
+        return recordatorios;
+    }
+
+    @Override
+    public List<Recordatorio> listarPorEstadoYFecha(String estado, LocalDate fecha) {
+        List<Recordatorio> recordatorios = new ArrayList<>();
+        Connection con = null;
+        CallableStatement cs = null;
+        ResultSet rs = null;
+
+        try {
+            con = DBManager.getInstance().getConnection();
+            String sql = "{CALL listar_recordatorios_por_estado_fecha(?, ?)}";
+            cs = con.prepareCall(sql);
+            cs.setString(1, estado);
+
+            if (fecha != null) {
+                cs.setDate(2, java.sql.Date.valueOf(fecha));
+            } else {
+                cs.setNull(2, java.sql.Types.DATE);
+            }
+
+            rs = cs.executeQuery();
+
+            while (rs.next()) {
+                Recordatorio r = new Recordatorio();
+                r.setId(rs.getInt("id_recordatorio"));
+                r.setFechaProgramada(rs.getTimestamp("fecha_programada").toLocalDateTime());
+                r.setMensaje(rs.getString("mensaje"));
+                r.setEstadoSeguimiento(EstadoSeguimiento.valueOf(rs.getString("estado_seguimiento")));
+                r.setCanal(CanalRecordatorio.valueOf(rs.getString("canal")));
+
+                Cita cita = new Cita();
+                cita.setId(rs.getInt("id_cita"));
+
+                Mascota mascota = new Mascota();
+                mascota.setNombre(rs.getString("nombre_mascota"));
+
+                Cliente cliente = new Cliente();
+                cliente.setNombres(rs.getString("nombres_cliente"));
+                cliente.setApellidos(rs.getString("apellidos_cliente"));
+
+                mascota.setCliente(cliente);
+                cita.setMascota(mascota);
+                r.setCita(cita);
+
+                recordatorios.add(r);
+            }
+
+        } catch (Exception ex) {
+            System.out.println("ERROR listando recordatorios por estado y fecha: " + ex.getMessage());
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (cs != null) cs.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("ERROR cerrando recursos en RecordatorioImpl: " + ex.getMessage());
+            }
+        }
+
         return recordatorios;
     }
 }

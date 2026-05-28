@@ -66,6 +66,18 @@ public class ServicioBOImpl implements IServicioBO {
         return servicioDAO.deshabilitar(id);
     }
 
+    @Override
+    public List<Servicio> listarPorNombreOTipo(String texto) throws Exception {
+        if (texto == null) texto = "";
+        texto = texto.trim();
+        return servicioDAO.listarPorNombreOTipo(texto);
+    }
+
+    @Override
+    public List<Servicio> listarPorEstado(boolean activo) throws Exception {
+        return servicioDAO.listarPorEstado(activo);
+    }
+
     private void validar(Servicio servicio, boolean esModificacion) throws Exception {
         if (servicio == null) {
             throw new Exception("El servicio no puede ser nulo.");
