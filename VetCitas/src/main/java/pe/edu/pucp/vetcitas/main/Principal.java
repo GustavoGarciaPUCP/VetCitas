@@ -432,6 +432,7 @@ public class Principal {
                     Atencion atencion = new Atencion();
                     atencion.setFechaHora(LocalDateTime.now());
                     atencion.setNotaClinica("Paciente estable. Presenta leve tos y buena respuesta al examen clínico.");
+                    atencion.setDiagnostico("Rinitis alérgica estacional debido a cambio de clima.");
                     atencion.setNotaPreOperatoria("No aplica para consulta clínica.");
                     atencion.setNotaPostOperatoria("No aplica para consulta clínica.");
                     atencion.setRecomendacionControl("Reposo 48 horas y control en 7 días.");
@@ -448,13 +449,15 @@ public class Principal {
                         atencionBD = atencionBO.buscarPorId(idAtencion);
                         System.out.println("Atención buscada -> ID: " + atencionBD.getId()
                                 + ", Fecha: " + atencionBD.getFechaHora()
-                                + ", Nota clínica: " + atencionBD.getNotaClinica());
+                                + ", Nota clínica: " + atencionBD.getNotaClinica()
+                                + ", Diagnóstico: " + atencionBD.getDiagnostico());
                     }
 
                     Atencion atencionPorCita = atencionBO.buscarPorCita(citaBD.getId());
                     if (atencionPorCita != null) {
                         System.out.println("Atención encontrada por cita -> ID Atención: " + atencionPorCita.getId()
-                                + ", ID Cita: " + atencionPorCita.getCita().getId());
+                                + ", ID Cita: " + atencionPorCita.getCita().getId()
+                                + ", Diagnóstico: " + atencionPorCita.getDiagnostico());
                     } else {
                         System.out.println("No se encontró atención por cita.");
                     }
@@ -780,7 +783,8 @@ public class Principal {
             for (Atencion a : atencionesFiltradas) {
                 System.out.println("Atención -> ID: " + a.getId()
                         + ", Fecha: " + a.getFechaHora()
-                        + ", Nota: " + a.getNotaClinica());
+                        + ", Nota: " + a.getNotaClinica()
+                        + ", Diagnóstico: " + a.getDiagnostico());
                 if (a.getCita() != null && a.getCita().getMascota() != null) {
                     System.out.println("   Mascota: " + a.getCita().getMascota().getNombre());
                 }
@@ -795,7 +799,8 @@ public class Principal {
                 System.out.println("Historial de la mascota " + mascotaBD.getNombre() + ": " + historialMascota.size());
                 for (Atencion a : historialMascota) {
                     System.out.println("Historial -> Atención ID: " + a.getId()
-                            + ", Fecha: " + a.getFechaHora());
+                            + ", Fecha: " + a.getFechaHora()
+                            + ", Diagnóstico: " + a.getDiagnostico());
                     if (a.getCita() != null && a.getCita().getServicio() != null) {
                         System.out.println("   Servicio: " + a.getCita().getServicio().getNombre());
                     }
