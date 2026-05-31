@@ -165,6 +165,7 @@ CREATE TABLE atencion (
     id_atencion INT AUTO_INCREMENT PRIMARY KEY,
     fecha_hora DATETIME NOT NULL,
     nota_clinica TEXT,
+    diagnostico TEXT,
     nota_pre_operatoria TEXT,
     nota_post_operatoria TEXT,
     recomendacion_control TEXT,

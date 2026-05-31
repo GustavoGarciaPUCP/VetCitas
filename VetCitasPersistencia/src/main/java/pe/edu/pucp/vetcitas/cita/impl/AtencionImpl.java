@@ -24,9 +24,10 @@ public class AtencionImpl implements IAtencionDAO {
         CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{call insertar_atencion(?,?,?,?,?,?,?,?,?,?)}");
+            cs = con.prepareCall("{call insertar_atencion(?,?,?,?,?,?,?,?,?,?,?)}");
             cs.setTimestamp("p_fecha_hora", Timestamp.valueOf(atencion.getFechaHora()));
             cs.setString("p_nota_clinica", atencion.getNotaClinica());
+            cs.setString("p_diagnostico", atencion.getDiagnostico());
             cs.setString("p_nota_pre_operatoria", atencion.getNotaPreOperatoria());
             cs.setString("p_nota_post_operatoria", atencion.getNotaPostOperatoria());
             cs.setString("p_recomendacion_control", atencion.getRecomendacionControl());
@@ -54,10 +55,11 @@ public class AtencionImpl implements IAtencionDAO {
         CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{call modificar_atencion(?,?,?,?,?,?,?,?,?,?)}");
+            cs = con.prepareCall("{call modificar_atencion(?,?,?,?,?,?,?,?,?,?,?)}");
             cs.setInt("p_id_atencion", atencion.getId());
             cs.setTimestamp("p_fecha_hora", Timestamp.valueOf(atencion.getFechaHora()));
             cs.setString("p_nota_clinica", atencion.getNotaClinica());
+            cs.setString("p_diagnostico", atencion.getDiagnostico());
             cs.setString("p_nota_pre_operatoria", atencion.getNotaPreOperatoria());
             cs.setString("p_nota_post_operatoria", atencion.getNotaPostOperatoria());
             cs.setString("p_recomendacion_control", atencion.getRecomendacionControl());
@@ -177,6 +179,7 @@ public class AtencionImpl implements IAtencionDAO {
         atencion.setId(rs.getInt("id_atencion"));
         atencion.setFechaHora(rs.getTimestamp("fecha_hora").toLocalDateTime());
         atencion.setNotaClinica(rs.getString("nota_clinica"));
+        atencion.setDiagnostico(rs.getString("diagnostico"));
         atencion.setNotaPreOperatoria(rs.getString("nota_pre_operatoria"));
         atencion.setNotaPostOperatoria(rs.getString("nota_post_operatoria"));
         atencion.setRecomendacionControl(rs.getString("recomendacion_control"));
@@ -219,6 +222,7 @@ public class AtencionImpl implements IAtencionDAO {
                 a.setId(rs.getInt("id_atencion"));
                 a.setFechaHora(rs.getTimestamp("fecha_hora").toLocalDateTime());
                 a.setNotaClinica(rs.getString("nota_clinica"));
+                a.setDiagnostico(rs.getString("diagnostico"));
                 a.setNotaPreOperatoria(rs.getString("nota_pre_operatoria"));
                 a.setNotaPostOperatoria(rs.getString("nota_post_operatoria"));
                 a.setRecomendacionControl(rs.getString("recomendacion_control"));
@@ -297,6 +301,7 @@ public class AtencionImpl implements IAtencionDAO {
                         a.setFechaHora(rs.getTimestamp("fecha_atencion").toLocalDateTime());
                     }
                     a.setNotaClinica(rs.getString("nota_clinica"));
+                    a.setDiagnostico(rs.getString("diagnostico"));
                     a.setRecomendacionControl(rs.getString("recomendacion_control"));
                     a.setMontoReferencial(rs.getDouble("monto_referencial"));
                     a.setDescuentoAplicado(rs.getDouble("descuento_aplicado"));
