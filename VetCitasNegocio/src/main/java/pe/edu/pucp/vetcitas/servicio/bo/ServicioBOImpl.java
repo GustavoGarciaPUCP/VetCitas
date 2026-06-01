@@ -97,5 +97,14 @@ public class ServicioBOImpl implements IServicioBO {
         if (servicio.getPrecioReferencial() < 0) {
             throw new Exception("El precio referencial no puede ser negativo.");
         }
+        if (servicio.getDescripcion() != null) {
+            String descripcion = servicio.getDescripcion().trim();
+
+            if (descripcion.length() > 255) {
+                throw new Exception("La descripción del servicio no puede superar los 255 caracteres.");
+            }
+
+            servicio.setDescripcion(descripcion);
+        }
     }
 }

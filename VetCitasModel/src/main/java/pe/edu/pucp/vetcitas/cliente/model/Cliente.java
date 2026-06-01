@@ -13,6 +13,7 @@ public class Cliente extends EntidadAuditable {
     private String nombres;
     private String apellidos;
     private String telefono;
+    private String email;
     private String observaciones;
     private boolean activo;
     private List<Mascota> mascotas;
@@ -24,13 +25,14 @@ public class Cliente extends EntidadAuditable {
         this.dni = "";
         this.apellidos = "";
         this.telefono = "";
+        this.email = "";
         this.observaciones = "";
         this.activo = true;
         this.mascotas = new ArrayList<>();
     }
 
     public Cliente(int id,String dni, String nombres, String apellidos, String telefono,
-                   String observaciones, boolean activo, List<Mascota> mascotas,
+                   String email, String observaciones, boolean activo, List<Mascota> mascotas,
                    LocalDateTime createdOn, LocalDateTime modifiedOn,
                    Usuario modifiedBy) {
         super(createdOn, modifiedOn, modifiedBy);
@@ -39,6 +41,7 @@ public class Cliente extends EntidadAuditable {
         this.nombres = nombres;
         this.apellidos = apellidos;
         this.telefono = telefono;
+        this.email = email;
         this.observaciones = observaciones;
         this.activo = activo;
         this.mascotas = new ArrayList<>();
@@ -57,6 +60,7 @@ public class Cliente extends EntidadAuditable {
         this.nombres = otro.nombres;
         this.apellidos = otro.apellidos;
         this.telefono = otro.telefono;
+        this.email = otro.email; // Copy new attribute
         this.observaciones = otro.observaciones;
         this.activo = otro.activo;
         this.mascotas = new ArrayList<>();
@@ -106,6 +110,14 @@ public class Cliente extends EntidadAuditable {
 
     public void setTelefono(String telefono) {
         this.telefono = telefono;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getObservaciones() {

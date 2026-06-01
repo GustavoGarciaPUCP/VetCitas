@@ -1,3 +1,5 @@
+DROP schema vetcitas_db;
+CREATE SCHEMA vetcitas_db;
 USE vetcitas_db;
 
 
@@ -29,6 +31,7 @@ CREATE TABLE usuario (
     nombres VARCHAR(100) NOT NULL,
     apellidos VARCHAR(100) NOT NULL,
     telefono VARCHAR(20),
+    email VARCHAR(150) NOT NULL UNIQUE,
     activo TINYINT(1) NOT NULL DEFAULT 1,
     created_on DATETIME,
     modified_on DATETIME,
@@ -90,6 +93,7 @@ CREATE TABLE cliente (
     nombres VARCHAR(100) NOT NULL,
     apellidos VARCHAR(100) NOT NULL,
     telefono VARCHAR(20),
+    email VARCHAR(150) NULL,
     observaciones VARCHAR(255),
     activo TINYINT(1) NOT NULL DEFAULT 1,
     created_on DATETIME,
@@ -103,6 +107,7 @@ CREATE TABLE mascota (
     especie VARCHAR(50) NOT NULL,
     raza VARCHAR(50),
     fecha_nacimiento DATE,
+    peso DECIMAL(6,2) NULL,
     esterilizado TINYINT(1) NOT NULL DEFAULT 0,
     activo TINYINT(1) NOT NULL DEFAULT 1,
     id_cliente INT NOT NULL,
@@ -115,6 +120,7 @@ CREATE TABLE mascota (
 CREATE TABLE servicio (
     id_servicio INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
+    descripcion VARCHAR(255) NULL,
     tipo_servicio VARCHAR(20) NOT NULL,
     duracion_minutos INT NOT NULL,
     precio_referencial DECIMAL(10,2) NOT NULL,
@@ -165,6 +171,7 @@ CREATE TABLE atencion (
     id_atencion INT AUTO_INCREMENT PRIMARY KEY,
     fecha_hora DATETIME NOT NULL,
     nota_clinica TEXT,
+    diagnostico VARCHAR(255) NULL,
     nota_pre_operatoria TEXT,
     nota_post_operatoria TEXT,
     recomendacion_control TEXT,
@@ -224,8 +231,30 @@ WHERE
 INSERT INTO configuracion(umbral_cliente_frecuente, descuento_maximo_permitido)
 VALUES (5, 20.00);
 
-INSERT INTO usuario(username, contrasena_hash, nombres, apellidos, telefono, activo, created_on, modified_on, modified_by)
-VALUES ('superadmin', 'hash_superadmin_inicial', 'Super', 'Admin', '000000000', 1, NOW(), NOW(), NULL);
+INSERT INTO usuario(
+    username,
+    contrasena_hash,
+    nombres,
+    apellidos,
+    telefono,
+    email,
+    activo,
+    created_on,
+    modified_on,
+    modified_by
+)
+VALUES(
+    'superadmin',
+    'hash_superadmin',
+    'Super',
+    'Admin',
+    '999999999',
+    'superadmin@vetcitas.com',
+    1,
+    NOW(),
+    NOW(),
+    NULL
+);
 
 INSERT INTO administrador(id_administrador, area, es_super_admin)
 SELECT id_usuario, 'Sistema', 1 FROM usuario WHERE username = 'superadmin';

@@ -21,11 +21,11 @@ public class Veterinario extends Usuario{
     }
 
     public Veterinario(int id, String username, String contrasenaHash, String nombres,
-                       String apellidos, boolean activo, String telefono,
+                       String apellidos, boolean activo, String telefono,String email,
                        List<RolSistema> roles, String cmpv, String especialidad,
                        LocalDateTime createdOn, LocalDateTime modifiedOn,
                        Usuario modifiedBy) {
-        super(id, username, contrasenaHash, nombres, apellidos, activo, telefono,
+        super(id, username, contrasenaHash, nombres, apellidos, activo, telefono,email,
                 roles, createdOn, modifiedOn, modifiedBy);
         this.cmpv = cmpv;
         this.especialidad = especialidad;

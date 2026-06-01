@@ -84,6 +84,13 @@ public class CitaBOImpl implements ICitaBO {
     @Override
     public void marcarAtendida(int idCita, int modifiedBy) throws Exception {
         Cita cita = buscarPorId(idCita);
+        if (cita == null) {
+            throw new Exception("La cita no existe.");
+        }
+
+        if (cita.getEstado() != EstadoCita.EN_CONSULTA) {
+            throw new Exception("Solo una cita en consulta puede marcarse como atendida.");
+        }
         if (cita.getEstado() == EstadoCita.CANCELADA) {
             throw new Exception("No se puede marcar como atendida una cita cancelada.");
         }
@@ -147,6 +154,29 @@ public class CitaBOImpl implements ICitaBO {
         textoBusqueda = textoBusqueda.trim();
 
         return citaDAO.listarFiltradas(idVeterinario, fechaInicio, fechaFin, estado, textoBusqueda);
+    }
+
+    @Override
+    public void marcarEnConsulta(int idCita, int idUsuario) throws Exception {
+        if (idCita <= 0) {
+            throw new Exception("El id de la cita debe ser mayor que cero.");
+        }
+
+        if (idUsuario <= 0) {
+            throw new Exception("El id del usuario que modifica debe ser mayor que cero.");
+        }
+
+        Cita cita = citaDAO.buscarPorId(idCita);
+
+        if (cita == null) {
+            throw new Exception("La cita no existe.");
+        }
+
+        if (cita.getEstado() != EstadoCita.CONFIRMADA) {
+            throw new Exception("Solo una cita confirmada puede pasar a EN_CONSULTA.");
+        }
+
+        citaDAO.marcarEnConsulta(idCita, idUsuario);
     }
 
     private void validar(Cita cita, boolean esModificacion) throws Exception {

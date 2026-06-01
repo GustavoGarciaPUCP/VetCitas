@@ -5,10 +5,7 @@ import pe.edu.pucp.vetcitas.cliente.model.Mascota;
 import pe.edu.pucp.vetcitas.config.DBManager;
 import pe.edu.pucp.vetcitas.cliente.model.Cliente;
 
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.Date;
-import java.sql.ResultSet;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,7 +17,8 @@ public class MascotaImpl implements MascotaDAO {
         CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
-            String sql = "{CALL insertar_mascota(?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)}";
+            String sql = "{CALL insertar_mascota(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
+
             cs = con.prepareCall(sql);
 
             cs.setString(1, mascota.getNombre());
@@ -28,42 +26,42 @@ public class MascotaImpl implements MascotaDAO {
             cs.setString(3, mascota.getRaza());
 
             if (mascota.getFechaNacimiento() != null) {
-                cs.setDate(4, Date.valueOf(mascota.getFechaNacimiento()));
+                cs.setDate(4, java.sql.Date.valueOf(mascota.getFechaNacimiento()));
             } else {
-                cs.setDate(4, null);
+                cs.setNull(4, Types.DATE);
             }
 
-            cs.setBoolean(5, mascota.isEsterilizado());
-            cs.setBoolean(6, mascota.isActivo());
+            cs.setDouble(5, mascota.getPeso());
 
-            if (mascota.getCliente() != null) {
-                cs.setInt(7, mascota.getCliente().getId());
-            } else {
-                cs.setNull(7, java.sql.Types.INTEGER);
-            }
+            cs.setBoolean(6, mascota.isEsterilizado());
+            cs.setBoolean(7, mascota.isActivo());
+            cs.setInt(8, mascota.getCliente().getId());
 
             if (mascota.getCreatedOn() != null) {
-                cs.setTimestamp(8, java.sql.Timestamp.valueOf(mascota.getCreatedOn()));
-            } else {
-                cs.setTimestamp(8, null);
-            }
-
-            if (mascota.getModifiedOn() != null) {
-                cs.setTimestamp(9, java.sql.Timestamp.valueOf(mascota.getModifiedOn()));
+                cs.setTimestamp(9, Timestamp.valueOf(mascota.getCreatedOn()));
             } else {
                 cs.setTimestamp(9, null);
             }
 
-            if (mascota.getModifiedBy() != null) {
-                cs.setInt(10, mascota.getModifiedBy().getId());
+            if (mascota.getModifiedOn() != null) {
+                cs.setTimestamp(10, Timestamp.valueOf(mascota.getModifiedOn()));
             } else {
-                cs.setNull(10, java.sql.Types.INTEGER);
+                cs.setTimestamp(10, null);
             }
-            cs.registerOutParameter(11, java.sql.Types.INTEGER);
 
-            resultado = cs.executeUpdate();
-            int idNuevo = cs.getInt(11);
+            if (mascota.getModifiedBy() != null) {
+                cs.setInt(11, mascota.getModifiedBy().getId());
+            } else {
+                cs.setNull(11, Types.INTEGER);
+            }
+
+            cs.registerOutParameter(12, Types.INTEGER);
+            cs.executeUpdate();
+
+            int idNuevo = cs.getInt(12);
             mascota.setId(idNuevo);
+
+            resultado = idNuevo;
 
         } catch (Exception ex) {
             System.out.println("ERROR: " + ex.getMessage());
@@ -85,7 +83,7 @@ public class MascotaImpl implements MascotaDAO {
         CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
-            String sql = "{CALL modificar_mascota(?, ?, ?, ?, ?, ?, ?, ?, ?)}";
+            String sql = "{CALL modificar_mascota(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
             cs = con.prepareCall(sql);
 
             cs.setInt(1, mascota.getId());
@@ -94,29 +92,27 @@ public class MascotaImpl implements MascotaDAO {
             cs.setString(4, mascota.getRaza());
 
             if (mascota.getFechaNacimiento() != null) {
-                cs.setDate(5, Date.valueOf(mascota.getFechaNacimiento()));
+                cs.setDate(5, java.sql.Date.valueOf(mascota.getFechaNacimiento()));
             } else {
-                cs.setDate(5, null);
+                cs.setNull(5, Types.DATE);
             }
 
-            cs.setBoolean(6, mascota.isEsterilizado());
+            cs.setDouble(6, mascota.getPeso());
 
-            if (mascota.getCliente() != null) {
-                cs.setInt(7, mascota.getCliente().getId());
-            } else {
-                cs.setNull(7, java.sql.Types.INTEGER);
-            }
+            cs.setBoolean(7, mascota.isEsterilizado());
+            cs.setBoolean(8, mascota.isActivo());
+            cs.setInt(9, mascota.getCliente().getId());
 
             if (mascota.getModifiedOn() != null) {
-                cs.setTimestamp(8, java.sql.Timestamp.valueOf(mascota.getModifiedOn()));
+                cs.setTimestamp(10, Timestamp.valueOf(mascota.getModifiedOn()));
             } else {
-                cs.setTimestamp(8, null);
+                cs.setTimestamp(10, null);
             }
 
             if (mascota.getModifiedBy() != null) {
-                cs.setInt(9, mascota.getModifiedBy().getId());
+                cs.setInt(11, mascota.getModifiedBy().getId());
             } else {
-                cs.setNull(9, java.sql.Types.INTEGER);
+                cs.setNull(11, Types.INTEGER);
             }
 
             resultado = cs.executeUpdate();
@@ -183,6 +179,7 @@ public class MascotaImpl implements MascotaDAO {
                 mascota.setNombre(rs.getString("nombre"));
                 mascota.setEspecie(rs.getString("especie"));
                 mascota.setRaza(rs.getString("raza"));
+                mascota.setPeso(rs.getDouble("peso"));
 
                 Date fecha = rs.getDate("fecha_nacimiento");
                 if (fecha != null) {
@@ -230,6 +227,7 @@ public class MascotaImpl implements MascotaDAO {
                 mascota.setNombre(rs.getString("nombre"));
                 mascota.setEspecie(rs.getString("especie"));
                 mascota.setRaza(rs.getString("raza"));
+                mascota.setPeso(rs.getDouble("peso"));
 
                 Date fecha = rs.getDate("fecha_nacimiento");
                 if (fecha != null) {
@@ -280,6 +278,7 @@ public class MascotaImpl implements MascotaDAO {
                 mascota.setNombre(rs.getString("nombre_mascota"));
                 mascota.setEspecie(rs.getString("especie"));
                 mascota.setRaza(rs.getString("raza"));
+                mascota.setPeso(rs.getDouble("peso"));
                 mascota.setFechaNacimiento(rs.getDate("fecha_nacimiento").toLocalDate());
                 mascota.setEsterilizado(rs.getBoolean("esterilizado"));
                 mascota.setActivo(rs.getBoolean("activo"));
@@ -328,6 +327,7 @@ public class MascotaImpl implements MascotaDAO {
                 mascota.setNombre(rs.getString("nombre_mascota"));
                 mascota.setEspecie(rs.getString("especie"));
                 mascota.setRaza(rs.getString("raza"));
+                mascota.setPeso(rs.getDouble("peso"));
                 mascota.setFechaNacimiento(rs.getDate("fecha_nacimiento").toLocalDate());
                 mascota.setEsterilizado(rs.getBoolean("esterilizado"));
                 mascota.setActivo(rs.getBoolean("activo"));

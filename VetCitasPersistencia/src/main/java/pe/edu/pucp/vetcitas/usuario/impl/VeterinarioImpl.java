@@ -18,26 +18,26 @@ public class VeterinarioImpl implements IVeterinarioDAO {
         CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{CALL insertar_veterinario(?, ?, ?, ?, ?, ?, ?, ?, ?)}");
-
+            cs = con.prepareCall("{CALL insertar_veterinario(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}");
             cs.setString(1, veterinario.getUsername());
             cs.setString(2, veterinario.getContrasenaHash());
             cs.setString(3, veterinario.getNombres());
             cs.setString(4, veterinario.getApellidos());
             cs.setString(5, veterinario.getTelefono());
-            cs.setString(6, veterinario.getCmpv());
-            cs.setString(7, veterinario.getEspecialidad());
+            cs.setString(6, veterinario.getEmail());
+            cs.setString(7, veterinario.getCmpv());
+            cs.setString(8, veterinario.getEspecialidad());
 
             if (veterinario.getModifiedBy() != null) {
-                cs.setInt(8, veterinario.getModifiedBy().getId());
+                cs.setInt(9, veterinario.getModifiedBy().getId());
             } else {
-                cs.setNull(8, Types.INTEGER);
+                cs.setNull(9, Types.INTEGER);
             }
 
-            cs.registerOutParameter(9, Types.INTEGER);
+            cs.registerOutParameter(10, Types.INTEGER);
             cs.executeUpdate();
 
-            idGenerado = cs.getInt(9);
+            idGenerado = cs.getInt(10);
             veterinario.setId(idGenerado);
 
         } catch (Exception ex) {
@@ -60,22 +60,22 @@ public class VeterinarioImpl implements IVeterinarioDAO {
         CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{CALL modificar_veterinario(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}");
-
+            cs = con.prepareCall("{CALL modificar_veterinario(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}");
             cs.setInt(1, veterinario.getId());
             cs.setString(2, veterinario.getUsername());
             cs.setString(3, veterinario.getContrasenaHash());
             cs.setString(4, veterinario.getNombres());
             cs.setString(5, veterinario.getApellidos());
             cs.setString(6, veterinario.getTelefono());
-            cs.setBoolean(7, veterinario.isActivo());
-            cs.setString(8, veterinario.getCmpv());
-            cs.setString(9, veterinario.getEspecialidad());
+            cs.setString(7, veterinario.getEmail());
+            cs.setBoolean(8, veterinario.isActivo());
+            cs.setString(9, veterinario.getCmpv());
+            cs.setString(10, veterinario.getEspecialidad());
 
             if (veterinario.getModifiedBy() != null) {
-                cs.setInt(10, veterinario.getModifiedBy().getId());
+                cs.setInt(11, veterinario.getModifiedBy().getId());
             } else {
-                cs.setNull(10, Types.INTEGER);
+                cs.setNull(11, Types.INTEGER);
             }
 
             resultado = cs.executeUpdate();
@@ -139,6 +139,7 @@ public class VeterinarioImpl implements IVeterinarioDAO {
                 veterinario.setApellidos(rs.getString("apellidos"));
                 veterinario.setTelefono(rs.getString("telefono"));
                 veterinario.setActivo(rs.getBoolean("activo"));
+                veterinario.setEmail(rs.getString("email"));
                 veterinario.setCmpv(rs.getString("cmpv"));
                 veterinario.setEspecialidad(rs.getString("especialidad"));
                 veterinario.setRoles(UsuarioPersistenciaHelper.cargarRolesDeUsuario(id));
@@ -179,6 +180,7 @@ public class VeterinarioImpl implements IVeterinarioDAO {
                 veterinario.setApellidos(rs.getString("apellidos"));
                 veterinario.setTelefono(rs.getString("telefono"));
                 veterinario.setActivo(rs.getBoolean("activo"));
+                veterinario.setEmail(rs.getString("email"));
                 veterinario.setCmpv(rs.getString("cmpv"));
                 veterinario.setEspecialidad(rs.getString("especialidad"));
                 veterinario.setRoles(UsuarioPersistenciaHelper.cargarRolesDeUsuario(id));
@@ -220,6 +222,7 @@ public class VeterinarioImpl implements IVeterinarioDAO {
                 veterinario.setNombres(rs.getString("nombres"));
                 veterinario.setApellidos(rs.getString("apellidos"));
                 veterinario.setTelefono(rs.getString("telefono"));
+                veterinario.setEmail(rs.getString("email"));
                 veterinario.setCmpv(rs.getString("cmpv"));
                 veterinario.setEspecialidad(rs.getString("especialidad"));
                 veterinario.setRoles(UsuarioPersistenciaHelper.cargarRolesDeUsuario(id));

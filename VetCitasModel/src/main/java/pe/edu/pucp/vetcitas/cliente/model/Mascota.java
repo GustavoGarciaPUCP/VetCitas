@@ -19,10 +19,12 @@ public class Mascota extends EntidadAuditable {
     private boolean activo;
     private Cliente cliente;
     private List<Atencion> atenciones;
+    private double peso;
 
     public Mascota() {
         super();
         this.id = 0;
+        this.peso = 0.0;
         this.nombre = "";
         this.especie = "";
         this.raza = "";
@@ -33,13 +35,14 @@ public class Mascota extends EntidadAuditable {
         this.atenciones = new ArrayList<>();
     }
 
-    public Mascota(int id, String nombre, String especie, String raza,
+    public Mascota(int id, String nombre, String especie, String raza,double peso,
                    LocalDate fechaNacimiento, boolean esterilizado, boolean activo,
                    Cliente cliente, List<Atencion> atenciones,
                    LocalDateTime createdOn, LocalDateTime modifiedOn,
                    Usuario modifiedBy) {
         super(createdOn, modifiedOn, modifiedBy);
         this.id = id;
+        this.peso = peso;
         this.nombre = nombre;
         this.especie = especie;
         this.raza = raza;
@@ -59,6 +62,7 @@ public class Mascota extends EntidadAuditable {
     public Mascota(Mascota otra) {
         super(otra);
         this.id = otra.id;
+        this.peso = otra.peso;
         this.nombre = otra.nombre;
         this.especie = otra.especie;
         this.raza = otra.raza;
@@ -73,6 +77,14 @@ public class Mascota extends EntidadAuditable {
                 this.atenciones.add(new Atencion(atencion));
             }
         }
+    }
+
+    public double getPeso() {
+        return peso;
+    }
+
+    public void setPeso(double peso) {
+        this.peso = peso;
     }
 
     public int getId() {

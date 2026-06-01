@@ -84,5 +84,18 @@ public class ClienteBOImpl implements IClienteBO {
         if (!cliente.getTelefono().matches("\\d{6,15}")) {
             throw new Exception("El teléfono debe contener solo dígitos (entre 6 y 15).");
         }
+        if (cliente.getEmail() != null && !cliente.getEmail().trim().isEmpty()) {
+            String email = cliente.getEmail().trim();
+
+            if (email.length() > 70) {
+                throw new Exception("El email no puede superar los 70 caracteres.");
+            }
+
+            if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+                throw new Exception("El email no tiene un formato válido.");
+            }
+
+            cliente.setEmail(email);
+        }
     }
 }

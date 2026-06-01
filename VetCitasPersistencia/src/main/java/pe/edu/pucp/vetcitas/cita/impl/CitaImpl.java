@@ -26,7 +26,6 @@ public class CitaImpl implements ICitaDAO {
         try {
             con = DBManager.getInstance().getConnection();
             cs = con.prepareCall("{CALL insertar_cita(?, ?, ?, ?, ?, ?, ?)}");
-
             cs.setTimestamp(1, Timestamp.valueOf(cita.getFechaHoraInicio()));
             cs.setString(2, cita.getEstado().name());
             cs.setInt(3, cita.getMascota().getId());
@@ -288,6 +287,7 @@ public class CitaImpl implements ICitaDAO {
         Mascota mascota = new Mascota();
         mascota.setId(rs.getInt("id_mascota"));
         mascota.setNombre(rs.getString("nombre_mascota"));
+        mascota.setPeso(rs.getDouble("peso_mascota"));
         cita.setMascota(mascota);
 
         Veterinario veterinario = new Veterinario();
@@ -297,6 +297,7 @@ public class CitaImpl implements ICitaDAO {
         Servicio servicio = new Servicio();
         servicio.setId(rs.getInt("id_servicio"));
         servicio.setNombre(rs.getString("nombre_servicio"));
+        servicio.setDescripcion(rs.getString("descripcion_servicio"));
         cita.setServicio(servicio);
 
         return cita;
@@ -338,6 +339,7 @@ public class CitaImpl implements ICitaDAO {
                 Mascota mascota = new Mascota();
                 mascota.setId(rs.getInt("id_mascota"));
                 mascota.setNombre(rs.getString("nombre_mascota"));
+                mascota.setPeso(rs.getDouble("peso_mascota"));
 
                 Cliente cliente = new Cliente();
                 cliente.setId(rs.getInt("id_cliente"));
@@ -353,6 +355,7 @@ public class CitaImpl implements ICitaDAO {
                 Servicio servicio = new Servicio();
                 servicio.setId(rs.getInt("id_servicio"));
                 servicio.setNombre(rs.getString("nombre_servicio"));
+                servicio.setDescripcion(rs.getString("descripcion_servicio"));
                 servicio.setTipoServicio(TipoServicio.valueOf(rs.getString("tipo_servicio")));
 
                 cita.setMascota(mascota);
@@ -375,5 +378,27 @@ public class CitaImpl implements ICitaDAO {
         }
 
         return citas;
+    }
+    @Override
+    public void marcarEnConsulta(int idCita, int modifiedBy) {
+        Connection con = null;
+        CallableStatement cs = null;
+        try {
+            con = DBManager.getInstance().getConnection();
+            cs = con.prepareCall("{CALL marcar_cita_en_consulta(?, ?)}");
+            cs.setInt(1, idCita);
+            cs.setInt(2, modifiedBy);
+            cs.executeUpdate();
+
+        } catch (Exception ex) {
+            System.out.println("ERROR marcando cita en consulta: " + ex.getMessage());
+        } finally {
+            try {
+                if (cs != null) cs.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("ERROR cerrando recursos en marcarEnConsulta: " + ex.getMessage());
+            }
+        }
     }
 }
