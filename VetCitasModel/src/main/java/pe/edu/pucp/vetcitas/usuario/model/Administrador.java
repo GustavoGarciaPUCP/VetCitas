@@ -16,11 +16,11 @@ public class Administrador extends Usuario{
     }
 
     public Administrador(int id, String username, String contrasenaHash, String nombres,
-                         String apellidos, boolean activo, String telefono,
+                         String apellidos, boolean activo, String telefono,String email,
                          List<RolSistema> roles, String area, boolean esSuperAdmin,
                          LocalDateTime createdOn, LocalDateTime modifiedOn,
                          Usuario modifiedBy) {
-        super(id, username, contrasenaHash, nombres, apellidos, activo, telefono,
+        super(id, username, contrasenaHash, nombres, apellidos, activo, telefono,email,
                 roles, createdOn, modifiedOn, modifiedBy);
         this.area = area;
         this.esSuperAdmin = esSuperAdmin;

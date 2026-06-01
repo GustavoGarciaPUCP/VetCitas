@@ -5,5 +5,6 @@ public enum EstadoCita {
     CONFIRMADA,
     CANCELADA,
     ATENDIDA,
-    NO_ASISTIO
+    NO_ASISTIO,
+    EN_CONSULTA
 }

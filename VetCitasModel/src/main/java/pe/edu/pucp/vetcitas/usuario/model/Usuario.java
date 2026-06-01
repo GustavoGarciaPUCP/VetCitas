@@ -13,6 +13,7 @@ public class Usuario extends EntidadAuditable {
     private String contrasenaHash;
     private String nombres;
     private String apellidos;
+    private String email;
     private boolean activo;
     private String telefono;
     private List<RolSistema> roles;
@@ -23,6 +24,7 @@ public class Usuario extends EntidadAuditable {
         this.username = "";
         this.contrasenaHash = "";
         this.nombres = "";
+        this.email = "";
         this.apellidos = "";
         this.activo = true;
         this.telefono = "";
@@ -30,7 +32,7 @@ public class Usuario extends EntidadAuditable {
     }
 
     public Usuario(int id, String username, String contrasenaHash, String nombres,
-                   String apellidos, boolean activo, String telefono,
+                   String apellidos, boolean activo, String telefono,String email,
                    List<RolSistema> roles, LocalDateTime createdOn,
                    LocalDateTime modifiedOn, Usuario modifiedBy) {
         super(createdOn, modifiedOn, modifiedBy);
@@ -41,6 +43,7 @@ public class Usuario extends EntidadAuditable {
         this.apellidos = apellidos;
         this.activo = activo;
         this.telefono = telefono;
+        this.email = email;
         this.roles = new ArrayList<>();
 
         if (roles != null) {
@@ -53,6 +56,7 @@ public class Usuario extends EntidadAuditable {
     public Usuario(Usuario otro) {
         super(otro);
         this.id = otro.id;
+        this.email = otro.email;
         this.username = otro.username;
         this.contrasenaHash = otro.contrasenaHash;
         this.nombres = otro.nombres;
@@ -66,6 +70,14 @@ public class Usuario extends EntidadAuditable {
                 this.roles.add(new RolSistema(rol));
             }
         }
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public int getId() {

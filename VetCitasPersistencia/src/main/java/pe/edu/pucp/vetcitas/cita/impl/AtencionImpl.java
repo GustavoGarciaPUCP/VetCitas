@@ -24,20 +24,44 @@ public class AtencionImpl implements IAtencionDAO {
         CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{call insertar_atencion(?,?,?,?,?,?,?,?,?,?)}");
+
+            cs = con.prepareCall("{call insertar_atencion(?,?,?,?,?,?,?,?,?,?,?,?,?)}");
+
             cs.setTimestamp("p_fecha_hora", Timestamp.valueOf(atencion.getFechaHora()));
             cs.setString("p_nota_clinica", atencion.getNotaClinica());
+            cs.setString("p_diagnostico", atencion.getDiagnostico());
             cs.setString("p_nota_pre_operatoria", atencion.getNotaPreOperatoria());
             cs.setString("p_nota_post_operatoria", atencion.getNotaPostOperatoria());
             cs.setString("p_recomendacion_control", atencion.getRecomendacionControl());
             cs.setDouble("p_monto_referencial", atencion.getMontoReferencial());
             cs.setDouble("p_descuento_aplicado", atencion.getDescuentoAplicado());
             cs.setInt("p_id_cita", atencion.getCita().getId());
-            cs.setTimestamp("p_created_on", Timestamp.valueOf(LocalDateTime.now()));
+
+            if (atencion.getCreatedOn() != null) {
+                cs.setTimestamp("p_created_on", Timestamp.valueOf(atencion.getCreatedOn()));
+            } else {
+                cs.setTimestamp("p_created_on", Timestamp.valueOf(LocalDateTime.now()));
+            }
+
+            if (atencion.getModifiedOn() != null) {
+                cs.setTimestamp("p_modified_on", Timestamp.valueOf(atencion.getModifiedOn()));
+            } else {
+                cs.setTimestamp("p_modified_on", Timestamp.valueOf(LocalDateTime.now()));
+            }
+
+            if (atencion.getModifiedBy() != null) {
+                cs.setInt("p_modified_by", atencion.getModifiedBy().getId());
+            } else {
+                cs.setNull("p_modified_by", Types.INTEGER);
+            }
+
             cs.registerOutParameter("p_id_generado", Types.INTEGER);
+
             cs.executeUpdate();
+
             resultado = cs.getInt("p_id_generado");
             atencion.setId(resultado);
+
         } catch (Exception ex) {
             System.out.println("ERROR: " + ex.getMessage());
         } finally {
@@ -54,22 +78,37 @@ public class AtencionImpl implements IAtencionDAO {
         CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{call modificar_atencion(?,?,?,?,?,?,?,?,?,?)}");
+
+            // Son 12 parámetros, igual que el procedure modificar_atencion
+            cs = con.prepareCall("{call modificar_atencion(?,?,?,?,?,?,?,?,?,?,?,?)}");
+
             cs.setInt("p_id_atencion", atencion.getId());
             cs.setTimestamp("p_fecha_hora", Timestamp.valueOf(atencion.getFechaHora()));
             cs.setString("p_nota_clinica", atencion.getNotaClinica());
+            cs.setString("p_diagnostico", atencion.getDiagnostico());
             cs.setString("p_nota_pre_operatoria", atencion.getNotaPreOperatoria());
             cs.setString("p_nota_post_operatoria", atencion.getNotaPostOperatoria());
             cs.setString("p_recomendacion_control", atencion.getRecomendacionControl());
             cs.setDouble("p_monto_referencial", atencion.getMontoReferencial());
             cs.setDouble("p_descuento_aplicado", atencion.getDescuentoAplicado());
-            cs.setTimestamp("p_modified_on", Timestamp.valueOf(LocalDateTime.now()));
+
+            // Te faltaba este parámetro
+            cs.setInt("p_id_cita", atencion.getCita().getId());
+
+            if (atencion.getModifiedOn() != null) {
+                cs.setTimestamp("p_modified_on", Timestamp.valueOf(atencion.getModifiedOn()));
+            } else {
+                cs.setTimestamp("p_modified_on", Timestamp.valueOf(LocalDateTime.now()));
+            }
+
             if (atencion.getModifiedBy() != null) {
                 cs.setInt("p_modified_by", atencion.getModifiedBy().getId());
             } else {
                 cs.setNull("p_modified_by", Types.INTEGER);
             }
+
             resultado = cs.executeUpdate();
+
         } catch (Exception ex) {
             System.out.println("ERROR: " + ex.getMessage());
         } finally {
@@ -178,6 +217,7 @@ public class AtencionImpl implements IAtencionDAO {
         atencion.setFechaHora(rs.getTimestamp("fecha_hora").toLocalDateTime());
         atencion.setNotaClinica(rs.getString("nota_clinica"));
         atencion.setNotaPreOperatoria(rs.getString("nota_pre_operatoria"));
+        atencion.setDiagnostico(rs.getString("diagnostico"));
         atencion.setNotaPostOperatoria(rs.getString("nota_post_operatoria"));
         atencion.setRecomendacionControl(rs.getString("recomendacion_control"));
         atencion.setMontoReferencial(rs.getDouble("monto_referencial"));
@@ -224,7 +264,7 @@ public class AtencionImpl implements IAtencionDAO {
                 a.setRecomendacionControl(rs.getString("recomendacion_control"));
                 a.setMontoReferencial(rs.getDouble("monto_referencial"));
                 a.setDescuentoAplicado(rs.getDouble("descuento_aplicado"));
-
+                a.setDiagnostico(rs.getString("diagnostico"));
 
                 Cita cita = new Cita();
                 cita.setId(rs.getInt("id_cita"));
@@ -235,6 +275,7 @@ public class AtencionImpl implements IAtencionDAO {
                 Mascota mascota = new Mascota();
                 mascota.setId(rs.getInt("id_mascota"));
                 mascota.setNombre(rs.getString("nombre_mascota"));
+                mascota.setPeso(rs.getDouble("peso_mascota"));
 
                 Cliente cliente = new Cliente();
                 cliente.setId(rs.getInt("id_cliente"));
@@ -249,6 +290,7 @@ public class AtencionImpl implements IAtencionDAO {
                 Servicio servicio = new Servicio();
                 servicio.setId(rs.getInt("id_servicio"));
                 servicio.setNombre(rs.getString("nombre_servicio"));
+                servicio.setDescripcion(rs.getString("descripcion_servicio"));
 
                 mascota.setCliente(cliente);
                 cita.setMascota(mascota);
@@ -297,6 +339,7 @@ public class AtencionImpl implements IAtencionDAO {
                         a.setFechaHora(rs.getTimestamp("fecha_atencion").toLocalDateTime());
                     }
                     a.setNotaClinica(rs.getString("nota_clinica"));
+                    a.setDiagnostico(rs.getString("diagnostico"));
                     a.setRecomendacionControl(rs.getString("recomendacion_control"));
                     a.setMontoReferencial(rs.getDouble("monto_referencial"));
                     a.setDescuentoAplicado(rs.getDouble("descuento_aplicado"));
@@ -310,6 +353,7 @@ public class AtencionImpl implements IAtencionDAO {
 
                 Servicio servicio = new Servicio();
                 servicio.setNombre(rs.getString("nombre_servicio"));
+                servicio.setDescripcion(rs.getString("descripcion_servicio"));
                 cita.setServicio(servicio);
 
                 a.setCita(cita);

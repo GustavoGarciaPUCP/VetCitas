@@ -15,6 +15,7 @@ public class Atencion extends EntidadAuditable{
     private double montoReferencial;
     private double descuentoAplicado;
     private Cita cita;
+    private String diagnostico;
 
     public Atencion() {
         super();
@@ -23,13 +24,14 @@ public class Atencion extends EntidadAuditable{
         this.notaClinica = "";
         this.notaPreOperatoria = "";
         this.notaPostOperatoria = "";
+        this.diagnostico = "";
         this.recomendacionControl = "";
         this.montoReferencial = 0.0;
         this.descuentoAplicado = 0.0;
         this.cita = null;
     }
 
-    public Atencion(int id, LocalDateTime fechaHora, String notaClinica,
+    public Atencion(int id, LocalDateTime fechaHora, String notaClinica,String diagnostico,
                     String notaPreOperatoria, String notaPostOperatoria,
                     String recomendacionControl, double montoReferencial,
                     double descuentoAplicado, Cita cita,
@@ -39,6 +41,7 @@ public class Atencion extends EntidadAuditable{
         this.id = id;
         this.fechaHora = fechaHora;
         this.notaClinica = notaClinica;
+        this.diagnostico = diagnostico;
         this.notaPreOperatoria = notaPreOperatoria;
         this.notaPostOperatoria = notaPostOperatoria;
         this.recomendacionControl = recomendacionControl;
@@ -50,6 +53,7 @@ public class Atencion extends EntidadAuditable{
     public Atencion(Atencion otra) {
         super(otra);
         this.id = otra.id;
+        this.diagnostico = otra.diagnostico;
         this.fechaHora = otra.fechaHora;
         this.notaClinica = otra.notaClinica;
         this.notaPreOperatoria = otra.notaPreOperatoria;
@@ -58,6 +62,14 @@ public class Atencion extends EntidadAuditable{
         this.montoReferencial = otra.montoReferencial;
         this.descuentoAplicado = otra.descuentoAplicado;
         this.cita = (otra.cita == null) ? null : new Cita(otra.cita);
+    }
+
+    public String getDiagnostico() {
+        return diagnostico;
+    }
+
+    public void setDiagnostico(String diagnostico) {
+        this.diagnostico = diagnostico;
     }
 
     public int getId() {

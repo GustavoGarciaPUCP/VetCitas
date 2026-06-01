@@ -150,5 +150,23 @@ public class AdministradorBOImpl implements IAdministradorBO {
         if (admin.getApellidos() == null || admin.getApellidos().trim().isEmpty()) {
             throw new Exception("Los apellidos son obligatorios.");
         }
+        validarEmailObligatorio(admin.getEmail());
+        admin.setEmail(admin.getEmail().trim());
+    }
+
+    private void validarEmailObligatorio(String email) throws Exception {
+        if (email == null || email.trim().isEmpty()) {
+            throw new Exception("El email es obligatorio.");
+        }
+
+        email = email.trim();
+
+        if (email.length() > 100) {
+            throw new Exception("El email no puede superar los 100 caracteres.");
+        }
+
+        if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+            throw new Exception("El email no tiene un formato válido.");
+        }
     }
 }

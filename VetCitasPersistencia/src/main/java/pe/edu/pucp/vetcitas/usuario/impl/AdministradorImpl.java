@@ -28,26 +28,27 @@ public class AdministradorImpl implements IAdministradorDAO {
         CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{CALL insertar_administrador(?, ?, ?, ?, ?, ?, ?, ?, ?)}");
+            cs = con.prepareCall("{CALL insertar_administrador(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}");
 
             cs.setString(1, administrador.getUsername());
             cs.setString(2, administrador.getContrasenaHash());
             cs.setString(3, administrador.getNombres());
             cs.setString(4, administrador.getApellidos());
             cs.setString(5, administrador.getTelefono());
-            cs.setString(6, administrador.getArea());
-            cs.setBoolean(7, administrador.isEsSuperAdmin());
+            cs.setString(6, administrador.getEmail());
+            cs.setString(7, administrador.getArea());
+            cs.setBoolean(8, administrador.isEsSuperAdmin());
 
             if (administrador.getModifiedBy() != null) {
-                cs.setInt(8, administrador.getModifiedBy().getId());
+                cs.setInt(9, administrador.getModifiedBy().getId());
             } else {
-                cs.setNull(8, Types.INTEGER);
+                cs.setNull(9, Types.INTEGER);
             }
 
-            cs.registerOutParameter(9, Types.INTEGER);
+            cs.registerOutParameter(10, Types.INTEGER);
             cs.executeUpdate();
 
-            idGenerado = cs.getInt(9);
+            idGenerado = cs.getInt(10);
             administrador.setId(idGenerado);
 
         } catch (Exception ex) {
@@ -70,7 +71,7 @@ public class AdministradorImpl implements IAdministradorDAO {
         CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{CALL modificar_administrador(?, ?, ?, ?, ?, ?, ?, ?, ?)}");
+            cs = con.prepareCall("{CALL modificar_administrador(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}");
 
             cs.setInt(1, administrador.getId());
             cs.setString(2, administrador.getUsername());
@@ -78,13 +79,14 @@ public class AdministradorImpl implements IAdministradorDAO {
             cs.setString(4, administrador.getNombres());
             cs.setString(5, administrador.getApellidos());
             cs.setString(6, administrador.getTelefono());
-            cs.setBoolean(7, administrador.isActivo());
-            cs.setString(8, administrador.getArea());
+            cs.setString(7, administrador.getEmail());
+            cs.setBoolean(8, administrador.isActivo());
+            cs.setString(9, administrador.getArea());
 
             if (administrador.getModifiedBy() != null) {
-                cs.setInt(9, administrador.getModifiedBy().getId());
+                cs.setInt(10, administrador.getModifiedBy().getId());
             } else {
-                cs.setNull(9, Types.INTEGER);
+                cs.setNull(10, Types.INTEGER);
             }
 
             resultado = cs.executeUpdate();
@@ -147,6 +149,7 @@ public class AdministradorImpl implements IAdministradorDAO {
                 administrador.setNombres(rs.getString("nombres"));
                 administrador.setApellidos(rs.getString("apellidos"));
                 administrador.setTelefono(rs.getString("telefono"));
+                administrador.setEmail(rs.getString("email"));
                 administrador.setActivo(rs.getBoolean("activo"));
                 administrador.setArea(rs.getString("area"));
                 administrador.setEsSuperAdmin(rs.getBoolean("es_super_admin"));
@@ -187,6 +190,7 @@ public class AdministradorImpl implements IAdministradorDAO {
                 administrador.setNombres(rs.getString("nombres"));
                 administrador.setApellidos(rs.getString("apellidos"));
                 administrador.setTelefono(rs.getString("telefono"));
+                administrador.setEmail(rs.getString("email"));
                 administrador.setActivo(rs.getBoolean("activo"));
                 administrador.setArea(rs.getString("area"));
                 administrador.setEsSuperAdmin(rs.getBoolean("es_super_admin"));
@@ -354,6 +358,7 @@ public class AdministradorImpl implements IAdministradorDAO {
                     usuario.setNombres(rs.getString("nombres"));
                     usuario.setApellidos(rs.getString("apellidos"));
                     usuario.setTelefono(rs.getString("telefono"));
+                    usuario.setEmail(rs.getString("email"));
                     usuario.setActivo(rs.getBoolean("activo"));
                     usuario.setRoles(new ArrayList<>());
                     mapa.put(idUsuario, usuario);

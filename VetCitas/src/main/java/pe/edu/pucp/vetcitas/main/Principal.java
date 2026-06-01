@@ -74,6 +74,7 @@ public class Principal {
             admin.setContrasenaHash("hash_admin_123");
             admin.setNombres("Ana");
             admin.setApellidos("Torres");
+            admin.setEmail("ana.torres@vetcitas.com");
             admin.setTelefono("999111222");
             admin.setActivo(true);
             admin.setArea("Administración");
@@ -99,6 +100,7 @@ public class Principal {
             vet.setNombres("Luis");
             vet.setApellidos("Pérez");
             vet.setTelefono("988777666");
+            vet.setEmail("luis.perez@vetcitas.com");
             vet.setActivo(true);
             vet.setCmpv("CMPV-99999");
             vet.setEspecialidad("Medicina General");
@@ -124,6 +126,7 @@ public class Principal {
             recep.setContrasenaHash("hash_recep_123");
             recep.setNombres("Carla");
             recep.setApellidos("Rojas");
+            recep.setEmail("carla.rojas@vetcitas.com");
             recep.setTelefono("977555444");
             recep.setActivo(true);
             recep.setArea("Front Desk");
@@ -225,6 +228,31 @@ public class Principal {
             }
 
             // ==================================================
+            // ===== NUEVO ===== VALIDAR EMAIL OBLIGATORIO EN USUARIO
+            // ==================================================
+            imprimirSeccion("VALIDAR EMAIL OBLIGATORIO EN USUARIO");
+
+            try {
+                Veterinario vetSinEmail = new Veterinario();
+                vetSinEmail.setUsername("vet_sin_email");
+                vetSinEmail.setContrasenaHash("hash_vet_sin_email");
+                vetSinEmail.setNombres("Marco");
+                vetSinEmail.setApellidos("SinCorreo");
+                vetSinEmail.setTelefono("944111222");
+                vetSinEmail.setEmail(""); // debe fallar
+                vetSinEmail.setActivo(true);
+                vetSinEmail.setCmpv("CMPV-00001");
+                vetSinEmail.setEspecialidad("Dermatología");
+                vetSinEmail.setCreatedOn(ahora);
+                vetSinEmail.setModifiedBy(adminBD);
+
+                veterinarioBO.insertar(vetSinEmail);
+                System.out.println("ERROR: se insertó veterinario sin email.");
+            } catch (Exception ex) {
+                System.out.println("ÉXITO: se bloqueó usuario sin email -> " + ex.getMessage());
+            }
+
+            // ==================================================
             // 7. HORARIO DEL VETERINARIO
             // ==================================================
             imprimirSeccion("7. HORARIO DEL VETERINARIO");
@@ -275,6 +303,7 @@ public class Principal {
             cliente.setNombres("Mariana");
             cliente.setApellidos("Gómez");
             cliente.setTelefono("966123123");
+            cliente.setEmail("mariana.gomez@email.com");
             cliente.setObservaciones("Cliente frecuente");
             cliente.setActivo(true);
             cliente.setCreatedOn(ahora);
@@ -286,8 +315,10 @@ public class Principal {
             Cliente clienteBD = null;
             if (resultadoCliente > 0) {
                 clienteBD = clienteBO.buscarPorId(resultadoCliente);
-                System.out.println("Cliente buscado: " + clienteBD.getId() + " - "
-                        +clienteBD.getDni() +" - " + clienteBD.getNombres() + " " + clienteBD.getApellidos());
+                System.out.println("Cliente buscado: " + clienteBD.getId()
+                        + " - DNI: " + clienteBD.getDni()
+                        + " - Nombre: " + clienteBD.getNombres() + " " + clienteBD.getApellidos()
+                        + " - Email: " + clienteBD.getEmail());
             }
 
             // ==================================================
@@ -303,6 +334,7 @@ public class Principal {
                 mascota.setEspecie("Perro");
                 mascota.setRaza("Mestizo");
                 mascota.setFechaNacimiento(LocalDate.of(2021, 5, 10));
+                mascota.setPeso(12.5);
                 mascota.setEsterilizado(true);
                 mascota.setActivo(true);
                 mascota.setCliente(clienteBD);
@@ -314,7 +346,9 @@ public class Principal {
 
                 if (resultadoMascota > 0) {
                     mascotaBD = mascotaBO.buscarPorId(resultadoMascota);
-                    System.out.println("Mascota buscada: " + mascotaBD.getId() + " - " + mascotaBD.getNombre());
+                    System.out.println("Mascota buscada: " + mascotaBD.getId()
+                            + " - " + mascotaBD.getNombre()
+                            + " - Peso: " + mascotaBD.getPeso() + " kg");
                 }
             } else {
                 System.out.println("No se puede registrar mascota porque el cliente no existe.");
@@ -327,6 +361,7 @@ public class Principal {
 
             Servicio servicio = new Servicio();
             servicio.setNombre("Consulta General");
+            servicio.setDescripcion("Servicio clínico general para evaluación inicial de la mascota.");
             servicio.setTipoServicio(TipoServicio.CLINICA);
             servicio.setDuracionMinutos(30);
             servicio.setPrecioReferencial(80.0);
@@ -340,7 +375,9 @@ public class Principal {
             Servicio servicioBD = null;
             if (idServicio > 0) {
                 servicioBD = servicioBO.buscarPorId(idServicio);
-                System.out.println("Servicio buscado: " + servicioBD.getId() + " - " + servicioBD.getNombre());
+                System.out.println("Servicio buscado: " + servicioBD.getId()
+                        + " - " + servicioBD.getNombre()
+                        + " - Descripción: " + servicioBD.getDescripcion());
             }
 
             // ==================================================
@@ -414,11 +451,16 @@ public class Principal {
                     citaParaModificar.setModifiedBy(adminBD);
 
                     citaBO.modificar(citaParaModificar);
-                    System.out.println("Cita reprogramada a las 11:00.");
+                    System.out.println("Cita reprogramada a las 9:00.");
                 }
+                // ==================================================
+                // ===== NUEVO ===== PASAR CITA A EN_CONSULTA
+                // ==================================================
+                citaBO.marcarEnConsulta(idCita, idVet);
+                System.out.println("Cita marcada como EN_CONSULTA.");
 
-                citaBO.marcarAtendida(idCita, idVet);
-                System.out.println("Cita marcada como atendida.");
+                // Recuperamos la cita actualizada para que la atención use el estado correcto
+                Cita citaEnConsulta = citaBO.buscarPorId(idCita);
 
                 // ==================================================
                 // ===== NUEVO ===== 13.1 REGISTRAR ATENCIÓN DE LA CITA
@@ -428,16 +470,17 @@ public class Principal {
                 Atencion atencionBD = null;
                 int idAtencion = 0;
 
-                if (citaBD != null) {
+                if (citaEnConsulta != null) {
                     Atencion atencion = new Atencion();
                     atencion.setFechaHora(LocalDateTime.now());
                     atencion.setNotaClinica("Paciente estable. Presenta leve tos y buena respuesta al examen clínico.");
+                    atencion.setDiagnostico("Tos leve sin signos de complicación respiratoria.");
                     atencion.setNotaPreOperatoria("No aplica para consulta clínica.");
                     atencion.setNotaPostOperatoria("No aplica para consulta clínica.");
                     atencion.setRecomendacionControl("Reposo 48 horas y control en 7 días.");
                     atencion.setMontoReferencial(80.0);
-                    atencion.setDescuentoAplicado(5.0); // debe respetar la configuración máxima
-                    atencion.setCita(citaBD);
+                    atencion.setDescuentoAplicado(5.0);
+                    atencion.setCita(citaEnConsulta);
                     atencion.setCreatedOn(LocalDateTime.now());
                     atencion.setModifiedBy(vetBD);
 
@@ -448,10 +491,11 @@ public class Principal {
                         atencionBD = atencionBO.buscarPorId(idAtencion);
                         System.out.println("Atención buscada -> ID: " + atencionBD.getId()
                                 + ", Fecha: " + atencionBD.getFechaHora()
-                                + ", Nota clínica: " + atencionBD.getNotaClinica());
+                                + ", Nota clínica: " + atencionBD.getNotaClinica()
+                                + ", Diagnóstico: " + atencionBD.getDiagnostico());
                     }
 
-                    Atencion atencionPorCita = atencionBO.buscarPorCita(citaBD.getId());
+                    Atencion atencionPorCita = atencionBO.buscarPorCita(citaEnConsulta.getId());
                     if (atencionPorCita != null) {
                         System.out.println("Atención encontrada por cita -> ID Atención: " + atencionPorCita.getId()
                                 + ", ID Cita: " + atencionPorCita.getCita().getId());
@@ -461,6 +505,15 @@ public class Principal {
                 }
 
                 // ==================================================
+                // ===== NUEVO ===== MARCAR CITA COMO ATENDIDA
+                // ==================================================
+                citaBO.marcarAtendida(idCita, idVet);
+                System.out.println("Cita marcada como atendida.");
+
+                // Recuperamos la cita ya atendida para usarla en recordatorio si hace falta
+                Cita citaAtendida = citaBO.buscarPorId(idCita);
+
+                // ==================================================
                 // ===== NUEVO ===== 13.2 REGISTRAR RECORDATORIO DE LA CITA
                 // ==================================================
                 imprimirSeccion("13.2 REGISTRAR RECORDATORIO");
@@ -468,7 +521,7 @@ public class Principal {
                 Recordatorio recordatorioBD = null;
                 int idRecordatorio = 0;
 
-                if (citaBD != null) {
+                if (citaAtendida != null) {
                     Recordatorio recordatorio = new Recordatorio();
                     recordatorio.setFechaProgramada(LocalDateTime.now().plusDays(3));
                     recordatorio.setCanal(CanalRecordatorio.WHATSAPP);
@@ -476,7 +529,7 @@ public class Principal {
                     recordatorio.setMensaje("Recordatorio de control para la mascota "
                             + (mascotaBD != null ? mascotaBD.getNombre() : "N/A")
                             + " en 3 días.");
-                    recordatorio.setCita(citaBD);
+                    recordatorio.setCita(citaAtendida);
                     recordatorio.setCreatedOn(LocalDateTime.now());
                     recordatorio.setModifiedBy(adminBD);
 
@@ -494,12 +547,12 @@ public class Principal {
                     }
                 }
 
-
                 List<Cita> citasVetDia = citaBO.listarPorVeterinarioYFecha(idVet, proximoLunes);
                 System.out.println("Citas del veterinario para ese día: " + citasVetDia.size());
                 for (Cita c : citasVetDia) {
                     imprimirCita(c);
                 }
+
             }
 
             // ==================================================
@@ -631,6 +684,19 @@ public class Principal {
             }
 
             // ------------------------------
+            // ===== NUEVO ===== Buscar cliente por email opcional
+            // ------------------------------
+            List<Cliente> clientesPorEmail = clienteBO.listarPorNombreApellidoODni("mariana.gomez");
+            System.out.println("Clientes encontrados con email 'mariana.gomez': " + clientesPorEmail.size());
+
+            for (Cliente c : clientesPorEmail) {
+                System.out.println("Cliente -> ID: " + c.getId()
+                        + ", DNI: " + c.getDni()
+                        + ", Nombre: " + c.getNombres() + " " + c.getApellidos()
+                        + ", Email: " + c.getEmail());
+            }
+
+            // ------------------------------
             // ===== NUEVO ===== 18.2 MASCOTAS
             // Buscar por nombre o dueño
             // ------------------------------
@@ -640,6 +706,7 @@ public class Principal {
             for (Mascota m : mascotasPorTexto) {
                 System.out.println("Mascota -> ID: " + m.getId()
                         + ", Nombre: " + m.getNombre()
+                        + ", Peso: " + m.getPeso() + " kg"
                         + ", Dueño: " + (m.getCliente() != null
                         ? m.getCliente().getNombres() + " " + m.getCliente().getApellidos()
                         : "null"));
@@ -662,7 +729,7 @@ public class Principal {
                 List<Mascota> mascotasCliente = mascotaBO.listarPorCliente(clienteBD.getId());
                 System.out.println("Mascotas del cliente " + clienteBD.getNombres() + ": " + mascotasCliente.size());
                 for (Mascota m : mascotasCliente) {
-                    System.out.println("- " + m.getNombre() + " (" + m.getEspecie() + ")");
+                    System.out.println("- " + m.getNombre() + " (" + m.getEspecie() + " - " + m.getPeso() +" kg" +  ")");
                 }
             }
 
@@ -676,7 +743,20 @@ public class Principal {
             for (Servicio s : serviciosPorTexto) {
                 System.out.println("Servicio -> ID: " + s.getId()
                         + ", Nombre: " + s.getNombre()
-                        + ", Tipo: " + s.getTipoServicio());
+                        + ", Tipo: " + s.getTipoServicio()
+                        + ", Descripción: " + s.getDescripcion());
+            }
+            // ------------------------------
+            // Buscar servicio por descripción
+            // ------------------------------
+            List<Servicio> serviciosPorDescripcion = servicioBO.listarPorNombreOTipo("evaluación");
+            System.out.println("Servicios encontrados por descripción 'evaluación': " + serviciosPorDescripcion.size());
+
+            for (Servicio s : serviciosPorDescripcion) {
+                System.out.println("Servicio por descripción -> ID: " + s.getId()
+                        + ", Nombre: " + s.getNombre()
+                        + ", Tipo: " + s.getTipoServicio()
+                        + ", Descripción: " + s.getDescripcion());
             }
 
             List<Servicio> serviciosActivos = servicioBO.listarPorEstado(true);
@@ -780,9 +860,20 @@ public class Principal {
             for (Atencion a : atencionesFiltradas) {
                 System.out.println("Atención -> ID: " + a.getId()
                         + ", Fecha: " + a.getFechaHora()
-                        + ", Nota: " + a.getNotaClinica());
-                if (a.getCita() != null && a.getCita().getMascota() != null) {
-                    System.out.println("   Mascota: " + a.getCita().getMascota().getNombre());
+                        + ", Nota: " + a.getNotaClinica()
+                        + ", Diagnóstico: " + a.getDiagnostico());
+
+                if (a.getCita() != null) {
+                    if (a.getCita().getMascota() != null) {
+                        System.out.println("   Mascota: " + a.getCita().getMascota().getNombre());
+                    }
+
+                    // ===== NUEVO: servicio y descripción desde atención filtrada =====
+                    if (a.getCita().getServicio() != null) {
+                        System.out.println("   Servicio: " + a.getCita().getServicio().getNombre());
+                        System.out.println("   Desc. Servicio: " + a.getCita().getServicio().getDescripcion());
+                    }
+                    // ===== FIN NUEVO =====
                 }
             }
 
@@ -795,9 +886,14 @@ public class Principal {
                 System.out.println("Historial de la mascota " + mascotaBD.getNombre() + ": " + historialMascota.size());
                 for (Atencion a : historialMascota) {
                     System.out.println("Historial -> Atención ID: " + a.getId()
-                            + ", Fecha: " + a.getFechaHora());
+                            + ", Fecha: " + a.getFechaHora()
+                            + ", Diagnóstico: " + a.getDiagnostico());
                     if (a.getCita() != null && a.getCita().getServicio() != null) {
                         System.out.println("   Servicio: " + a.getCita().getServicio().getNombre());
+
+                        // ===== NUEVO: descripción en historial de visitas =====
+                        System.out.println("   Desc. Servicio: " + a.getCita().getServicio().getDescripcion());
+                        // ===== FIN NUEVO =====
                     }
                 }
             }
@@ -839,7 +935,9 @@ public class Principal {
         System.out.println("Administrador -> ID: " + admin.getId()
                 + ", Username: " + admin.getUsername()
                 + ", Nombre: " + admin.getNombres() + " " + admin.getApellidos()
-                + ", Área: " + admin.getArea());
+                + ", Área: " + admin.getArea()
+                + ", Email: " + admin.getEmail());
+
     }
 
     private static void imprimirVeterinario(Veterinario vet) {
@@ -851,7 +949,8 @@ public class Principal {
                 + ", Username: " + vet.getUsername()
                 + ", Nombre: " + vet.getNombres() + " " + vet.getApellidos()
                 + ", CMPV: " + vet.getCmpv()
-                + ", Especialidad: " + vet.getEspecialidad());
+                + ", Especialidad: " + vet.getEspecialidad()
+                + ", Email: " + vet.getEmail());
     }
 
     private static void imprimirRecepcionista(Recepcionista recep) {
@@ -862,7 +961,8 @@ public class Principal {
         System.out.println("Recepcionista -> ID: " + recep.getId()
                 + ", Username: " + recep.getUsername()
                 + ", Nombre: " + recep.getNombres() + " " + recep.getApellidos()
-                + ", Área: " + recep.getArea());
+                + ", Área: " + recep.getArea()
+                + ", Email: " + recep.getEmail());
     }
 
     private static void imprimirHorario(HorarioVeterinario horario) {
@@ -888,7 +988,9 @@ public class Principal {
                 + ", Fin: " + cita.getFechaHoraFin()
                 + ", Estado: " + cita.getEstado()
                 + ", Mascota: " + (cita.getMascota() != null ? cita.getMascota().getNombre() : "null")
+                + ", Peso Mascota: " + (cita.getMascota() != null ? cita.getMascota().getPeso() + " kg" : "null")
                 + ", Vet ID: " + (cita.getVeterinario() != null ? cita.getVeterinario().getId() : 0)
-                + ", Servicio: " + (cita.getServicio() != null ? cita.getServicio().getNombre() : "null"));
+                + ", Servicio: " + (cita.getServicio() != null ? cita.getServicio().getNombre() : "null")
+                + ", Desc. Servicio: " + (cita.getServicio() != null ? cita.getServicio().getDescripcion() : "null"));
     }
 }

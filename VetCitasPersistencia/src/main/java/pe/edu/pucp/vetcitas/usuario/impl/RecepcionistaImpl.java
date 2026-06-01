@@ -19,25 +19,25 @@ public class RecepcionistaImpl implements IRecepcionistaDAO {
         CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{CALL insertar_recepcionista(?, ?, ?, ?, ?, ?, ?, ?)}");
-
+            cs = con.prepareCall("{CALL insertar_recepcionista(?, ?, ?, ?, ?, ?, ?, ?, ?)}");
             cs.setString(1, recepcionista.getUsername());
             cs.setString(2, recepcionista.getContrasenaHash());
             cs.setString(3, recepcionista.getNombres());
             cs.setString(4, recepcionista.getApellidos());
             cs.setString(5, recepcionista.getTelefono());
-            cs.setString(6, recepcionista.getArea());
+            cs.setString(6, recepcionista.getEmail());
+            cs.setString(7, recepcionista.getArea());
 
             if (recepcionista.getModifiedBy() != null) {
-                cs.setInt(7, recepcionista.getModifiedBy().getId());
+                cs.setInt(8, recepcionista.getModifiedBy().getId());
             } else {
-                cs.setNull(7, Types.INTEGER);
+                cs.setNull(8, Types.INTEGER);
             }
 
-            cs.registerOutParameter(8, Types.INTEGER);
+            cs.registerOutParameter(9, Types.INTEGER);
             cs.executeUpdate();
 
-            idGenerado = cs.getInt(8);
+            idGenerado = cs.getInt(9);
             recepcionista.setId(idGenerado);
 
         } catch (Exception ex) {
@@ -60,21 +60,21 @@ public class RecepcionistaImpl implements IRecepcionistaDAO {
         CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{CALL modificar_recepcionista(?, ?, ?, ?, ?, ?, ?, ?, ?)}");
-
+            cs = con.prepareCall("{CALL modificar_recepcionista(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}");
             cs.setInt(1, recepcionista.getId());
             cs.setString(2, recepcionista.getUsername());
             cs.setString(3, recepcionista.getContrasenaHash());
             cs.setString(4, recepcionista.getNombres());
             cs.setString(5, recepcionista.getApellidos());
             cs.setString(6, recepcionista.getTelefono());
-            cs.setBoolean(7, recepcionista.isActivo());
-            cs.setString(8, recepcionista.getArea());
+            cs.setString(7, recepcionista.getEmail());
+            cs.setBoolean(8, recepcionista.isActivo());
+            cs.setString(9, recepcionista.getArea());
 
             if (recepcionista.getModifiedBy() != null) {
-                cs.setInt(9, recepcionista.getModifiedBy().getId());
+                cs.setInt(10, recepcionista.getModifiedBy().getId());
             } else {
-                cs.setNull(9, Types.INTEGER);
+                cs.setNull(10, Types.INTEGER);
             }
 
             resultado = cs.executeUpdate();
@@ -137,6 +137,7 @@ public class RecepcionistaImpl implements IRecepcionistaDAO {
                 recepcionista.setNombres(rs.getString("nombres"));
                 recepcionista.setApellidos(rs.getString("apellidos"));
                 recepcionista.setTelefono(rs.getString("telefono"));
+                recepcionista.setEmail(rs.getString("email"));
                 recepcionista.setActivo(rs.getBoolean("activo"));
                 recepcionista.setArea(rs.getString("area"));
                 recepcionista.setRoles(UsuarioPersistenciaHelper.cargarRolesDeUsuario(id));
@@ -176,6 +177,7 @@ public class RecepcionistaImpl implements IRecepcionistaDAO {
                 recepcionista.setNombres(rs.getString("nombres"));
                 recepcionista.setApellidos(rs.getString("apellidos"));
                 recepcionista.setTelefono(rs.getString("telefono"));
+                recepcionista.setEmail(rs.getString("email"));
                 recepcionista.setActivo(rs.getBoolean("activo"));
                 recepcionista.setArea(rs.getString("area"));
                 recepcionista.setRoles(UsuarioPersistenciaHelper.cargarRolesDeUsuario(id));

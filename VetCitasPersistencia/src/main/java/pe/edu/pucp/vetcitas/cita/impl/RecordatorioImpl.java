@@ -196,6 +196,7 @@ public class RecordatorioImpl implements IRecordatorioDAO {
                 Mascota mascota = new Mascota();
                 mascota.setId(rs.getInt("id_mascota"));
                 mascota.setNombre(rs.getString("nombre_mascota"));
+                mascota.setPeso(rs.getDouble("peso_mascota"));
 
                 Cliente cliente = new Cliente();
                 cliente.setId(rs.getInt("id_cliente"));
@@ -258,6 +259,7 @@ public class RecordatorioImpl implements IRecordatorioDAO {
 
                 Mascota mascota = new Mascota();
                 mascota.setNombre(rs.getString("nombre_mascota"));
+                mascota.setPeso(rs.getDouble("peso_mascota"));
 
                 Cliente cliente = new Cliente();
                 cliente.setNombres(rs.getString("nombres_cliente"));

@@ -13,23 +13,26 @@ public class Servicio extends EntidadAuditable{
     private int duracionMinutos;
     private double precioReferencial;
     private boolean activo;
+    private String descripcion;
 
     public Servicio() {
         super();
         this.id = 0;
         this.nombre = "";
+        this.descripcion = "";
         this.tipoServicio = null;
         this.duracionMinutos = 0;
         this.precioReferencial = 0.0;
         this.activo = true;
     }
 
-    public Servicio(int id, String nombre, TipoServicio tipoServicio,
+    public Servicio(int id, String nombre,String descripcion, TipoServicio tipoServicio,
                     int duracionMinutos, double precioReferencial, boolean activo,
                     LocalDateTime createdOn, LocalDateTime modifiedOn,
                     Usuario modifiedBy) {
         super(createdOn, modifiedOn, modifiedBy);
         this.id = id;
+        this.descripcion = descripcion;
         this.nombre = nombre;
         this.tipoServicio = tipoServicio;
         this.duracionMinutos = duracionMinutos;
@@ -40,11 +43,20 @@ public class Servicio extends EntidadAuditable{
     public Servicio(Servicio otro) {
         super(otro);
         this.id = otro.id;
+        this.descripcion = otro.descripcion;
         this.nombre = otro.nombre;
         this.tipoServicio = otro.tipoServicio;
         this.duracionMinutos = otro.duracionMinutos;
         this.precioReferencial = otro.precioReferencial;
         this.activo = otro.activo;
+    }
+
+    public String getDescripcion() {
+        return descripcion;
+    }
+
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
     }
 
     public int getId() {

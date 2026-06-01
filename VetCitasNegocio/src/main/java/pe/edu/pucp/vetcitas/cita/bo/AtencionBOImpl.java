@@ -116,6 +116,15 @@ public class AtencionBOImpl implements IAtencionBO {
         if (atencion.getDescuentoAplicado() < 0) {
             throw new Exception("El descuento aplicado no puede ser negativo.");
         }
+        if (atencion.getDiagnostico() != null) {
+            String diagnostico = atencion.getDiagnostico().trim();
+
+            if (diagnostico.length() > 255) {
+                throw new Exception("El diagnóstico no puede superar los 255 caracteres.");
+            }
+
+            atencion.setDiagnostico(diagnostico);
+        }
 
         Configuracion conf = configuracionBO.obtenerConfiguracionActual();
         if (atencion.getDescuentoAplicado() > conf.getDescuentoMaximoPermitido()) {

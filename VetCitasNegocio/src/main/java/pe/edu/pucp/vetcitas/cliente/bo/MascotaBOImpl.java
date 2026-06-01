@@ -86,5 +86,12 @@ public class MascotaBOImpl implements IMascotaBO {
         if (mascota.getCliente() == null || mascota.getCliente().getId() <= 0) {
             throw new Exception("El cliente dueño de la mascota es obligatorio.");
         }
+        if (mascota.getPeso() < 0) {
+            throw new Exception("El peso de la mascota no puede ser negativo.");
+        }
+        if (mascota.getPeso() <= 0) {
+            throw new Exception("El peso de la mascota debe ser mayor que cero.");
+        }
+
     }
 }
