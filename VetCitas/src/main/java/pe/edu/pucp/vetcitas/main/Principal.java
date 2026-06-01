@@ -331,7 +331,7 @@ public class Principal {
             if (clienteBD != null) {
                 Mascota mascota = new Mascota();
                 mascota.setNombre("Firulais");
-                mascota.setEspecie("Perro");
+                mascota.setEspecie(TipoEspecie.PERRO);
                 mascota.setRaza("Mestizo");
                 mascota.setFechaNacimiento(LocalDate.of(2021, 5, 10));
                 mascota.setPeso(12.5);

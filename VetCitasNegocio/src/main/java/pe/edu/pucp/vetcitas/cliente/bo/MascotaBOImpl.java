@@ -77,7 +77,7 @@ public class MascotaBOImpl implements IMascotaBO {
         if (mascota.getNombre() == null || mascota.getNombre().trim().isEmpty()) {
             throw new Exception("El nombre de la mascota es obligatorio.");
         }
-        if (mascota.getEspecie() == null || mascota.getEspecie().trim().isEmpty()) {
+        if (mascota.getEspecie() == null) {
             throw new Exception("La especie es obligatoria.");
         }
         if (mascota.getFechaNacimiento() != null && mascota.getFechaNacimiento().isAfter(LocalDate.now())) {

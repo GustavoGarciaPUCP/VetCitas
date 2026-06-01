@@ -1363,6 +1363,10 @@ CREATE PROCEDURE insertar_recordatorio(
     IN p_mensaje VARCHAR(255), IN p_id_cita INT, IN p_modified_by INT, OUT p_id_generado INT
 )
 BEGIN
+    IF p_estado_seguimiento NOT IN ('PENDIENTE', 'ENVIADO') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Estado de seguimiento invalido. Valores permitidos: PENDIENTE, ENVIADO.';
+    END IF;
+
     INSERT INTO recordatorio(fecha_programada, canal, estado_seguimiento, mensaje, id_cita, created_on, modified_on, modified_by)
     VALUES(p_fecha_programada, p_canal, p_estado_seguimiento, p_mensaje, p_id_cita, NOW(), NOW(), p_modified_by);
     SET p_id_generado = LAST_INSERT_ID();
@@ -1373,6 +1377,10 @@ CREATE PROCEDURE modificar_recordatorio(
     IN p_mensaje VARCHAR(255), IN p_id_cita INT, IN p_modified_by INT
 )
 BEGIN
+    IF p_estado_seguimiento NOT IN ('PENDIENTE', 'ENVIADO') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Estado de seguimiento invalido. Valores permitidos: PENDIENTE, ENVIADO.';
+    END IF;
+
     UPDATE recordatorio
     SET fecha_programada = p_fecha_programada, canal = p_canal, estado_seguimiento = p_estado_seguimiento,
         mensaje = p_mensaje, id_cita = p_id_cita, modified_on = NOW(), modified_by = p_modified_by
