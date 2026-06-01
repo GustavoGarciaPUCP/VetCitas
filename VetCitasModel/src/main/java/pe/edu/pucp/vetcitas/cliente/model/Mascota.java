@@ -1,6 +1,7 @@
 package pe.edu.pucp.vetcitas.cliente.model;
 
 import pe.edu.pucp.vetcitas.cita.model.Atencion;
+import pe.edu.pucp.vetcitas.common.enums.TipoEspecie;
 import pe.edu.pucp.vetcitas.common.model.EntidadAuditable;
 import pe.edu.pucp.vetcitas.usuario.model.Usuario;
 
@@ -12,7 +13,7 @@ import java.util.List;
 public class Mascota extends EntidadAuditable {
     private int id;
     private String nombre;
-    private String especie;
+    private TipoEspecie especie;
     private String raza;
     private LocalDate fechaNacimiento;
     private boolean esterilizado;
@@ -26,7 +27,7 @@ public class Mascota extends EntidadAuditable {
         this.id = 0;
         this.peso = 0.0;
         this.nombre = "";
-        this.especie = "";
+        this.especie = null;
         this.raza = "";
         this.fechaNacimiento = null;
         this.esterilizado = false;
@@ -35,7 +36,7 @@ public class Mascota extends EntidadAuditable {
         this.atenciones = new ArrayList<>();
     }
 
-    public Mascota(int id, String nombre, String especie, String raza,double peso,
+    public Mascota(int id, String nombre, TipoEspecie especie, String raza,double peso,
                    LocalDate fechaNacimiento, boolean esterilizado, boolean activo,
                    Cliente cliente, List<Atencion> atenciones,
                    LocalDateTime createdOn, LocalDateTime modifiedOn,
@@ -103,11 +104,11 @@ public class Mascota extends EntidadAuditable {
         this.nombre = nombre;
     }
 
-    public String getEspecie() {
+    public TipoEspecie getEspecie() {
         return this.especie;
     }
 
-    public void setEspecie(String especie) {
+    public void setEspecie(TipoEspecie especie) {
         this.especie = especie;
     }
 

@@ -104,7 +104,7 @@ CREATE TABLE cliente (
 CREATE TABLE mascota (
     id_mascota INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
-    especie VARCHAR(50) NOT NULL,
+    especie ENUM('PERRO', 'GATO') NOT NULL,
     raza VARCHAR(50),
     fecha_nacimiento DATE,
     peso DECIMAL(6,2) NULL,
