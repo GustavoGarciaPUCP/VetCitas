@@ -266,5 +266,3 @@ WHERE u.username = 'superadmin';
 
 INSERT INTO configuracion (umbral_cliente_frecuente, descuento_maximo_permitido)
 VALUES (5, 20.00);
-
-DROP TABLE IF EXISTS configuracion;
