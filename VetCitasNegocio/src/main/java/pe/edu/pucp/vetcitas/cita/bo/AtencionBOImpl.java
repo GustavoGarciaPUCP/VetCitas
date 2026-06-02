@@ -5,20 +5,15 @@ import pe.edu.pucp.vetcitas.cita.dao.IAtencionDAO;
 import pe.edu.pucp.vetcitas.cita.impl.AtencionImpl;
 import pe.edu.pucp.vetcitas.cita.model.Atencion;
 import pe.edu.pucp.vetcitas.common.enums.EstadoCita;
-import pe.edu.pucp.vetcitas.configuracion.bo.ConfiguracionBOImpl;
-import pe.edu.pucp.vetcitas.configuracion.boi.IConfiguracionBO;
-import pe.edu.pucp.vetcitas.configuracion.model.Configuracion;
 
 import java.time.LocalDate;
 import java.util.List;
 
 public class AtencionBOImpl implements IAtencionBO {
     private IAtencionDAO atencionDAO;
-    private IConfiguracionBO configuracionBO;
 
     public AtencionBOImpl() {
         this.atencionDAO = new AtencionImpl();
-        this.configuracionBO = new ConfiguracionBOImpl();
     }
 
     @Override
@@ -126,10 +121,5 @@ public class AtencionBOImpl implements IAtencionBO {
             atencion.setDiagnostico(diagnostico);
         }
 
-        Configuracion conf = configuracionBO.obtenerConfiguracionActual();
-        if (atencion.getDescuentoAplicado() > conf.getDescuentoMaximoPermitido()) {
-            throw new Exception("El descuento aplicado supera el máximo permitido ("
-                    + conf.getDescuentoMaximoPermitido() + "%).");
-        }
     }
 }

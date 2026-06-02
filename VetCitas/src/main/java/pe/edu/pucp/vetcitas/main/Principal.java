@@ -16,9 +16,6 @@ import pe.edu.pucp.vetcitas.cliente.bo.MascotaBOImpl;
 import pe.edu.pucp.vetcitas.cliente.model.Cliente;
 import pe.edu.pucp.vetcitas.cliente.model.Mascota;
 import pe.edu.pucp.vetcitas.common.enums.*;
-import pe.edu.pucp.vetcitas.configuracion.boi.IConfiguracionBO;
-import pe.edu.pucp.vetcitas.configuracion.bo.ConfiguracionBOImpl;
-import pe.edu.pucp.vetcitas.configuracion.model.Configuracion;
 import pe.edu.pucp.vetcitas.servicio.boi.IServicioBO;
 import pe.edu.pucp.vetcitas.servicio.bo.ServicioBOImpl;
 import pe.edu.pucp.vetcitas.servicio.model.Servicio;
@@ -52,7 +49,6 @@ public class Principal {
         IRecepcionistaBO recepcionistaBO = new RecepcionistaBOImpl();
         IHorarioVeterinarioBO horarioBO = new HorarioVeterinarioBOImpl();
         IPermisoBO permisoBO = new PermisoBOImpl();
-        IConfiguracionBO configuracionBO = new ConfiguracionBOImpl();
 
         IClienteBO clienteBO = new ClienteBOImpl();
         IMascotaBO mascotaBO = new MascotaBOImpl();
@@ -206,26 +202,6 @@ public class Principal {
             List<Permiso> permisos = permisoBO.listarTodos();
             System.out.println("Total permisos listados: " + permisos.size());
 
-            // ==================================================
-            // 6. CONFIGURACIÓN
-            // ==================================================
-            imprimirSeccion("6. CONFIGURACIÓN");
-
-            Configuracion configuracion = configuracionBO.obtenerConfiguracionActual();
-            if (configuracion != null) {
-                System.out.println("Configuración inicial:");
-                System.out.println("Umbral cliente frecuente: " + configuracion.getUmbralClienteFrecuente());
-                System.out.println("Descuento máximo permitido: " + configuracion.getDescuentoMaximoPermitido());
-
-                configuracion.setUmbralClienteFrecuente(configuracion.getUmbralClienteFrecuente() + 1);
-                configuracion.setDescuentoMaximoPermitido(configuracion.getDescuentoMaximoPermitido() + 5.0);
-                configuracionBO.modificar(configuracion);
-
-                Configuracion configuracionModificada = configuracionBO.obtenerConfiguracionActual();
-                System.out.println("Configuración modificada:");
-                System.out.println("Umbral cliente frecuente: " + configuracionModificada.getUmbralClienteFrecuente());
-                System.out.println("Descuento máximo permitido: " + configuracionModificada.getDescuentoMaximoPermitido());
-            }
 
             // ==================================================
             // ===== NUEVO ===== VALIDAR EMAIL OBLIGATORIO EN USUARIO
@@ -331,7 +307,7 @@ public class Principal {
             if (clienteBD != null) {
                 Mascota mascota = new Mascota();
                 mascota.setNombre("Firulais");
-                mascota.setEspecie(TipoEspecie.PERRO);
+                mascota.setEspecie("PERRO");
                 mascota.setRaza("Mestizo");
                 mascota.setFechaNacimiento(LocalDate.of(2021, 5, 10));
                 mascota.setPeso(12.5);
@@ -580,7 +556,6 @@ public class Principal {
             System.out.println("Horarios: " + horarioBO.listarTodos().size());
             System.out.println("Citas: " + citaBO.listarTodos().size());
             System.out.println("Permisos: " + permisoBO.listarTodos().size());
-            System.out.println("Configuraciones activas: " + (configuracionBO.obtenerConfiguracionActual() != null ? 1 : 0));
 
             // ==================================================
             // 16. ELIMINACIONES LÓGICAS CONTROLADAS

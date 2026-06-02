@@ -2,7 +2,6 @@ package pe.edu.pucp.vetcitas.cliente.impl;
 
 import pe.edu.pucp.vetcitas.cliente.dao.MascotaDAO;
 import pe.edu.pucp.vetcitas.cliente.model.Mascota;
-import pe.edu.pucp.vetcitas.common.enums.TipoEspecie;
 import pe.edu.pucp.vetcitas.config.DBManager;
 import pe.edu.pucp.vetcitas.cliente.model.Cliente;
 
@@ -23,7 +22,7 @@ public class MascotaImpl implements MascotaDAO {
             cs = con.prepareCall(sql);
 
             cs.setString(1, mascota.getNombre());
-            cs.setString(2, mascota.getEspecie().name());
+            cs.setString(2, mascota.getEspecie());
             cs.setString(3, mascota.getRaza());
 
             if (mascota.getFechaNacimiento() != null) {
@@ -89,7 +88,7 @@ public class MascotaImpl implements MascotaDAO {
 
             cs.setInt(1, mascota.getId());
             cs.setString(2, mascota.getNombre());
-            cs.setString(3, mascota.getEspecie().name());
+            cs.setString(3, mascota.getEspecie());
             cs.setString(4, mascota.getRaza());
 
             if (mascota.getFechaNacimiento() != null) {
@@ -178,7 +177,7 @@ public class MascotaImpl implements MascotaDAO {
                 mascota = new Mascota();
                 mascota.setId(rs.getInt("id_mascota"));
                 mascota.setNombre(rs.getString("nombre"));
-                mascota.setEspecie(TipoEspecie.valueOf(rs.getString("especie")));
+                mascota.setEspecie(rs.getString("especie"));
                 mascota.setRaza(rs.getString("raza"));
                 mascota.setPeso(rs.getDouble("peso"));
 
@@ -226,7 +225,7 @@ public class MascotaImpl implements MascotaDAO {
                 Mascota mascota = new Mascota();
                 mascota.setId(rs.getInt("id_mascota"));
                 mascota.setNombre(rs.getString("nombre"));
-                mascota.setEspecie(TipoEspecie.valueOf(rs.getString("especie")));
+                mascota.setEspecie(rs.getString("especie"));
                 mascota.setRaza(rs.getString("raza"));
                 mascota.setPeso(rs.getDouble("peso"));
 
@@ -277,7 +276,7 @@ public class MascotaImpl implements MascotaDAO {
                 Mascota mascota = new Mascota();
                 mascota.setId(rs.getInt("id_mascota"));
                 mascota.setNombre(rs.getString("nombre_mascota"));
-                mascota.setEspecie(TipoEspecie.valueOf(rs.getString("especie")));
+                mascota.setEspecie(rs.getString("especie"));
                 mascota.setRaza(rs.getString("raza"));
                 mascota.setPeso(rs.getDouble("peso"));
                 mascota.setFechaNacimiento(rs.getDate("fecha_nacimiento").toLocalDate());
@@ -326,7 +325,7 @@ public class MascotaImpl implements MascotaDAO {
                 Mascota mascota = new Mascota();
                 mascota.setId(rs.getInt("id_mascota"));
                 mascota.setNombre(rs.getString("nombre_mascota"));
-                mascota.setEspecie(TipoEspecie.valueOf(rs.getString("especie")));
+                mascota.setEspecie(rs.getString("especie"));
                 mascota.setRaza(rs.getString("raza"));
                 mascota.setPeso(rs.getDouble("peso"));
                 mascota.setFechaNacimiento(rs.getDate("fecha_nacimiento").toLocalDate());
