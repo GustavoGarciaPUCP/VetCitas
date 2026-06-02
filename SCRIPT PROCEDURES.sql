@@ -1917,3 +1917,7 @@ BEGIN
 END $$
 
 DELIMITER ;
+
+DROP PROCEDURE IF EXISTS insertar_configuracion;
+DROP PROCEDURE IF EXISTS modificar_configuracion;
+DROP PROCEDURE IF EXISTS obtener_configuracion_actual;
