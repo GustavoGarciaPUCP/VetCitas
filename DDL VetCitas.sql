@@ -17,7 +17,6 @@ DROP TABLE IF EXISTS administrador;
 DROP TABLE IF EXISTS mascota;
 DROP TABLE IF EXISTS cliente;
 DROP TABLE IF EXISTS servicio;
-DROP TABLE IF EXISTS configuracion;
 DROP TABLE IF EXISTS permiso;
 DROP TABLE IF EXISTS rol_sistema;
 DROP TABLE IF EXISTS usuario;
@@ -150,12 +149,16 @@ CREATE TABLE cita (
     fecha_hora_inicio DATETIME NOT NULL,
     fecha_hora_fin DATETIME NOT NULL,
     estado VARCHAR(20) NOT NULL,
+    motivo_cancelacion VARCHAR(255) NULL,
+    fecha_cancelacion DATETIME NULL,
+    id_usuario_cancelacion INT NULL,
     id_mascota INT NOT NULL,
     id_veterinario INT NOT NULL,
     id_servicio INT NOT NULL,
     created_on DATETIME,
     modified_on DATETIME,
     modified_by INT NULL,
+    CONSTRAINT fk_cita_usuario_cancelacion FOREIGN KEY (id_usuario_cancelacion) REFERENCES usuario(id_usuario),
     CONSTRAINT fk_cita_mascota FOREIGN KEY (id_mascota) REFERENCES mascota(id_mascota),
     CONSTRAINT fk_cita_veterinario FOREIGN KEY (id_veterinario) REFERENCES veterinario(id_veterinario),
     CONSTRAINT fk_cita_servicio FOREIGN KEY (id_servicio) REFERENCES servicio(id_servicio)
