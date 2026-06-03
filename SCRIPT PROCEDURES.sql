@@ -51,10 +51,6 @@ DROP PROCEDURE IF EXISTS deshabilitar_servicio $$
 DROP PROCEDURE IF EXISTS buscar_servicio_por_id $$
 DROP PROCEDURE IF EXISTS listar_servicios $$
 
-DROP PROCEDURE IF EXISTS buscar_configuracion_por_id $$
-DROP PROCEDURE IF EXISTS listar_configuraciones $$
-DROP PROCEDURE IF EXISTS modificar_configuracion $$
-
 DROP PROCEDURE IF EXISTS insertar_horario_veterinario $$
 DROP PROCEDURE IF EXISTS modificar_horario_veterinario $$
 DROP PROCEDURE IF EXISTS eliminar_horario_veterinario $$
@@ -890,28 +886,6 @@ BEGIN
         activo
     FROM servicio
     ORDER BY nombre;
-END $$
-
-CREATE PROCEDURE buscar_configuracion_por_id(IN p_id_configuracion INT)
-BEGIN
-    SELECT id_configuracion, umbral_cliente_frecuente, descuento_maximo_permitido
-    FROM configuracion
-    WHERE id_configuracion = p_id_configuracion;
-END $$
-
-CREATE PROCEDURE listar_configuraciones()
-BEGIN
-    SELECT id_configuracion, umbral_cliente_frecuente, descuento_maximo_permitido
-    FROM configuracion
-    ORDER BY id_configuracion;
-END $$
-
-CREATE PROCEDURE modificar_configuracion(IN p_id_configuracion INT, IN p_umbral_cliente_frecuente INT, IN p_descuento_maximo_permitido DECIMAL(10,2))
-BEGIN
-    UPDATE configuracion
-    SET umbral_cliente_frecuente = p_umbral_cliente_frecuente,
-        descuento_maximo_permitido = p_descuento_maximo_permitido
-    WHERE id_configuracion = p_id_configuracion;
 END $$
 
 CREATE PROCEDURE insertar_horario_veterinario(
