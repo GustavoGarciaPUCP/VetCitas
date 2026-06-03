@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface ICitaDAO extends IDAO<Cita> {
-    void cancelarCita(int idCita, int modifiedBy);
+    void cancelarCita(int idCita, String motivoCancelacion,int modifiedBy);
     void confirmarCita(int idCita, int modifiedBy);
     void marcarAtendida(int idCita, int modifiedBy);
     void marcarNoAsistio(int idCita, int modifiedBy);

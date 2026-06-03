@@ -9,6 +9,7 @@ import pe.edu.pucp.vetcitas.common.enums.CodigoRol;
 import pe.edu.pucp.vetcitas.common.enums.TipoServicio;
 import pe.edu.pucp.vetcitas.config.DBManager;
 import pe.edu.pucp.vetcitas.servicio.model.Servicio;
+import pe.edu.pucp.vetcitas.usuario.model.Usuario;
 import pe.edu.pucp.vetcitas.usuario.model.Veterinario;
 
 import java.sql.*;
@@ -155,14 +156,15 @@ public class CitaImpl implements ICitaDAO {
     }
 
     @Override
-    public void cancelarCita(int idCita, int modifiedBy) {
+    public void cancelarCita(int idCita,String motivoCancelacion, int modifiedBy) {
         Connection con = null;
         CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{CALL cancelar_cita(?, ?)}");
+            cs = con.prepareCall("{CALL cancelar_cita(?, ?,?)}");
             cs.setInt(1, idCita);
-            cs.setInt(2, modifiedBy);
+            cs.setString(2, motivoCancelacion);
+            cs.setInt(3, modifiedBy);
             cs.executeUpdate();
 
         } catch (Exception ex) {
@@ -283,6 +285,12 @@ public class CitaImpl implements ICitaDAO {
         cita.setFechaHoraInicio(rs.getTimestamp("fecha_hora_inicio").toLocalDateTime());
         cita.setFechaHoraFin(rs.getTimestamp("fecha_hora_fin").toLocalDateTime());
         cita.setEstado(EstadoCita.valueOf(rs.getString("estado")));
+        cita.setMotivoCancelacion(rs.getString("motivo_cancelacion"));
+        Timestamp fechaCancelacion = rs.getTimestamp("fecha_cancelacion");
+        if (fechaCancelacion != null) {
+            cita.setFechaCancelacion(fechaCancelacion.toLocalDateTime());
+        }
+        cita.setUsuarioCancelacion(mapearUsuarioCancelacion(rs));
 
         Mascota mascota = new Mascota();
         mascota.setId(rs.getInt("id_mascota"));
@@ -335,7 +343,12 @@ public class CitaImpl implements ICitaDAO {
                 cita.setFechaHoraInicio(rs.getTimestamp("fecha_hora_inicio").toLocalDateTime());
                 cita.setFechaHoraFin(rs.getTimestamp("fecha_hora_fin").toLocalDateTime());
                 cita.setEstado(EstadoCita.valueOf(rs.getString("estado")));
-
+                cita.setMotivoCancelacion(rs.getString("motivo_cancelacion"));
+                Timestamp fechaCancelacion = rs.getTimestamp("fecha_cancelacion");
+                if (fechaCancelacion != null) {
+                    cita.setFechaCancelacion(fechaCancelacion.toLocalDateTime());
+                }
+                cita.setUsuarioCancelacion(mapearUsuarioCancelacion(rs));
                 Mascota mascota = new Mascota();
                 mascota.setId(rs.getInt("id_mascota"));
                 mascota.setNombre(rs.getString("nombre_mascota"));
@@ -400,5 +413,22 @@ public class CitaImpl implements ICitaDAO {
                 System.out.println("ERROR cerrando recursos en marcarEnConsulta: " + ex.getMessage());
             }
         }
+    }
+
+    private Usuario mapearUsuarioCancelacion(ResultSet rs) throws SQLException {
+        int idUsuarioCancelacion = rs.getInt("id_usuario_cancelacion");
+
+        if (rs.wasNull()) {
+            return null;
+        }
+
+        Usuario usuario = new Usuario();
+        usuario.setId(idUsuarioCancelacion);
+        usuario.setUsername(rs.getString("username_usuario_cancelacion"));
+        usuario.setNombres(rs.getString("nombres_usuario_cancelacion"));
+        usuario.setApellidos(rs.getString("apellidos_usuario_cancelacion"));
+        usuario.setEmail(rs.getString("email_usuario_cancelacion"));
+
+        return usuario;
     }
 }
