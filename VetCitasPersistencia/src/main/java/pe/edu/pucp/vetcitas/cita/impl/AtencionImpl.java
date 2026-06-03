@@ -8,6 +8,7 @@ import pe.edu.pucp.vetcitas.cliente.model.Mascota;
 import pe.edu.pucp.vetcitas.common.enums.EstadoCita;
 import pe.edu.pucp.vetcitas.config.DBManager;
 import pe.edu.pucp.vetcitas.servicio.model.Servicio;
+import pe.edu.pucp.vetcitas.usuario.model.Usuario;
 import pe.edu.pucp.vetcitas.usuario.model.Veterinario;
 
 import java.sql.*;
@@ -269,6 +270,12 @@ public class AtencionImpl implements IAtencionDAO {
                 Cita cita = new Cita();
                 cita.setId(rs.getInt("id_cita"));
                 cita.setEstado(EstadoCita.valueOf(rs.getString("estado_cita")));
+                cita.setMotivoCancelacion(rs.getString("motivo_cancelacion"));
+                Timestamp fechaCancelacion = rs.getTimestamp("fecha_cancelacion");
+                if (fechaCancelacion != null) {
+                    cita.setFechaCancelacion(fechaCancelacion.toLocalDateTime());
+                }
+                cita.setUsuarioCancelacion(mapearUsuarioCancelacion(rs));
                 cita.setFechaHoraInicio(rs.getTimestamp("fecha_hora_inicio").toLocalDateTime());
                 cita.setFechaHoraFin(rs.getTimestamp("fecha_hora_fin").toLocalDateTime());
 
@@ -348,6 +355,13 @@ public class AtencionImpl implements IAtencionDAO {
                 Cita cita = new Cita();
                 cita.setId(rs.getInt("id_cita"));
                 cita.setEstado(EstadoCita.valueOf(rs.getString("estado")));
+                cita.setMotivoCancelacion(rs.getString("motivo_cancelacion"));
+                Timestamp fechaCancelacion = rs.getTimestamp("fecha_cancelacion");
+                if (fechaCancelacion != null) {
+                    cita.setFechaCancelacion(fechaCancelacion.toLocalDateTime());
+                }
+                cita.setUsuarioCancelacion(mapearUsuarioCancelacion(rs));
+
                 cita.setFechaHoraInicio(rs.getTimestamp("fecha_hora_inicio").toLocalDateTime());
                 cita.setFechaHoraFin(rs.getTimestamp("fecha_hora_fin").toLocalDateTime());
 
@@ -373,6 +387,23 @@ public class AtencionImpl implements IAtencionDAO {
         }
 
         return atenciones;
+    }
+
+    private Usuario mapearUsuarioCancelacion(ResultSet rs) throws SQLException {
+        int idUsuarioCancelacion = rs.getInt("id_usuario_cancelacion");
+
+        if (rs.wasNull()) {
+            return null;
+        }
+
+        Usuario usuario = new Usuario();
+        usuario.setId(idUsuarioCancelacion);
+        usuario.setUsername(rs.getString("username_usuario_cancelacion"));
+        usuario.setNombres(rs.getString("nombres_usuario_cancelacion"));
+        usuario.setApellidos(rs.getString("apellidos_usuario_cancelacion"));
+        usuario.setEmail(rs.getString("email_usuario_cancelacion"));
+
+        return usuario;
     }
 
 }

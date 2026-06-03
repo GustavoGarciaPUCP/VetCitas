@@ -7,7 +7,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface ICitaBO extends IBaseBO<Cita> {
-    void cancelarCita(int idCita, int modifiedBy) throws Exception;
+    void cancelarCita(int idCita, String motivoCancelacion,int modifiedBy) throws Exception;
     void confirmarCita(int idCita, int modifiedBy) throws Exception;
     void marcarAtendida(int idCita, int modifiedBy) throws Exception;
     void marcarNoAsistio(int idCita, int modifiedBy) throws Exception;

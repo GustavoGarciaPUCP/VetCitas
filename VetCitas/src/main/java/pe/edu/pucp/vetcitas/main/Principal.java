@@ -38,6 +38,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
 public class Principal {
@@ -655,6 +656,53 @@ public class Principal {
                 }
             }
 
+            // ==================================================
+            // ===== NUEVO ===== PRUEBA DE CANCELACIÓN CON MOTIVO
+            // ==================================================
+            imprimirSeccion("PRUEBA DE CANCELACIÓN CON MOTIVO");
+
+            LocalDate fechaPruebaCancelacion = LocalDate.now()
+                    .with(TemporalAdjusters.next(DayOfWeek.MONDAY));
+
+            LocalDateTime inicioCancelacion = LocalDateTime.of(fechaPruebaCancelacion, LocalTime.of(10, 0));
+            LocalDateTime finCancelacion = inicioCancelacion.plusMinutes(servicioBD.getDuracionMinutos());
+
+            Cita citaCancelacion = new Cita();
+            citaCancelacion.setFechaHoraInicio(inicioCancelacion);
+            citaCancelacion.setFechaHoraFin(finCancelacion);
+            citaCancelacion.setEstado(EstadoCita.PENDIENTE);
+            citaCancelacion.setMascota(mascotaBD);
+            citaCancelacion.setVeterinario(vetBD);
+            citaCancelacion.setServicio(servicioBD);
+            citaCancelacion.setCreatedOn(LocalDateTime.now());
+            citaCancelacion.setModifiedBy(adminBD);
+
+            int idCitaCancelacion = citaBO.insertar(citaCancelacion);
+            System.out.println("Cita para cancelar insertada con ID: " + idCitaCancelacion);
+
+            citaBO.confirmarCita(idCitaCancelacion, idAdmin);
+            System.out.println("Cita para cancelar confirmada.");
+
+            citaBO.cancelarCita(
+                    idCitaCancelacion,
+                    "Cliente solicitó cancelar por cruce de horario.",
+                    idAdmin
+            );
+            System.out.println("Cita cancelada con motivo.");
+
+            Cita citaCanceladaBD = citaBO.buscarPorId(idCitaCancelacion);
+
+            if (citaCanceladaBD != null) {
+                System.out.println("Cita cancelada -> ID: " + citaCanceladaBD.getId()
+                        + ", Estado: " + citaCanceladaBD.getEstado()
+                        + ", Motivo: " + citaCanceladaBD.getMotivoCancelacion()
+                        + ", Fecha cancelación: " + citaCanceladaBD.getFechaCancelacion()
+                        + ", Usuario cancelación: "
+                        + (citaCanceladaBD.getUsuarioCancelacion() != null
+                        ? citaCanceladaBD.getUsuarioCancelacion().getUsername()
+                        : "null"));
+            }
+
             System.out.println("\n==================================================");
             System.out.println(" TODAS LAS PRUEBAS FINALIZARON CON ÉXITO");
             System.out.println("==================================================");
@@ -909,7 +957,10 @@ public class Principal {
             ex.printStackTrace();
             System.out.println("==============================================");
         }
+
     }
+
+
 
 
 
@@ -982,6 +1033,21 @@ public class Principal {
         if (cita == null) {
             System.out.println("Cita: null");
             return;
+        }
+        if (cita.getMotivoCancelacion() != null && !cita.getMotivoCancelacion().trim().isEmpty()) {
+            System.out.println("   Motivo cancelación: " + cita.getMotivoCancelacion());
+        }
+
+        if (cita.getFechaCancelacion() != null) {
+            System.out.println("   Fecha cancelación: " + cita.getFechaCancelacion());
+        }
+        if (cita.getUsuarioCancelacion() != null) {
+            System.out.println("   Usuario cancelación: "
+                    + cita.getUsuarioCancelacion().getUsername()
+                    + " - "
+                    + cita.getUsuarioCancelacion().getNombres()
+                    + " "
+                    + cita.getUsuarioCancelacion().getApellidos());
         }
         System.out.println("Cita -> ID: " + cita.getId()
                 + ", Inicio: " + cita.getFechaHoraInicio()

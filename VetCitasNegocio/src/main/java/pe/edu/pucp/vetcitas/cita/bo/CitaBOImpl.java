@@ -55,7 +55,20 @@ public class CitaBOImpl implements ICitaBO {
     }
 
     @Override
-    public void cancelarCita(int idCita, int modifiedBy) throws Exception {
+    public void cancelarCita(int idCita, String motivoCancelacion,int modifiedBy) throws Exception {
+        if (idCita <= 0) {
+            throw new Exception("El id de la cita debe ser mayor que cero.");
+        }
+
+        if (modifiedBy <= 0) {
+            throw new Exception("El id del usuario que cancela debe ser mayor que cero.");
+        }
+
+        motivoCancelacion = motivoCancelacion.trim();
+
+        if (motivoCancelacion.length() > 255) {
+            throw new Exception("El motivo de cancelación no puede superar los 255 caracteres.");
+        }
         Cita cita = buscarPorId(idCita);
         if (cita.getEstado() == EstadoCita.CANCELADA) {
             throw new Exception("La cita ya se encuentra cancelada.");
@@ -66,7 +79,7 @@ public class CitaBOImpl implements ICitaBO {
         if (modifiedBy <= 0) {
             throw new Exception("El usuario que modifica es obligatorio.");
         }
-        citaDAO.cancelarCita(idCita, modifiedBy);
+        citaDAO.cancelarCita(idCita,motivoCancelacion, modifiedBy);
     }
 
     @Override
