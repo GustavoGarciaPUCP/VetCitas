@@ -9,7 +9,6 @@ public class Atencion extends EntidadAuditable{
     private int id;
     private LocalDateTime fechaHora;
     private String notaClinica;
-    private String diagnostico;
     private String notaPreOperatoria;
     private String notaPostOperatoria;
     private String recomendacionControl;
@@ -22,7 +21,6 @@ public class Atencion extends EntidadAuditable{
         this.id = 0;
         this.fechaHora = null;
         this.notaClinica = "";
-        this.diagnostico = "";
         this.notaPreOperatoria = "";
         this.notaPostOperatoria = "";
         this.recomendacionControl = "";
@@ -31,7 +29,7 @@ public class Atencion extends EntidadAuditable{
         this.cita = null;
     }
 
-    public Atencion(int id, LocalDateTime fechaHora, String notaClinica, String diagnostico,
+    public Atencion(int id, LocalDateTime fechaHora, String notaClinica,
                     String notaPreOperatoria, String notaPostOperatoria,
                     String recomendacionControl, double montoReferencial,
                     double descuentoAplicado, Cita cita,
@@ -41,7 +39,6 @@ public class Atencion extends EntidadAuditable{
         this.id = id;
         this.fechaHora = fechaHora;
         this.notaClinica = notaClinica;
-        this.diagnostico = diagnostico;
         this.notaPreOperatoria = notaPreOperatoria;
         this.notaPostOperatoria = notaPostOperatoria;
         this.recomendacionControl = recomendacionControl;
@@ -55,7 +52,6 @@ public class Atencion extends EntidadAuditable{
         this.id = otra.id;
         this.fechaHora = otra.fechaHora;
         this.notaClinica = otra.notaClinica;
-        this.diagnostico = otra.diagnostico;
         this.notaPreOperatoria = otra.notaPreOperatoria;
         this.notaPostOperatoria = otra.notaPostOperatoria;
         this.recomendacionControl = otra.recomendacionControl;
@@ -86,14 +82,6 @@ public class Atencion extends EntidadAuditable{
 
     public void setNotaClinica(String notaClinica) {
         this.notaClinica = notaClinica;
-    }
-
-    public String getDiagnostico() {
-        return diagnostico;
-    }
-
-    public void setDiagnostico(String diagnostico) {
-        this.diagnostico = diagnostico;
     }
 
     public String getNotaPreOperatoria() {

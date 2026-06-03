@@ -77,7 +77,7 @@ public class MascotaBOImpl implements IMascotaBO {
         if (mascota.getNombre() == null || mascota.getNombre().trim().isEmpty()) {
             throw new Exception("El nombre de la mascota es obligatorio.");
         }
-        if (mascota.getEspecie() == null || mascota.getEspecie().trim().isEmpty()) {
+        if (mascota.getEspecie() == null) {
             throw new Exception("La especie es obligatoria.");
         }
         if (mascota.getFechaNacimiento() != null && mascota.getFechaNacimiento().isAfter(LocalDate.now())) {
@@ -86,5 +86,12 @@ public class MascotaBOImpl implements IMascotaBO {
         if (mascota.getCliente() == null || mascota.getCliente().getId() <= 0) {
             throw new Exception("El cliente dueño de la mascota es obligatorio.");
         }
+        if (mascota.getPeso() < 0) {
+            throw new Exception("El peso de la mascota no puede ser negativo.");
+        }
+        if (mascota.getPeso() <= 0) {
+            throw new Exception("El peso de la mascota debe ser mayor que cero.");
+        }
+
     }
 }

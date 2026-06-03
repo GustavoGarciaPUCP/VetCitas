@@ -18,8 +18,15 @@ public class ServicioImpl implements IServicioDAO {
         CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{call insertar_servicio(?,?,?,?,?,?)}");
+            cs = con.prepareCall("{call insertar_servicio(?,?,?,?,?,?,?)}");
             cs.setString("p_nombre", servicio.getNombre());
+
+            if (servicio.getDescripcion() != null && !servicio.getDescripcion().trim().isEmpty()) {
+                cs.setString("p_descripcion", servicio.getDescripcion().trim());
+            } else {
+                cs.setNull("p_descripcion", Types.VARCHAR);
+            }
+
             cs.setString("p_tipo_servicio", servicio.getTipoServicio().name());
             cs.setInt("p_duracion_minutos", servicio.getDuracionMinutos());
             cs.setDouble("p_precio_referencial", servicio.getPrecioReferencial());
@@ -43,13 +50,21 @@ public class ServicioImpl implements IServicioDAO {
         CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{call modificar_servicio(?,?,?,?,?,?,?)}");
+            cs = con.prepareCall("{call modificar_servicio(?,?,?,?,?,?,?,?)}");
             cs.setInt("p_id_servicio", servicio.getId());
             cs.setString("p_nombre", servicio.getNombre());
+
+            if (servicio.getDescripcion() != null && !servicio.getDescripcion().trim().isEmpty()) {
+                cs.setString("p_descripcion", servicio.getDescripcion().trim());
+            } else {
+                cs.setNull("p_descripcion", Types.VARCHAR);
+            }
+
             cs.setString("p_tipo_servicio", servicio.getTipoServicio().name());
             cs.setInt("p_duracion_minutos", servicio.getDuracionMinutos());
             cs.setDouble("p_precio_referencial", servicio.getPrecioReferencial());
             cs.setTimestamp("p_modified_on", Timestamp.valueOf(LocalDateTime.now()));
+
             if (servicio.getModifiedBy() != null) {
                 cs.setInt("p_modified_by", servicio.getModifiedBy().getId());
             } else {
@@ -124,6 +139,7 @@ public class ServicioImpl implements IServicioDAO {
                 servicio = new Servicio();
                 servicio.setId(rs.getInt("id_servicio"));
                 servicio.setNombre(rs.getString("nombre"));
+                servicio.setDescripcion(rs.getString("descripcion"));
                 servicio.setTipoServicio(TipoServicio.valueOf(rs.getString("tipo_servicio")));
                 servicio.setDuracionMinutos(rs.getInt("duracion_minutos"));
                 servicio.setPrecioReferencial(rs.getDouble("precio_referencial"));
@@ -155,6 +171,7 @@ public class ServicioImpl implements IServicioDAO {
                 Servicio servicio = new Servicio();
                 servicio.setId(rs.getInt("id_servicio"));
                 servicio.setNombre(rs.getString("nombre"));
+                servicio.setDescripcion(rs.getString("descripcion"));
                 servicio.setTipoServicio(TipoServicio.valueOf(rs.getString("tipo_servicio")));
                 servicio.setDuracionMinutos(rs.getInt("duracion_minutos"));
                 servicio.setPrecioReferencial(rs.getDouble("precio_referencial"));
@@ -189,6 +206,7 @@ public class ServicioImpl implements IServicioDAO {
                 Servicio servicio = new Servicio();
                 servicio.setId(rs.getInt("id_servicio"));
                 servicio.setNombre(rs.getString("nombre"));
+                servicio.setDescripcion(rs.getString("descripcion"));
                 servicio.setTipoServicio(TipoServicio.valueOf(rs.getString("tipo_servicio")));
                 servicio.setDuracionMinutos(rs.getInt("duracion_minutos"));
                 servicio.setPrecioReferencial(rs.getDouble("precio_referencial"));
@@ -229,6 +247,7 @@ public class ServicioImpl implements IServicioDAO {
                 Servicio servicio = new Servicio();
                 servicio.setId(rs.getInt("id_servicio"));
                 servicio.setNombre(rs.getString("nombre"));
+                servicio.setDescripcion(rs.getString("descripcion"));
                 servicio.setTipoServicio(TipoServicio.valueOf(rs.getString("tipo_servicio")));
                 servicio.setDuracionMinutos(rs.getInt("duracion_minutos"));
                 servicio.setPrecioReferencial(rs.getDouble("precio_referencial"));

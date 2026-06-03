@@ -88,5 +88,22 @@ public class VeterinarioBOImpl implements IVeterinarioBO {
         if (vet.getEspecialidad() == null || vet.getEspecialidad().trim().isEmpty()) {
             throw new Exception("La especialidad es obligatoria.");
         }
+        validarEmailObligatorio(vet.getEmail());
+        vet.setEmail(vet.getEmail().trim());
+    }
+    private void validarEmailObligatorio(String email) throws Exception {
+        if (email == null || email.trim().isEmpty()) {
+            throw new Exception("El email es obligatorio.");
+        }
+
+        email = email.trim();
+
+        if (email.length() > 100) {
+            throw new Exception("El email no puede superar los 100 caracteres.");
+        }
+
+        if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+            throw new Exception("El email no tiene un formato válido.");
+        }
     }
 }

@@ -815,26 +815,26 @@ BEGIN
 END $$
 
 CREATE PROCEDURE insertar_atencion(
-    IN p_fecha_hora DATETIME, IN p_nota_clinica TEXT,IN p_diagnostico TEXT, IN p_nota_pre_operatoria TEXT, IN p_nota_post_operatoria TEXT,
+    IN p_fecha_hora DATETIME, IN p_nota_clinica TEXT, IN p_nota_pre_operatoria TEXT, IN p_nota_post_operatoria TEXT,
     IN p_recomendacion_control TEXT, IN p_monto_referencial DECIMAL(10,2), IN p_descuento_aplicado DECIMAL(10,2),
     IN p_id_cita INT, IN p_created_on DATETIME, OUT p_id_generado INT
 )
 BEGIN
-    INSERT INTO atencion(fecha_hora, nota_clinica, diagnostico, nota_pre_operatoria, nota_post_operatoria, recomendacion_control,
+    INSERT INTO atencion(fecha_hora, nota_clinica, nota_pre_operatoria, nota_post_operatoria, recomendacion_control,
                          monto_referencial, descuento_aplicado, id_cita, created_on, activo)
-    VALUES(p_fecha_hora, p_nota_clinica, p_diagnostico,p_nota_pre_operatoria, p_nota_post_operatoria, p_recomendacion_control,
+    VALUES(p_fecha_hora, p_nota_clinica, p_nota_pre_operatoria, p_nota_post_operatoria, p_recomendacion_control,
            p_monto_referencial, p_descuento_aplicado, p_id_cita, p_created_on, 1);
     SET p_id_generado = LAST_INSERT_ID();
 END $$
 
 CREATE PROCEDURE modificar_atencion(
-    IN p_id_atencion INT, IN p_fecha_hora DATETIME, IN p_nota_clinica TEXT, IN p_diagnostico TEXT, IN p_nota_pre_operatoria TEXT, IN p_nota_post_operatoria TEXT,
+    IN p_id_atencion INT, IN p_fecha_hora DATETIME, IN p_nota_clinica TEXT, IN p_nota_pre_operatoria TEXT, IN p_nota_post_operatoria TEXT,
     IN p_recomendacion_control TEXT, IN p_monto_referencial DECIMAL(10,2), IN p_descuento_aplicado DECIMAL(10,2),
     IN p_modified_on DATETIME, IN p_modified_by INT
 )
 BEGIN
     UPDATE atencion
-    SET fecha_hora = p_fecha_hora, nota_clinica = p_nota_clinica, diagnostico = p_diagnostico, nota_pre_operatoria = p_nota_pre_operatoria,
+    SET fecha_hora = p_fecha_hora, nota_clinica = p_nota_clinica, nota_pre_operatoria = p_nota_pre_operatoria,
         nota_post_operatoria = p_nota_post_operatoria, recomendacion_control = p_recomendacion_control,
         monto_referencial = p_monto_referencial, descuento_aplicado = p_descuento_aplicado,
         modified_on = p_modified_on, modified_by = p_modified_by
@@ -850,7 +850,7 @@ END $$
 
 CREATE PROCEDURE buscar_atencion_por_id(IN p_id_atencion INT)
 BEGIN
-    SELECT id_atencion, fecha_hora, nota_clinica, diagnostico, nota_pre_operatoria, nota_post_operatoria,
+    SELECT id_atencion, fecha_hora, nota_clinica, nota_pre_operatoria, nota_post_operatoria,
            recomendacion_control, monto_referencial, descuento_aplicado, id_cita
     FROM atencion
     WHERE id_atencion = p_id_atencion AND activo = 1;
@@ -858,7 +858,7 @@ END $$
 
 CREATE PROCEDURE buscar_atencion_por_cita(IN p_id_cita INT)
 BEGIN
-    SELECT id_atencion, fecha_hora, nota_clinica, diagnostico, nota_pre_operatoria, nota_post_operatoria,
+    SELECT id_atencion, fecha_hora, nota_clinica, nota_pre_operatoria, nota_post_operatoria,
            recomendacion_control, monto_referencial, descuento_aplicado, id_cita
     FROM atencion
     WHERE id_cita = p_id_cita AND activo = 1;
@@ -866,7 +866,7 @@ END $$
 
 CREATE PROCEDURE listar_atenciones()
 BEGIN
-    SELECT id_atencion, fecha_hora, nota_clinica, diagnostico, nota_pre_operatoria, nota_post_operatoria,
+    SELECT id_atencion, fecha_hora, nota_clinica, nota_pre_operatoria, nota_post_operatoria,
            recomendacion_control, monto_referencial, descuento_aplicado, id_cita
     FROM atencion
     WHERE activo = 1
@@ -1181,7 +1181,6 @@ BEGIN
         a.id_atencion,
         a.fecha_hora,
         a.nota_clinica,
-        a.diagnostico,
         a.nota_pre_operatoria,
         a.nota_post_operatoria,
         a.recomendacion_control,
@@ -1252,7 +1251,6 @@ BEGIN
         a.id_atencion,
         a.fecha_hora AS fecha_atencion,
         a.nota_clinica,
-        a.diagnostico,
         a.recomendacion_control,
         a.monto_referencial,
         a.descuento_aplicado,
