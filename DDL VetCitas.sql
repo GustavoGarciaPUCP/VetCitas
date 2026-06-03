@@ -130,12 +130,6 @@ CREATE TABLE servicio (
     modified_by INT NULL
 ) ENGINE=InnoDB;
 
-CREATE TABLE configuracion (
-    id_configuracion INT AUTO_INCREMENT PRIMARY KEY,
-    umbral_cliente_frecuente INT NOT NULL,
-    descuento_maximo_permitido DECIMAL(10,2) NOT NULL
-) ENGINE=InnoDB;
-
 CREATE TABLE horario_veterinario (
     id_horario INT AUTO_INCREMENT PRIMARY KEY,
     id_veterinario INT NOT NULL,
@@ -156,16 +150,12 @@ CREATE TABLE cita (
     fecha_hora_inicio DATETIME NOT NULL,
     fecha_hora_fin DATETIME NOT NULL,
     estado VARCHAR(20) NOT NULL,
-    motivo_cancelacion VARCHAR(255) NULL,
-    fecha_cancelacion DATETIME NULL,
-    id_usuario_cancelacion INT NULL,
     id_mascota INT NOT NULL,
     id_veterinario INT NOT NULL,
     id_servicio INT NOT NULL,
     created_on DATETIME,
     modified_on DATETIME,
     modified_by INT NULL,
-    CONSTRAINT fk_cita_usuario_cancelacion FOREIGN KEY (id_usuario_cancelacion) REFERENCES usuario(id_usuario);
     CONSTRAINT fk_cita_mascota FOREIGN KEY (id_mascota) REFERENCES mascota(id_mascota),
     CONSTRAINT fk_cita_veterinario FOREIGN KEY (id_veterinario) REFERENCES veterinario(id_veterinario),
     CONSTRAINT fk_cita_servicio FOREIGN KEY (id_servicio) REFERENCES servicio(id_servicio)
@@ -232,9 +222,6 @@ WHERE
  OR (r.codigo = 'RECEPCIONISTA' AND p.nombre IN ('CLIENTE_GESTIONAR','MASCOTA_GESTIONAR','CITA_CREAR','CITA_REPROGRAMAR','CITA_CANCELAR','CITA_ASIGNAR_VETERINARIO','AGENDA_CONSULTAR_GENERAL'))
  OR (r.codigo = 'VETERINARIO' AND p.nombre IN ('AGENDA_CONSULTAR_PROPIA','ATENCION_REGISTRAR','HISTORIAL_CONSULTAR','RECORDATORIO_GESTIONAR'));
 
-INSERT INTO configuracion(umbral_cliente_frecuente, descuento_maximo_permitido)
-VALUES (5, 20.00);
-
 INSERT INTO usuario(
     username,
     contrasena_hash,
@@ -267,6 +254,3 @@ INSERT INTO usuario_rol(id_usuario, id_rol)
 SELECT u.id_usuario, r.id_rol
 FROM usuario u JOIN rol_sistema r ON r.codigo = 'ADMINISTRADOR'
 WHERE u.username = 'superadmin';
-
-INSERT INTO configuracion (umbral_cliente_frecuente, descuento_maximo_permitido)
-VALUES (5, 20.00);

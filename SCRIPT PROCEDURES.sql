@@ -51,10 +51,6 @@ DROP PROCEDURE IF EXISTS deshabilitar_servicio $$
 DROP PROCEDURE IF EXISTS buscar_servicio_por_id $$
 DROP PROCEDURE IF EXISTS listar_servicios $$
 
-DROP PROCEDURE IF EXISTS buscar_configuracion_por_id $$
-DROP PROCEDURE IF EXISTS listar_configuraciones $$
-DROP PROCEDURE IF EXISTS modificar_configuracion $$
-
 DROP PROCEDURE IF EXISTS insertar_horario_veterinario $$
 DROP PROCEDURE IF EXISTS modificar_horario_veterinario $$
 DROP PROCEDURE IF EXISTS eliminar_horario_veterinario $$
@@ -892,28 +888,6 @@ BEGIN
     ORDER BY nombre;
 END $$
 
-CREATE PROCEDURE buscar_configuracion_por_id(IN p_id_configuracion INT)
-BEGIN
-    SELECT id_configuracion, umbral_cliente_frecuente, descuento_maximo_permitido
-    FROM configuracion
-    WHERE id_configuracion = p_id_configuracion;
-END $$
-
-CREATE PROCEDURE listar_configuraciones()
-BEGIN
-    SELECT id_configuracion, umbral_cliente_frecuente, descuento_maximo_permitido
-    FROM configuracion
-    ORDER BY id_configuracion;
-END $$
-
-CREATE PROCEDURE modificar_configuracion(IN p_id_configuracion INT, IN p_umbral_cliente_frecuente INT, IN p_descuento_maximo_permitido DECIMAL(10,2))
-BEGIN
-    UPDATE configuracion
-    SET umbral_cliente_frecuente = p_umbral_cliente_frecuente,
-        descuento_maximo_permitido = p_descuento_maximo_permitido
-    WHERE id_configuracion = p_id_configuracion;
-END $$
-
 CREATE PROCEDURE insertar_horario_veterinario(
     IN p_id_veterinario INT, IN p_dia_semana TINYINT, IN p_hora_inicio TIME, IN p_hora_fin TIME,
     IN p_hora_descanso_inicio TIME, IN p_hora_descanso_fin TIME, IN p_modified_by INT, OUT p_id_generado INT
@@ -1120,21 +1094,9 @@ BEGIN
     WHERE id_cita = p_id_cita;
 END $$
 
-CREATE PROCEDURE cancelar_cita(
-    IN p_id_cita INT,
-    IN p_motivo_cancelacion VARCHAR(255),
-    IN p_modified_by INT
-)
+CREATE PROCEDURE cancelar_cita(IN p_id_cita INT, IN p_modified_by INT)
 BEGIN
-    UPDATE cita
-    SET estado = 'CANCELADA',
-        motivo_cancelacion = p_motivo_cancelacion,
-        fecha_cancelacion = NOW(),
-        id_usuario_cancelacion = p_modified_by,
-        modified_on = NOW(),
-        modified_by = p_modified_by
-    WHERE id_cita = p_id_cita
-      AND estado IN ('PENDIENTE', 'CONFIRMADA', 'EN_CONSULTA');
+    UPDATE cita SET estado = 'CANCELADA', modified_on = NOW(), modified_by = p_modified_by WHERE id_cita = p_id_cita;
 END $$
 
 CREATE PROCEDURE confirmar_cita(IN p_id_cita INT, IN p_modified_by INT)
@@ -1177,63 +1139,29 @@ DROP PROCEDURE IF EXISTS buscar_cita_por_id $$
 
 CREATE PROCEDURE buscar_cita_por_id(IN p_id_cita INT)
 BEGIN
-    SELECT
-        c.id_cita,
-        c.fecha_hora_inicio,
-        c.fecha_hora_fin,
-        c.estado,
-        c.motivo_cancelacion,
-        c.fecha_cancelacion,
-        c.id_usuario_cancelacion,
-
-        uc.username AS username_usuario_cancelacion,
-        uc.nombres AS nombres_usuario_cancelacion,
-        uc.apellidos AS apellidos_usuario_cancelacion,
-        uc.email AS email_usuario_cancelacion,
-
-        c.id_mascota,
-        c.id_veterinario,
-        c.id_servicio,
-
-        m.nombre AS nombre_mascota,
-        m.peso AS peso_mascota,
-
-        s.nombre AS nombre_servicio,
-        s.descripcion AS descripcion_servicio
+    SELECT c.id_cita, c.fecha_hora_inicio, c.fecha_hora_fin, c.estado,
+           c.id_mascota, c.id_veterinario, c.id_servicio,
+           m.nombre AS nombre_mascota,
+           m.peso AS peso_mascota,
+           s.nombre AS nombre_servicio,
+           s.descripcion AS descripcion_servicio
     FROM cita c
     JOIN mascota m ON m.id_mascota = c.id_mascota
     JOIN servicio s ON s.id_servicio = c.id_servicio
-    LEFT JOIN usuario uc ON uc.id_usuario = c.id_usuario_cancelacion
     WHERE c.id_cita = p_id_cita;
 END $$
 
 CREATE PROCEDURE listar_citas()
 BEGIN
-    SELECT
-        c.id_cita,
-        c.fecha_hora_inicio,
-        c.fecha_hora_fin,
-        c.estado,
-        c.motivo_cancelacion,
-        c.fecha_cancelacion,
-        c.id_usuario_cancelacion,
-
-        uc.username AS username_usuario_cancelacion,
-        uc.nombres AS nombres_usuario_cancelacion,
-        uc.apellidos AS apellidos_usuario_cancelacion,
-        uc.email AS email_usuario_cancelacion,
-
-        c.id_mascota,
-        c.id_veterinario,
-        c.id_servicio,
-        m.nombre AS nombre_mascota,
-        m.peso AS peso_mascota,
-        s.nombre AS nombre_servicio,
-        s.descripcion AS descripcion_servicio
+    SELECT c.id_cita, c.fecha_hora_inicio, c.fecha_hora_fin, c.estado,
+           c.id_mascota, c.id_veterinario, c.id_servicio,
+           m.nombre AS nombre_mascota,
+           m.peso AS peso_mascota,
+           s.nombre AS nombre_servicio,
+           s.descripcion AS descripcion_servicio
     FROM cita c
     JOIN mascota m ON m.id_mascota = c.id_mascota
     JOIN servicio s ON s.id_servicio = c.id_servicio
-    LEFT JOIN usuario uc ON uc.id_usuario = c.id_usuario_cancelacion
     ORDER BY c.fecha_hora_inicio;
 END $$
 
@@ -1242,34 +1170,18 @@ CREATE PROCEDURE listar_citas_por_veterinario_fecha(
     IN p_fecha DATE
 )
 BEGIN
-    SELECT
-        c.id_cita,
-        c.fecha_hora_inicio,
-        c.fecha_hora_fin,
-        c.estado,
-        c.motivo_cancelacion,
-        c.fecha_cancelacion,
-        c.id_usuario_cancelacion,
-
-        uc.username AS username_usuario_cancelacion,
-        uc.nombres AS nombres_usuario_cancelacion,
-        uc.apellidos AS apellidos_usuario_cancelacion,
-        uc.email AS email_usuario_cancelacion,
-
-        c.id_mascota,
-        c.id_veterinario,
-        c.id_servicio,
-        m.nombre AS nombre_mascota,
-        m.peso AS peso_mascota,
-        cl.nombres AS cliente_nombres,
-        cl.apellidos AS cliente_apellidos,
-        s.nombre AS nombre_servicio,
-        s.descripcion AS descripcion_servicio
+    SELECT c.id_cita, c.fecha_hora_inicio, c.fecha_hora_fin, c.estado,
+           c.id_mascota, c.id_veterinario, c.id_servicio,
+           m.nombre AS nombre_mascota,
+           cl.nombres AS cliente_nombres,
+           m.peso AS peso_mascota,
+           cl.apellidos AS cliente_apellidos,
+           s.nombre AS nombre_servicio,
+           s.descripcion AS descripcion_servicio
     FROM cita c
     JOIN mascota m ON m.id_mascota = c.id_mascota
     JOIN cliente cl ON cl.id_cliente = m.id_cliente
     JOIN servicio s ON s.id_servicio = c.id_servicio
-    LEFT JOIN usuario uc ON uc.id_usuario = c.id_usuario_cancelacion
     WHERE c.id_veterinario = p_id_veterinario
       AND DATE(c.fecha_hora_inicio) = p_fecha
     ORDER BY c.fecha_hora_inicio;
@@ -1751,33 +1663,19 @@ BEGIN
         a.monto_referencial,
         a.descuento_aplicado,
         a.activo,
-
         ci.id_cita,
         ci.estado AS estado_cita,
-        ci.motivo_cancelacion,
-        ci.fecha_cancelacion,
-        ci.id_usuario_cancelacion,
-
-        uc.username AS username_usuario_cancelacion,
-        uc.nombres AS nombres_usuario_cancelacion,
-        uc.apellidos AS apellidos_usuario_cancelacion,
-        uc.email AS email_usuario_cancelacion,
-
         ci.fecha_hora_inicio,
         ci.fecha_hora_fin,
-
         m.id_mascota,
         m.nombre AS nombre_mascota,
         m.peso AS peso_mascota,
-
         c.id_cliente,
         c.nombres AS nombres_cliente,
         c.apellidos AS apellidos_cliente,
-
         s.id_servicio,
         s.nombre AS nombre_servicio,
         s.descripcion AS descripcion_servicio,
-
         v.id_veterinario,
         u.nombres AS nombres_veterinario,
         u.apellidos AS apellidos_veterinario
@@ -1788,7 +1686,6 @@ BEGIN
     INNER JOIN servicio s ON s.id_servicio = ci.id_servicio
     INNER JOIN veterinario v ON v.id_veterinario = ci.id_veterinario
     INNER JOIN usuario u ON u.id_usuario = v.id_veterinario
-    LEFT JOIN usuario uc ON uc.id_usuario = ci.id_usuario_cancelacion
     WHERE a.activo = 1
       AND (
             p_id_veterinario IS NULL
@@ -1828,18 +1725,8 @@ BEGIN
         ci.fecha_hora_inicio,
         ci.fecha_hora_fin,
         ci.estado,
-        ci.motivo_cancelacion,
-        ci.fecha_cancelacion,
-        ci.id_usuario_cancelacion,
-
-        uc.username AS username_usuario_cancelacion,
-        uc.nombres AS nombres_usuario_cancelacion,
-        uc.apellidos AS apellidos_usuario_cancelacion,
-        uc.email AS email_usuario_cancelacion,
-
         s.nombre AS nombre_servicio,
         s.descripcion AS descripcion_servicio,
-
         a.id_atencion,
         a.fecha_hora AS fecha_atencion,
         a.nota_clinica,
@@ -1851,7 +1738,6 @@ BEGIN
     FROM cita ci
     INNER JOIN servicio s ON s.id_servicio = ci.id_servicio
     LEFT JOIN atencion a ON a.id_cita = ci.id_cita AND a.activo = 1
-    LEFT JOIN usuario uc ON uc.id_usuario = ci.id_usuario_cancelacion
     WHERE ci.id_mascota = p_id_mascota
     ORDER BY ci.fecha_hora_inicio DESC;
 END $$
@@ -1957,27 +1843,15 @@ BEGIN
         ci.fecha_hora_inicio,
         ci.fecha_hora_fin,
         ci.estado,
-        ci.motivo_cancelacion,
-        ci.fecha_cancelacion,
-        ci.id_usuario_cancelacion,
-
-        uc.username AS username_usuario_cancelacion,
-        uc.nombres AS nombres_usuario_cancelacion,
-        uc.apellidos AS apellidos_usuario_cancelacion,
-        uc.email AS email_usuario_cancelacion,
-
         m.id_mascota,
         m.nombre AS nombre_mascota,
-        m.peso AS peso_mascota,
-
         c.id_cliente,
         c.nombres AS nombres_cliente,
         c.apellidos AS apellidos_cliente,
-
+        m.peso AS peso_mascota,
         v.id_veterinario,
         u.nombres AS nombres_veterinario,
         u.apellidos AS apellidos_veterinario,
-
         s.id_servicio,
         s.nombre AS nombre_servicio,
         s.descripcion AS descripcion_servicio,
@@ -1988,7 +1862,6 @@ BEGIN
     INNER JOIN veterinario v ON v.id_veterinario = ci.id_veterinario
     INNER JOIN usuario u ON u.id_usuario = v.id_veterinario
     INNER JOIN servicio s ON s.id_servicio = ci.id_servicio
-    LEFT JOIN usuario uc ON uc.id_usuario = ci.id_usuario_cancelacion
     WHERE (
             p_id_veterinario IS NULL
             OR ci.id_veterinario = p_id_veterinario
