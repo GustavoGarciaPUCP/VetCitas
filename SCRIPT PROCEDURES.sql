@@ -85,9 +85,37 @@ DROP PROCEDURE IF EXISTS eliminar_recordatorio $$
 DROP PROCEDURE IF EXISTS buscar_recordatorio_por_id $$
 DROP PROCEDURE IF EXISTS listar_recordatorios $$
 
+DROP PROCEDURE IF EXISTS validar_disponibilidad_slot $$
+DROP PROCEDURE IF EXISTS reprogramar_cita $$
+DROP PROCEDURE IF EXISTS cambiar_veterinario_cita $$
+DROP PROCEDURE IF EXISTS contar_citas_por_estado_en_rango $$
+DROP PROCEDURE IF EXISTS contar_citas_por_veterinario_en_rango $$
+
+DROP PROCEDURE IF EXISTS listar_ultimas_atenciones_por_veterinario $$
+DROP PROCEDURE IF EXISTS contar_atenciones_por_veterinario_en_mes $$
+DROP PROCEDURE IF EXISTS sumar_montos_netos_atenciones_por_mes $$
+DROP PROCEDURE IF EXISTS top_servicios_por_veterinario $$
+DROP PROCEDURE IF EXISTS top_veterinarios_por_atenciones $$
+DROP PROCEDURE IF EXISTS top_servicios_mas_demandados $$
+
+DROP PROCEDURE IF EXISTS contar_clientes_activos $$
+DROP PROCEDURE IF EXISTS contar_clientes_nuevos_en_mes $$
+DROP PROCEDURE IF EXISTS contar_mascotas_activas $$
+
+DROP PROCEDURE IF EXISTS marcar_recordatorio_enviado $$
+DROP PROCEDURE IF EXISTS contar_recordatorios_pendientes $$
+
+DROP PROCEDURE IF EXISTS autenticar_usuario $$
+DROP PROCEDURE IF EXISTS cambiar_contrasena_usuario $$
+
+DROP PROCEDURE IF EXISTS usuario_tiene_rol $$
+DROP PROCEDURE IF EXISTS restablecer_contrasena_usuario $$
+
+
+
 CREATE PROCEDURE insertar_usuario_base(
     IN p_username VARCHAR(50),
-    IN p_contrasena_hash VARCHAR(255),
+    IN p_contrasena_hash CHAR(64),
     IN p_nombres VARCHAR(100),
     IN p_apellidos VARCHAR(100),
     IN p_telefono VARCHAR(20),
@@ -272,7 +300,7 @@ END $$
 CREATE PROCEDURE modificar_administrador(
     IN p_id_administrador INT,
     IN p_username VARCHAR(50),
-    IN p_contrasena_hash VARCHAR(255),
+    IN p_contrasena_hash CHAR(64),
     IN p_nombres VARCHAR(100),
     IN p_apellidos VARCHAR(100),
     IN p_telefono VARCHAR(20),
@@ -398,7 +426,7 @@ END $$
 CREATE PROCEDURE modificar_veterinario(
     IN p_id_veterinario INT,
     IN p_username VARCHAR(50),
-    IN p_contrasena_hash VARCHAR(255),
+    IN p_contrasena_hash CHAR(64),
     IN p_nombres VARCHAR(100),
     IN p_apellidos VARCHAR(100),
     IN p_telefono VARCHAR(20),
@@ -499,7 +527,7 @@ END $$
 CREATE PROCEDURE modificar_recepcionista(
     IN p_id_recepcionista INT,
     IN p_username VARCHAR(50),
-    IN p_contrasena_hash VARCHAR(255),
+    IN p_contrasena_hash CHAR(64),
     IN p_nombres VARCHAR(100),
     IN p_apellidos VARCHAR(100),
     IN p_telefono VARCHAR(20),
@@ -1157,6 +1185,7 @@ BEGIN
         c.fecha_hora_fin,
         c.estado,
         c.motivo_cancelacion,
+        c.motivo_reprogramacion,
         c.fecha_cancelacion,
         c.id_usuario_cancelacion,
 
@@ -1189,6 +1218,7 @@ BEGIN
         c.fecha_hora_fin,
         c.estado,
         c.motivo_cancelacion,
+        c.motivo_reprogramacion,
         c.fecha_cancelacion,
         c.id_usuario_cancelacion,
 
@@ -1222,6 +1252,7 @@ BEGIN
         c.fecha_hora_fin,
         c.estado,
         c.motivo_cancelacion,
+        c.motivo_reprogramacion,
         c.fecha_cancelacion,
         c.id_usuario_cancelacion,
 
@@ -1739,6 +1770,7 @@ BEGIN
 
         ci.fecha_hora_inicio,
         ci.fecha_hora_fin,
+        ci.motivo_reprogramacion,
 
         m.id_mascota,
         m.nombre AS nombre_mascota,
@@ -1803,6 +1835,7 @@ BEGIN
         ci.fecha_hora_fin,
         ci.estado,
         ci.motivo_cancelacion,
+        ci.motivo_reprogramacion,
         ci.fecha_cancelacion,
         ci.id_usuario_cancelacion,
 
@@ -1824,7 +1857,7 @@ BEGIN
         (a.monto_referencial - a.descuento_aplicado) AS monto_final
     FROM cita ci
     INNER JOIN servicio s ON s.id_servicio = ci.id_servicio
-    LEFT JOIN atencion a ON a.id_cita = ci.id_cita AND a.activo = 1
+    INNER JOIN atencion a ON a.id_cita = ci.id_cita AND a.activo = 1
     LEFT JOIN usuario uc ON uc.id_usuario = ci.id_usuario_cancelacion
     WHERE ci.id_mascota = p_id_mascota
     ORDER BY ci.fecha_hora_inicio DESC;
@@ -1913,6 +1946,432 @@ BEGIN
     ORDER BY u.apellidos, u.nombres, u.username;
 END $$
 
+CREATE PROCEDURE validar_disponibilidad_slot(
+    IN p_id_veterinario INT,
+    IN p_fecha_hora_inicio DATETIME,
+    IN p_fecha_hora_fin DATETIME,
+    IN p_id_cita_excluir INT,
+    OUT p_disponible TINYINT
+)
+BEGIN
+    DECLARE v_dia_semana TINYINT;
+    DECLARE v_hora_inicio TIME;
+    DECLARE v_hora_fin TIME;
+    DECLARE v_horario_count INT DEFAULT 0;
+    DECLARE v_solapa TINYINT DEFAULT 0;
+
+    SET v_dia_semana = WEEKDAY(p_fecha_hora_inicio) + 1;
+    SET v_hora_inicio = TIME(p_fecha_hora_inicio);
+    SET v_hora_fin = TIME(p_fecha_hora_fin);
+
+    SELECT COUNT(*) INTO v_horario_count
+    FROM horario_veterinario hv
+    WHERE hv.id_veterinario = p_id_veterinario
+      AND hv.dia_semana = v_dia_semana
+      AND hv.activo = 1
+      AND v_hora_inicio >= hv.hora_inicio
+      AND v_hora_fin <= hv.hora_fin
+      AND (
+          hv.hora_descanso_inicio IS NULL
+          OR hv.hora_descanso_fin IS NULL
+          OR NOT (v_hora_inicio < hv.hora_descanso_fin AND v_hora_fin > hv.hora_descanso_inicio)
+      );
+
+    CALL existe_solapamiento_cita(
+        p_id_veterinario,
+        p_fecha_hora_inicio,
+        p_fecha_hora_fin,
+        p_id_cita_excluir,
+        v_solapa
+    );
+
+    SET p_disponible = (v_horario_count > 0 AND v_solapa = 0);
+END $$
+
+CREATE PROCEDURE listar_ultimas_atenciones_por_veterinario(
+    IN p_id_veterinario INT,
+    IN p_limite INT
+)
+BEGIN
+    SELECT
+        a.id_atencion,
+        a.fecha_hora,
+        a.nota_clinica,
+        a.diagnostico,
+        a.nota_pre_operatoria,
+        a.nota_post_operatoria,
+        a.recomendacion_control,
+        a.monto_referencial,
+        a.descuento_aplicado,
+        a.activo,
+
+        ci.id_cita,
+        ci.estado AS estado_cita,
+        ci.motivo_cancelacion,
+        ci.fecha_cancelacion,
+        ci.id_usuario_cancelacion,
+        ci.motivo_reprogramacion,
+        ci.fecha_hora_inicio,
+        ci.fecha_hora_fin,
+
+        uc.username AS username_usuario_cancelacion,
+        uc.nombres AS nombres_usuario_cancelacion,
+        uc.apellidos AS apellidos_usuario_cancelacion,
+        uc.email AS email_usuario_cancelacion,
+
+        m.id_mascota,
+        m.nombre AS nombre_mascota,
+        m.peso AS peso_mascota,
+
+        c.id_cliente,
+        c.nombres AS nombres_cliente,
+        c.apellidos AS apellidos_cliente,
+
+        s.id_servicio,
+        s.nombre AS nombre_servicio,
+        s.descripcion AS descripcion_servicio,
+        s.tipo_servicio,
+        s.duracion_minutos,
+        s.precio_referencial,
+
+        v.id_veterinario,
+        u.nombres AS nombres_veterinario,
+        u.apellidos AS apellidos_veterinario
+    FROM atencion a
+    INNER JOIN cita ci ON ci.id_cita = a.id_cita
+    INNER JOIN mascota m ON m.id_mascota = ci.id_mascota
+    INNER JOIN cliente c ON c.id_cliente = m.id_cliente
+    INNER JOIN servicio s ON s.id_servicio = ci.id_servicio
+    INNER JOIN veterinario v ON v.id_veterinario = ci.id_veterinario
+    INNER JOIN usuario u ON u.id_usuario = v.id_veterinario
+    LEFT JOIN usuario uc ON uc.id_usuario = ci.id_usuario_cancelacion
+    WHERE a.activo = 1
+      AND ci.id_veterinario = p_id_veterinario
+    ORDER BY a.fecha_hora DESC
+    LIMIT p_limite;
+END $$
+
+CREATE PROCEDURE contar_atenciones_por_veterinario_en_mes(
+    IN p_id_veterinario INT,
+    IN p_anio INT,
+    IN p_mes INT,
+    OUT p_total INT
+)
+BEGIN
+    SELECT COUNT(*) INTO p_total
+    FROM atencion a
+    INNER JOIN cita c ON c.id_cita = a.id_cita
+    WHERE a.activo = 1
+      AND c.id_veterinario = p_id_veterinario
+      AND YEAR(a.fecha_hora) = p_anio
+      AND MONTH(a.fecha_hora) = p_mes;
+END $$
+
+CREATE PROCEDURE sumar_montos_netos_atenciones_por_mes(
+    IN p_anio INT,
+    IN p_mes INT,
+    OUT p_total DECIMAL(10,2)
+)
+BEGIN
+    SELECT COALESCE(SUM(a.monto_referencial - a.descuento_aplicado), 0)
+    INTO p_total
+    FROM atencion a
+    WHERE a.activo = 1
+      AND YEAR(a.fecha_hora) = p_anio
+      AND MONTH(a.fecha_hora) = p_mes;
+END $$
+
+CREATE PROCEDURE top_servicios_por_veterinario(
+    IN p_id_veterinario INT,
+    IN p_anio INT,
+    IN p_mes INT,
+    IN p_limite INT
+)
+BEGIN
+    SELECT
+        s.id_servicio,
+        s.nombre,
+        s.descripcion,
+        s.tipo_servicio,
+        s.duracion_minutos,
+        s.precio_referencial,
+        COUNT(a.id_atencion) AS total_atenciones,
+        COALESCE(SUM(a.monto_referencial - a.descuento_aplicado), 0) AS monto_neto_total
+    FROM atencion a
+    INNER JOIN cita c ON c.id_cita = a.id_cita
+    INNER JOIN servicio s ON s.id_servicio = c.id_servicio
+    WHERE a.activo = 1
+      AND c.id_veterinario = p_id_veterinario
+      AND YEAR(a.fecha_hora) = p_anio
+      AND MONTH(a.fecha_hora) = p_mes
+    GROUP BY
+        s.id_servicio,
+        s.nombre,
+        s.descripcion,
+        s.tipo_servicio,
+        s.duracion_minutos,
+        s.precio_referencial
+    ORDER BY total_atenciones DESC, monto_neto_total DESC
+    LIMIT p_limite;
+END $$
+
+CREATE PROCEDURE usuario_tiene_rol(
+    IN p_id_usuario INT,
+    IN p_codigo_rol VARCHAR(30),
+    OUT p_tiene_rol INT
+)
+BEGIN
+    SELECT COUNT(*) INTO p_tiene_rol
+    FROM usuario_rol ur
+    INNER JOIN rol_sistema r ON r.id_rol = ur.id_rol
+    INNER JOIN usuario u ON u.id_usuario = ur.id_usuario
+    WHERE ur.id_usuario = p_id_usuario
+      AND r.codigo = p_codigo_rol
+      AND u.activo = 1;
+END $$
+
+CREATE PROCEDURE restablecer_contrasena_usuario(
+    IN p_id_usuario_objetivo INT,
+    IN p_nueva_contrasena_hash CHAR(64),
+    IN p_id_admin INT,
+    OUT p_actualizado INT
+)
+BEGIN
+    UPDATE usuario
+    SET contrasena_hash = p_nueva_contrasena_hash,
+        modified_on = NOW(),
+        modified_by = p_id_admin
+    WHERE id_usuario = p_id_usuario_objetivo
+      AND activo = 1;
+
+    SET p_actualizado = ROW_COUNT();
+END $$
+
+CREATE PROCEDURE top_servicios_mas_demandados(
+    IN p_desde DATETIME,
+    IN p_hasta DATETIME,
+    IN p_limite INT
+)
+BEGIN
+    SELECT
+        s.id_servicio,
+        s.nombre,
+        s.descripcion,
+        s.tipo_servicio,
+        s.duracion_minutos,
+        s.precio_referencial,
+        s.activo,
+        COUNT(a.id_atencion) AS total_atenciones,
+        COALESCE(SUM(a.monto_referencial - a.descuento_aplicado), 0) AS monto_neto_total
+    FROM atencion a
+    INNER JOIN cita c ON c.id_cita = a.id_cita
+    INNER JOIN servicio s ON s.id_servicio = c.id_servicio
+    WHERE a.activo = 1
+      AND a.fecha_hora >= p_desde
+      AND a.fecha_hora <= p_hasta
+    GROUP BY
+        s.id_servicio,
+        s.nombre,
+        s.descripcion,
+        s.tipo_servicio,
+        s.duracion_minutos,
+        s.precio_referencial,
+        s.activo
+    ORDER BY total_atenciones DESC, monto_neto_total DESC
+    LIMIT p_limite;
+END $$
+
+CREATE PROCEDURE top_veterinarios_por_atenciones(
+    IN p_anio INT,
+    IN p_mes INT,
+    IN p_limite INT
+)
+BEGIN
+    SELECT
+        v.id_veterinario,
+        u.username,
+        u.nombres,
+        u.apellidos,
+        u.telefono,
+        u.email,
+        v.cmpv,
+        v.especialidad,
+        COUNT(a.id_atencion) AS total_atenciones,
+        COALESCE(SUM(a.monto_referencial - a.descuento_aplicado), 0) AS monto_neto_total
+    FROM atencion a
+    INNER JOIN cita c ON c.id_cita = a.id_cita
+    INNER JOIN veterinario v ON v.id_veterinario = c.id_veterinario
+    INNER JOIN usuario u ON u.id_usuario = v.id_veterinario
+    WHERE a.activo = 1
+      AND YEAR(a.fecha_hora) = p_anio
+      AND MONTH(a.fecha_hora) = p_mes
+    GROUP BY
+        v.id_veterinario,
+        u.username,
+        u.nombres,
+        u.apellidos,
+        u.telefono,
+        u.email,
+        v.cmpv,
+        v.especialidad
+    ORDER BY total_atenciones DESC, monto_neto_total DESC
+    LIMIT p_limite;
+END $$
+
+
+
+CREATE PROCEDURE reprogramar_cita(
+    IN p_id_cita INT,
+    IN p_fecha_hora_inicio DATETIME,
+    IN p_fecha_hora_fin DATETIME,
+    IN p_motivo_reprogramacion VARCHAR(255),
+    IN p_modified_by INT
+)
+BEGIN
+    UPDATE cita
+    SET fecha_hora_inicio = p_fecha_hora_inicio,
+        fecha_hora_fin = p_fecha_hora_fin,
+        motivo_reprogramacion = p_motivo_reprogramacion,
+        modified_on = NOW(),
+        modified_by = p_modified_by
+    WHERE id_cita = p_id_cita
+      AND estado IN ('PENDIENTE', 'CONFIRMADA');
+END $$
+
+CREATE PROCEDURE cambiar_veterinario_cita(
+    IN p_id_cita INT,
+    IN p_id_nuevo_veterinario INT,
+    IN p_modified_by INT
+)
+BEGIN
+    UPDATE cita
+    SET id_veterinario = p_id_nuevo_veterinario,
+        modified_on = NOW(),
+        modified_by = p_modified_by
+    WHERE id_cita = p_id_cita
+      AND estado IN ('PENDIENTE', 'CONFIRMADA');
+END $$
+
+CREATE PROCEDURE marcar_recordatorio_enviado(
+    IN p_id_recordatorio INT,
+    IN p_modified_by INT
+)
+BEGIN
+    UPDATE recordatorio
+    SET estado_seguimiento = 'ENVIADO',
+        modified_on = NOW(),
+        modified_by = p_modified_by
+    WHERE id_recordatorio = p_id_recordatorio
+      AND estado_seguimiento = 'PENDIENTE';
+END $$
+
+CREATE PROCEDURE contar_recordatorios_pendientes(
+    OUT p_total INT
+)
+BEGIN
+    SELECT COUNT(*) INTO p_total
+    FROM recordatorio
+    WHERE estado_seguimiento = 'PENDIENTE';
+END $$
+
+CREATE PROCEDURE contar_citas_por_estado_en_rango(
+    IN p_estado VARCHAR(20),
+    IN p_desde DATETIME,
+    IN p_hasta DATETIME,
+    OUT p_total INT
+)
+BEGIN
+    SELECT COUNT(*) INTO p_total
+    FROM cita c
+    WHERE c.estado = p_estado
+      AND c.fecha_hora_inicio >= p_desde
+      AND c.fecha_hora_inicio <= p_hasta;
+END $$
+
+CREATE PROCEDURE contar_citas_por_veterinario_en_rango(
+    IN p_id_veterinario INT,
+    IN p_desde DATETIME,
+    IN p_hasta DATETIME,
+    OUT p_total INT
+)
+BEGIN
+    SELECT COUNT(*) INTO p_total
+    FROM cita c
+    WHERE c.id_veterinario = p_id_veterinario
+      AND c.fecha_hora_inicio >= p_desde
+      AND c.fecha_hora_inicio <= p_hasta;
+END $$
+
+CREATE PROCEDURE contar_clientes_activos(
+    OUT p_total INT
+)
+BEGIN
+    SELECT COUNT(*) INTO p_total
+    FROM cliente
+    WHERE activo = 1;
+END $$
+
+CREATE PROCEDURE contar_clientes_nuevos_en_mes(
+    IN p_anio INT,
+    IN p_mes INT,
+    OUT p_total INT
+)
+BEGIN
+    SELECT COUNT(*) INTO p_total
+    FROM cliente
+    WHERE YEAR(created_on) = p_anio
+      AND MONTH(created_on) = p_mes;
+END $$
+
+CREATE PROCEDURE autenticar_usuario(
+    IN p_username VARCHAR(50),
+    IN p_contrasena_hash CHAR(64)
+)
+BEGIN
+    SELECT
+        id_usuario,
+        username,
+        contrasena_hash,
+        nombres,
+        apellidos,
+        telefono,
+        email,
+        activo
+    FROM usuario
+    WHERE username = p_username
+      AND contrasena_hash = p_contrasena_hash
+      AND activo = 1;
+END $$
+
+CREATE PROCEDURE cambiar_contrasena_usuario(
+    IN p_id_usuario INT,
+    IN p_contrasena_actual_hash CHAR(64),
+    IN p_nueva_contrasena_hash CHAR(64),
+    OUT p_actualizado INT
+)
+BEGIN
+    UPDATE usuario
+    SET contrasena_hash = p_nueva_contrasena_hash,
+        modified_on = NOW(),
+        modified_by = p_id_usuario
+    WHERE id_usuario = p_id_usuario
+      AND contrasena_hash = p_contrasena_actual_hash
+      AND activo = 1;
+
+    SET p_actualizado = ROW_COUNT();
+END $$
+
+CREATE PROCEDURE contar_mascotas_activas(
+    OUT p_total INT
+)
+BEGIN
+    SELECT COUNT(*) INTO p_total
+    FROM mascota
+    WHERE activo = 1;
+END $$
+
+
+
 
 /* =========================================================
    12. CITAS FILTRADAS
@@ -1932,6 +2391,7 @@ BEGIN
         ci.fecha_hora_fin,
         ci.estado,
         ci.motivo_cancelacion,
+        ci.motivo_reprogramacion,
         ci.fecha_cancelacion,
         ci.id_usuario_cancelacion,
 

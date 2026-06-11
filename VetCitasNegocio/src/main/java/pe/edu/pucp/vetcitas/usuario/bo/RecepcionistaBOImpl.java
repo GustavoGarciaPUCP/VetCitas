@@ -5,6 +5,8 @@ import pe.edu.pucp.vetcitas.usuario.dao.IRecepcionistaDAO;
 import pe.edu.pucp.vetcitas.usuario.impl.RecepcionistaImpl;
 import pe.edu.pucp.vetcitas.usuario.model.Recepcionista;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.List;
 
 public class RecepcionistaBOImpl implements IRecepcionistaBO {
@@ -17,12 +19,14 @@ public class RecepcionistaBOImpl implements IRecepcionistaBO {
     @Override
     public int insertar(Recepcionista recepcionista) throws Exception {
         validar(recepcionista, false);
+        recepcionista.setContrasenaHash(hashSiNoEstaHasheada(recepcionista.getContrasenaHash()));
         return recepcionistaDAO.insertar(recepcionista);
     }
 
     @Override
     public int modificar(Recepcionista recepcionista) throws Exception {
         validar(recepcionista, true);
+        recepcionista.setContrasenaHash(hashSiNoEstaHasheada(recepcionista.getContrasenaHash()));
         return recepcionistaDAO.modificar(recepcionista);
     }
 
@@ -92,4 +96,37 @@ public class RecepcionistaBOImpl implements IRecepcionistaBO {
             throw new Exception("El email no tiene un formato válido.");
         }
     }
+
+    private String hashSiNoEstaHasheada(String contrasena) throws Exception {
+        if (contrasena == null || contrasena.trim().isEmpty()) {
+            throw new Exception("La contraseña es obligatoria.");
+        }
+
+        contrasena = contrasena.trim();
+
+        if (esSha256(contrasena)) {
+            return contrasena.toLowerCase();
+        }
+
+        return generarSha256(contrasena);
+    }
+
+    private boolean esSha256(String texto) {
+        return texto != null && texto.matches("^[0-9a-fA-F]{64}$");
+    }
+
+    private String generarSha256(String texto) throws Exception {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] hashBytes = digest.digest(texto.getBytes(StandardCharsets.UTF_8));
+
+        StringBuilder sb = new StringBuilder();
+
+        for (byte b : hashBytes) {
+            sb.append(String.format("%02x", b));
+        }
+
+        return sb.toString();
+    }
+
+
 }

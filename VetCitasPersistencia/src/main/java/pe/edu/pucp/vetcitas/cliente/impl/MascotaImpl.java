@@ -356,4 +356,34 @@ public class MascotaImpl implements MascotaDAO {
 
         return mascotas;
     }
+
+    @Override
+    public int contarActivas() {
+        int total = 0;
+        Connection con = null;
+        CallableStatement cs = null;
+
+        try {
+            con = DBManager.getInstance().getConnection();
+            cs = con.prepareCall("{CALL contar_mascotas_activas(?)}");
+
+            cs.registerOutParameter(1, Types.INTEGER);
+
+            cs.execute();
+
+            total = cs.getInt(1);
+
+        } catch (Exception ex) {
+            System.out.println("ERROR contando mascotas activas: " + ex.getMessage());
+        } finally {
+            try {
+                if (cs != null) cs.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("ERROR cerrando recursos en contarActivas mascota: " + ex.getMessage());
+            }
+        }
+
+        return total;
+    }
 }

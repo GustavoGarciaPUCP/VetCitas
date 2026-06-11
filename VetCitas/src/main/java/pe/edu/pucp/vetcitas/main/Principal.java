@@ -6,9 +6,7 @@ import pe.edu.pucp.vetcitas.cita.boi.IAtencionBO;
 import pe.edu.pucp.vetcitas.cita.boi.ICitaBO;
 import pe.edu.pucp.vetcitas.cita.bo.CitaBOImpl;
 import pe.edu.pucp.vetcitas.cita.boi.IRecordatorioBO;
-import pe.edu.pucp.vetcitas.cita.model.Atencion;
-import pe.edu.pucp.vetcitas.cita.model.Cita;
-import pe.edu.pucp.vetcitas.cita.model.Recordatorio;
+import pe.edu.pucp.vetcitas.cita.model.*;
 import pe.edu.pucp.vetcitas.cliente.boi.IClienteBO;
 import pe.edu.pucp.vetcitas.cliente.bo.ClienteBOImpl;
 import pe.edu.pucp.vetcitas.cliente.boi.IMascotaBO;
@@ -19,16 +17,8 @@ import pe.edu.pucp.vetcitas.common.enums.*;
 import pe.edu.pucp.vetcitas.servicio.boi.IServicioBO;
 import pe.edu.pucp.vetcitas.servicio.bo.ServicioBOImpl;
 import pe.edu.pucp.vetcitas.servicio.model.Servicio;
-import pe.edu.pucp.vetcitas.usuario.boi.IAdministradorBO;
-import pe.edu.pucp.vetcitas.usuario.bo.AdministradorBOImpl;
-import pe.edu.pucp.vetcitas.usuario.boi.IHorarioVeterinarioBO;
-import pe.edu.pucp.vetcitas.usuario.bo.HorarioVeterinarioBOImpl;
-import pe.edu.pucp.vetcitas.usuario.boi.IPermisoBO;
-import pe.edu.pucp.vetcitas.usuario.bo.PermisoBOImpl;
-import pe.edu.pucp.vetcitas.usuario.boi.IRecepcionistaBO;
-import pe.edu.pucp.vetcitas.usuario.bo.RecepcionistaBOImpl;
-import pe.edu.pucp.vetcitas.usuario.boi.IVeterinarioBO;
-import pe.edu.pucp.vetcitas.usuario.bo.VeterinarioBOImpl;
+import pe.edu.pucp.vetcitas.usuario.bo.*;
+import pe.edu.pucp.vetcitas.usuario.boi.*;
 import pe.edu.pucp.vetcitas.usuario.model.*;
 
 import java.time.DayOfWeek;
@@ -57,6 +47,7 @@ public class Principal {
         ICitaBO citaBO = new CitaBOImpl();
         IAtencionBO atencionBO = new AtencionBOImpl();
         IRecordatorioBO recordatorioBO = new RecordatorioBOImpl();
+        IUsuarioBO usuarioBO = new UsuarioBOImpl();
 
         LocalDateTime ahora = LocalDateTime.now();
 
@@ -68,7 +59,7 @@ public class Principal {
 
             Administrador admin = new Administrador();
             admin.setUsername("admin_lab_final");
-            admin.setContrasenaHash("hash_admin_123");
+            admin.setContrasenaHash("Admin1234");
             admin.setNombres("Ana");
             admin.setApellidos("Torres");
             admin.setEmail("ana.torres@vetcitas.com");
@@ -93,7 +84,7 @@ public class Principal {
 
             Veterinario vet = new Veterinario();
             vet.setUsername("vet_lab_final");
-            vet.setContrasenaHash("hash_vet_123");
+            vet.setContrasenaHash("Vet1234");
             vet.setNombres("Luis");
             vet.setApellidos("Pérez");
             vet.setTelefono("988777666");
@@ -120,7 +111,7 @@ public class Principal {
 
             Recepcionista recep = new Recepcionista();
             recep.setUsername("recep_lab_final");
-            recep.setContrasenaHash("hash_recep_123");
+            recep.setContrasenaHash("Recep123");
             recep.setNombres("Carla");
             recep.setApellidos("Rojas");
             recep.setEmail("carla.rojas@vetcitas.com");
@@ -138,6 +129,75 @@ public class Principal {
                 recepBD = recepcionistaBO.buscarPorId(idRecep);
             }
             imprimirRecepcionista(recepBD);
+
+            // ==================================================
+            // 3.1 AUTENTICACIÓN Y CAMBIO DE CONTRASEÑA
+            // ==================================================
+            imprimirSeccion("3.1 AUTENTICACIÓN Y CAMBIO DE CONTRASEÑA");
+
+            Usuario usuarioLogin = usuarioBO.autenticar("admin_lab_final", "Admin1234");
+
+            System.out.println("Login correcto -> ID: " + usuarioLogin.getId()
+                    + ", Username: " + usuarioLogin.getUsername()
+                    + ", Nombre: " + usuarioLogin.getNombres() + " " + usuarioLogin.getApellidos()
+                    + ", Roles: " + (usuarioLogin.getRoles() != null ? usuarioLogin.getRoles().size() : 0));
+
+            try {
+                usuarioBO.autenticar("admin_lab_final", "PasswordIncorrecto");
+                System.out.println("ERROR: autenticó con contraseña incorrecta.");
+            } catch (Exception ex) {
+                System.out.println("ÉXITO: login incorrecto bloqueado -> " + ex.getMessage());
+            }
+
+            usuarioBO.cambiarContrasena(idAdmin, "Admin1234", "AdminNueva1234");
+            System.out.println("Contraseña del administrador cambiada correctamente.");
+
+            try {
+                usuarioBO.autenticar("admin_lab_final", "Admin1234");
+                System.out.println("ERROR: autenticó con contraseña antigua.");
+            } catch (Exception ex) {
+                System.out.println("ÉXITO: la contraseña antigua ya no funciona -> " + ex.getMessage());
+            }
+
+            Usuario usuarioLoginNuevo = usuarioBO.autenticar("admin_lab_final", "AdminNueva1234");
+
+            System.out.println("Login con nueva contraseña correcto -> ID: " + usuarioLoginNuevo.getId()
+                    + ", Username: " + usuarioLoginNuevo.getUsername());
+
+            // ==================================================
+            // 3.2 RESTABLECER CONTRASEÑA DE OTRO USUARIO POR ADMIN
+            // ==================================================
+            imprimirSeccion("3.2 RESTABLECER CONTRASEÑA DE OTRO USUARIO POR ADMIN");
+
+            usuarioBO.restablecerContrasena(idVet, "VetNueva1234", idAdmin);
+            System.out.println("Admin restableció la contraseña del veterinario correctamente.");
+
+            try {
+                usuarioBO.autenticar("vet_lab_final", "Vet1234");
+                System.out.println("ERROR: el veterinario autenticó con la contraseña antigua.");
+            } catch (Exception ex) {
+                System.out.println("ÉXITO: contraseña antigua del veterinario ya no funciona -> " + ex.getMessage());
+            }
+
+            Usuario vetLoginNuevo = usuarioBO.autenticar("vet_lab_final", "VetNueva1234");
+
+            System.out.println("Login veterinario con contraseña restablecida correcto -> ID: "
+                    + vetLoginNuevo.getId()
+                    + ", Username: " + vetLoginNuevo.getUsername());
+
+            try {
+                usuarioBO.restablecerContrasena(idRecep, "RecepHack1234", idVet);
+                System.out.println("ERROR: un veterinario pudo restablecer contraseña de otro usuario.");
+            } catch (Exception ex) {
+                System.out.println("ÉXITO: usuario no administrador bloqueado -> " + ex.getMessage());
+            }
+
+            try {
+                usuarioBO.restablecerContrasena(idAdmin, "AdminReset1234", idAdmin);
+                System.out.println("ERROR: el admin pudo usar este método para cambiarse su propia contraseña.");
+            } catch (Exception ex) {
+                System.out.println("ÉXITO: se bloqueó restablecimiento de contraseña propia -> " + ex.getMessage());
+            }
 
             // ==================================================
             // 4. ASIGNAR ROL RECEPCIONISTA AL VETERINARIO
@@ -211,7 +271,7 @@ public class Principal {
             try {
                 Veterinario vetSinEmail = new Veterinario();
                 vetSinEmail.setUsername("vet_sin_email");
-                vetSinEmail.setContrasenaHash("hash_vet_sin_email");
+                vetSinEmail.setContrasenaHash("VetSinEmail1234");
                 vetSinEmail.setNombres("Marco");
                 vetSinEmail.setApellidos("SinCorreo");
                 vetSinEmail.setTelefono("944111222");
@@ -364,6 +424,9 @@ public class Principal {
             int idCita = 0;
             Cita citaBD = null;
 
+            int idRecordatorio = 0;
+            Recordatorio recordatorioBD = null;
+
             if (mascotaBD != null && vetBD != null && servicioBD != null) {
                 LocalDate proximoLunes = obtenerProximaFecha(DayOfWeek.MONDAY);
                 LocalDateTime fechaCita = LocalDateTime.of(proximoLunes, LocalTime.of(10, 0));
@@ -394,14 +457,20 @@ public class Principal {
 
                 try {
                     Cita citaSolapada = new Cita();
-                    citaSolapada.setFechaHoraInicio(LocalDateTime.of(proximoLunes, LocalTime.of(10, 15)));
+
+                    LocalDateTime inicioSolapada = LocalDateTime.of(proximoLunes, LocalTime.of(10, 15));
+                    LocalDateTime finSolapada = inicioSolapada.plusMinutes(servicioBD.getDuracionMinutos());
+
+                    citaSolapada.setFechaHoraInicio(inicioSolapada);
+                    citaSolapada.setFechaHoraFin(finSolapada);
                     citaSolapada.setEstado(EstadoCita.PENDIENTE);
                     citaSolapada.setMascota(mascotaBD);
                     citaSolapada.setVeterinario(vetBD);
                     citaSolapada.setServicio(servicioBD);
                     citaSolapada.setCreatedOn(ahora);
+                    citaSolapada.setModifiedBy(adminBD);
 
-                    citaBO.insertar(citaSolapada); // Esto arrojará una Exception desde el BO
+                    citaBO.insertar(citaSolapada);
                     System.out.println("ERROR: la cita solapada no debió insertarse.");
                 } catch (Exception ex) {
                     System.out.println("Correcto, la Capa de Negocios rechazó la cita solapada.");
@@ -418,17 +487,26 @@ public class Principal {
 
                 Cita citaParaModificar = citaBO.buscarPorId(idCita);
                 if (citaParaModificar != null) {
-                    citaParaModificar.setFechaHoraInicio(LocalDateTime.of(proximoLunes, LocalTime.of(9, 0)));
-                    citaParaModificar.setEstado(EstadoCita.CONFIRMADA);
-                    citaParaModificar.setMascota(mascotaBD);
-                    citaParaModificar.setVeterinario(vetBD);
-                    citaParaModificar.setServicio(servicioBD);
-                    citaParaModificar.setModifiedOn(LocalDateTime.now());
-                    citaParaModificar.setModifiedBy(adminBD);
+                    LocalDateTime nuevaHoraInicio = LocalDateTime.of(proximoLunes, LocalTime.of(9, 0));
+                    LocalDateTime nuevaHoraFin = nuevaHoraInicio.plusMinutes(servicioBD.getDuracionMinutos());
 
-                    citaBO.modificar(citaParaModificar);
-                    System.out.println("Cita reprogramada a las 9:00.");
+                    citaBO.reprogramar(
+                            idCita,
+                            nuevaHoraInicio,
+                            nuevaHoraFin,
+                            "Cliente solicitó adelantar la cita por disponibilidad.",
+                            idAdmin
+                    );
+
+                    System.out.println("Cita reprogramada mediante BO.");
+
+                    Cita citaReprogramadaBD = citaBO.buscarPorId(idCita);
+                    System.out.println("Cita reprogramada -> ID: " + citaReprogramadaBD.getId()
+                            + ", Inicio: " + citaReprogramadaBD.getFechaHoraInicio()
+                            + ", Fin: " + citaReprogramadaBD.getFechaHoraFin()
+                            + ", Motivo reprogramación: " + citaReprogramadaBD.getMotivoReprogramacion());
                 }
+
                 // ==================================================
                 // ===== NUEVO ===== PASAR CITA A EN_CONSULTA
                 // ==================================================
@@ -494,9 +572,6 @@ public class Principal {
                 // ==================================================
                 imprimirSeccion("13.2 REGISTRAR RECORDATORIO");
 
-                Recordatorio recordatorioBD = null;
-                int idRecordatorio = 0;
-
                 if (citaAtendida != null) {
                     Recordatorio recordatorio = new Recordatorio();
                     recordatorio.setFechaProgramada(LocalDateTime.now().plusDays(3));
@@ -523,6 +598,30 @@ public class Principal {
                     }
                 }
 
+                imprimirSeccion("13.3 MÉTODOS DE RECORDATORIO");
+
+                int pendientesAntes = recordatorioBO.contarPendientes();
+                System.out.println("Recordatorios pendientes antes de marcar enviado: " + pendientesAntes);
+
+                if (idRecordatorio > 0) {
+                    recordatorioBO.marcarEnviado(idRecordatorio, idAdmin);
+                    System.out.println("Recordatorio marcado como ENVIADO.");
+
+                    Recordatorio recordatorioEnviadoBD = recordatorioBO.buscarPorId(idRecordatorio);
+
+                    if (recordatorioEnviadoBD != null) {
+                        System.out.println("Recordatorio actualizado -> ID: " + recordatorioEnviadoBD.getId()
+                                + ", Estado: " + recordatorioEnviadoBD.getEstadoSeguimiento()
+                                + ", Fecha programada: " + recordatorioEnviadoBD.getFechaProgramada()
+                                + ", Mensaje: " + recordatorioEnviadoBD.getMensaje());
+                    }
+                } else {
+                    System.out.println("No se creó recordatorio, no se puede probar marcarEnviado.");
+                }
+
+                int pendientesDespues = recordatorioBO.contarPendientes();
+                System.out.println("Recordatorios pendientes después de marcar enviado: " + pendientesDespues);
+
                 List<Cita> citasVetDia = citaBO.listarPorVeterinarioYFecha(idVet, proximoLunes);
                 System.out.println("Citas del veterinario para ese día: " + citasVetDia.size());
                 for (Cita c : citasVetDia) {
@@ -530,6 +629,23 @@ public class Principal {
                 }
 
             }
+            int totalConfirmadas = citaBO.contarPorEstadoEnRango(
+                    EstadoCita.ATENDIDA.name(),
+                    LocalDateTime.now().minusDays(1),
+                    LocalDateTime.now().plusDays(30)
+            );
+
+            System.out.println("Total citas ATENDIDA en rango: " + totalConfirmadas);
+
+            int totalVet = citaBO.contarPorVeterinarioEnRango(
+                    idVet,
+                    LocalDateTime.now().minusDays(1),
+                    LocalDateTime.now().plusDays(30)
+            );
+
+            System.out.println("Total citas del veterinario en rango: " + totalVet);
+
+
 
             // ==================================================
             // 14. MODIFICAR RECEPCIONISTA
@@ -676,6 +792,92 @@ public class Principal {
                         ? citaCanceladaBD.getUsuarioCancelacion().getUsername()
                         : "null"));
             }
+
+            // ==================================================
+            // MÉTODOS ESTADÍSTICOS DE ATENCIÓN
+            // ==================================================
+            imprimirSeccion("MÉTODOS ESTADÍSTICOS DE ATENCIÓN");
+
+            int anioActual = LocalDate.now().getYear();
+            int mesActual = LocalDate.now().getMonthValue();
+
+            List<Atencion> ultimasAtencionesVet = atencionBO.listarUltimasPorVeterinario(idVet, 5);
+            System.out.println("Últimas atenciones del veterinario: " + ultimasAtencionesVet.size());
+
+            for (Atencion a : ultimasAtencionesVet) {
+                System.out.println("Atención ID: " + a.getId()
+                        + ", Fecha: " + a.getFechaHora()
+                        + ", Diagnóstico: " + a.getDiagnostico()
+                        + ", Mascota: " + a.getCita().getMascota().getNombre());
+            }
+
+            int totalAtencionesVetMes = atencionBO.contarPorVeterinarioEnMes(idVet, anioActual, mesActual);
+            System.out.println("Total atenciones del veterinario en el mes: " + totalAtencionesVetMes);
+
+            double montoNetoMes = atencionBO.sumarMontosNetosPorMes(anioActual, mesActual);
+            System.out.println("Monto neto total de atenciones del mes: " + montoNetoMes);
+
+            List<ServicioAtencionResumen> topServicios = atencionBO.topServiciosPorVeterinario(
+                    idVet,
+                    anioActual,
+                    mesActual,
+                    5
+            );
+
+            System.out.println("Top servicios del veterinario:");
+            for (ServicioAtencionResumen r : topServicios) {
+                System.out.println("- " + r.getServicio().getNombre()
+                        + " | Atenciones: " + r.getTotalAtenciones()
+                        + " | Monto neto: " + r.getMontoNetoTotal());
+            }
+
+            List<VeterinarioAtencionResumen> topVeterinarios = atencionBO.topVeterinariosPorAtenciones(
+                    anioActual,
+                    mesActual,
+                    5
+            );
+
+            System.out.println("Top veterinarios por atenciones:");
+            for (VeterinarioAtencionResumen r : topVeterinarios) {
+                System.out.println("- " + r.getVeterinario().getNombres()
+                        + " " + r.getVeterinario().getApellidos()
+                        + " | Atenciones: " + r.getTotalAtenciones()
+                        + " | Monto neto: " + r.getMontoNetoTotal());
+            }
+
+            // ==================================================
+            // MÉTODOS ESTADÍSTICOS DE SERVICIO
+            // ==================================================
+            imprimirSeccion("MÉTODOS ESTADÍSTICOS DE SERVICIO");
+
+            List<ServicioAtencionResumen> serviciosMasDemandados = servicioBO.topNMasDemandados(
+                    LocalDateTime.now().minusDays(1),
+                    LocalDateTime.now().plusDays(30),
+                    5
+            );
+
+            System.out.println("Top servicios más demandados:");
+            for (ServicioAtencionResumen r : serviciosMasDemandados) {
+                System.out.println("- " + r.getServicio().getNombre()
+                        + " | Tipo: " + r.getServicio().getTipoServicio()
+                        + " | Atenciones: " + r.getTotalAtenciones()
+                        + " | Monto neto: " + r.getMontoNetoTotal());
+            }
+
+            // ==================================================
+            // MÉTODOS ESTADÍSTICOS DE CLIENTE Y MASCOTA
+            // ==================================================
+            imprimirSeccion("MÉTODOS ESTADÍSTICOS DE CLIENTE Y MASCOTA");
+
+            int totalClientesActivos = clienteBO.contarActivos();
+            System.out.println("Total clientes activos: " + totalClientesActivos);
+
+            int totalClientesNuevosMes = clienteBO.contarNuevosEnMes(anioActual, mesActual);
+            System.out.println("Total clientes nuevos en el mes: " + totalClientesNuevosMes);
+
+            int totalMascotasActivas = mascotaBO.contarActivas();
+            System.out.println("Total mascotas activas: " + totalMascotasActivas);
+
 
             System.out.println("\n==================================================");
             System.out.println(" TODAS LAS PRUEBAS FINALIZARON CON ÉXITO");
@@ -934,10 +1136,6 @@ public class Principal {
 
     }
 
-
-
-
-
     private static LocalDate obtenerProximaFecha(DayOfWeek diaObjetivo) {
         LocalDate fecha = LocalDate.now().plusDays(1);
         while (fecha.getDayOfWeek() != diaObjetivo) {
@@ -1008,21 +1206,7 @@ public class Principal {
             System.out.println("Cita: null");
             return;
         }
-        if (cita.getMotivoCancelacion() != null && !cita.getMotivoCancelacion().trim().isEmpty()) {
-            System.out.println("   Motivo cancelación: " + cita.getMotivoCancelacion());
-        }
 
-        if (cita.getFechaCancelacion() != null) {
-            System.out.println("   Fecha cancelación: " + cita.getFechaCancelacion());
-        }
-        if (cita.getUsuarioCancelacion() != null) {
-            System.out.println("   Usuario cancelación: "
-                    + cita.getUsuarioCancelacion().getUsername()
-                    + " - "
-                    + cita.getUsuarioCancelacion().getNombres()
-                    + " "
-                    + cita.getUsuarioCancelacion().getApellidos());
-        }
         System.out.println("Cita -> ID: " + cita.getId()
                 + ", Inicio: " + cita.getFechaHoraInicio()
                 + ", Fin: " + cita.getFechaHoraFin()
@@ -1032,5 +1216,26 @@ public class Principal {
                 + ", Vet ID: " + (cita.getVeterinario() != null ? cita.getVeterinario().getId() : 0)
                 + ", Servicio: " + (cita.getServicio() != null ? cita.getServicio().getNombre() : "null")
                 + ", Desc. Servicio: " + (cita.getServicio() != null ? cita.getServicio().getDescripcion() : "null"));
+
+        if (cita.getMotivoReprogramacion() != null && !cita.getMotivoReprogramacion().trim().isEmpty()) {
+            System.out.println("   Motivo reprogramación: " + cita.getMotivoReprogramacion());
+        }
+
+        if (cita.getMotivoCancelacion() != null && !cita.getMotivoCancelacion().trim().isEmpty()) {
+            System.out.println("   Motivo cancelación: " + cita.getMotivoCancelacion());
+        }
+
+        if (cita.getFechaCancelacion() != null) {
+            System.out.println("   Fecha cancelación: " + cita.getFechaCancelacion());
+        }
+
+        if (cita.getUsuarioCancelacion() != null) {
+            System.out.println("   Usuario cancelación: "
+                    + cita.getUsuarioCancelacion().getUsername()
+                    + " - "
+                    + cita.getUsuarioCancelacion().getNombres()
+                    + " "
+                    + cita.getUsuarioCancelacion().getApellidos());
+        }
     }
 }

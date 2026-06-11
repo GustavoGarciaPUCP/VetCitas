@@ -67,6 +67,11 @@ public class MascotaBOImpl implements IMascotaBO {
         return mascotaDAO.listarPorCliente(idCliente);
     }
 
+    @Override
+    public int contarActivas() throws Exception {
+        return mascotaDAO.contarActivas();
+    }
+
     private void validar(Mascota mascota, boolean esModificacion) throws Exception {
         if (mascota == null) {
             throw new Exception("La mascota no puede ser nula.");

@@ -76,6 +76,30 @@ public class RecordatorioBOImpl implements IRecordatorioBO {
         return recordatorioDAO.listarPorEstadoYFecha(estado, fecha);
     }
 
+    @Override
+    public void marcarEnviado(int idRecordatorio, int modifiedBy) throws Exception {
+        if (idRecordatorio <= 0) {
+            throw new Exception("El id del recordatorio debe ser mayor que cero.");
+        }
+
+        if (modifiedBy <= 0) {
+            throw new Exception("El usuario que modifica es obligatorio.");
+        }
+
+        Recordatorio recordatorio = buscarPorId(idRecordatorio);
+
+        if (recordatorio.getEstadoSeguimiento() != EstadoSeguimiento.PENDIENTE) {
+            throw new Exception("Solo se pueden marcar como enviados los recordatorios pendientes.");
+        }
+
+        recordatorioDAO.marcarEnviado(idRecordatorio, modifiedBy);
+    }
+
+    @Override
+    public int contarPendientes() throws Exception {
+        return recordatorioDAO.contarPendientes();
+    }
+
 
     private void validar(Recordatorio recordatorio, boolean esModificacion) throws Exception {
         if (recordatorio == null) {
