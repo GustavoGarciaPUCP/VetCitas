@@ -9,4 +9,6 @@ import java.util.List;
 public interface IRecordatorioDAO extends IDAO<Recordatorio> {
     List<Recordatorio> listarPorMascotaOCliente(String texto);
     List<Recordatorio> listarPorEstadoYFecha(String estado, LocalDate fecha);
+    void marcarEnviado(int idRecordatorio, int modifiedBy);
+    int contarPendientes();
 }

@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface ClienteDAO extends IDAO<Cliente> {
     List<Cliente> listarPorNombreApellidoODni(String texto);
+    int contarActivos();
+    int contarNuevosEnMes(int anio, int mes);
 }

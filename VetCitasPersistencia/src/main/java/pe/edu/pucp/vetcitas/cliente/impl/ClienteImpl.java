@@ -7,6 +7,7 @@ import pe.edu.pucp.vetcitas.config.DBManager;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -276,5 +277,68 @@ public class ClienteImpl implements ClienteDAO {
 
         return clientes;
     }
+
+    @Override
+    public int contarActivos() {
+        int total = 0;
+        Connection con = null;
+        CallableStatement cs = null;
+
+        try {
+            con = DBManager.getInstance().getConnection();
+            cs = con.prepareCall("{CALL contar_clientes_activos(?)}");
+
+            cs.registerOutParameter(1, Types.INTEGER);
+
+            cs.execute();
+
+            total = cs.getInt(1);
+
+        } catch (Exception ex) {
+            System.out.println("ERROR contando clientes activos: " + ex.getMessage());
+        } finally {
+            try {
+                if (cs != null) cs.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("ERROR cerrando recursos en contarActivos cliente: " + ex.getMessage());
+            }
+        }
+
+        return total;
+    }
+
+    @Override
+    public int contarNuevosEnMes(int anio, int mes) {
+        int total = 0;
+        Connection con = null;
+        CallableStatement cs = null;
+
+        try {
+            con = DBManager.getInstance().getConnection();
+            cs = con.prepareCall("{CALL contar_clientes_nuevos_en_mes(?, ?, ?)}");
+
+            cs.setInt(1, anio);
+            cs.setInt(2, mes);
+            cs.registerOutParameter(3, Types.INTEGER);
+
+            cs.execute();
+
+            total = cs.getInt(3);
+
+        } catch (Exception ex) {
+            System.out.println("ERROR contando clientes nuevos en mes: " + ex.getMessage());
+        } finally {
+            try {
+                if (cs != null) cs.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("ERROR cerrando recursos en contarNuevosEnMes cliente: " + ex.getMessage());
+            }
+        }
+
+        return total;
+    }
+
 
 }
