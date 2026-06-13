@@ -4,21 +4,18 @@ import pe.edu.pucp.vetcitas.cita.boi.IAtencionBO;
 import pe.edu.pucp.vetcitas.cita.dao.IAtencionDAO;
 import pe.edu.pucp.vetcitas.cita.impl.AtencionImpl;
 import pe.edu.pucp.vetcitas.cita.model.Atencion;
+import pe.edu.pucp.vetcitas.cita.model.ServicioAtencionResumen;
+import pe.edu.pucp.vetcitas.cita.model.VeterinarioAtencionResumen;
 import pe.edu.pucp.vetcitas.common.enums.EstadoCita;
-import pe.edu.pucp.vetcitas.configuracion.bo.ConfiguracionBOImpl;
-import pe.edu.pucp.vetcitas.configuracion.boi.IConfiguracionBO;
-import pe.edu.pucp.vetcitas.configuracion.model.Configuracion;
 
 import java.time.LocalDate;
 import java.util.List;
 
 public class AtencionBOImpl implements IAtencionBO {
     private IAtencionDAO atencionDAO;
-    private IConfiguracionBO configuracionBO;
 
     public AtencionBOImpl() {
         this.atencionDAO = new AtencionImpl();
-        this.configuracionBO = new ConfiguracionBOImpl();
     }
 
     @Override
@@ -97,6 +94,81 @@ public class AtencionBOImpl implements IAtencionBO {
         return atencionDAO.listarHistorialPorMascota(idMascota);
     }
 
+    @Override
+    public List<Atencion> listarUltimasPorVeterinario(int idVeterinario, int limite) throws Exception {
+        if (idVeterinario <= 0) {
+            throw new Exception("El id del veterinario debe ser mayor que cero.");
+        }
+
+        if (limite <= 0) {
+            throw new Exception("El límite debe ser mayor que cero.");
+        }
+
+        return atencionDAO.listarUltimasPorVeterinario(idVeterinario, limite);
+    }
+
+    @Override
+    public int contarPorVeterinarioEnMes(int idVeterinario, int anio, int mes) throws Exception {
+        if (idVeterinario <= 0) {
+            throw new Exception("El id del veterinario debe ser mayor que cero.");
+        }
+
+        validarAnioMes(anio, mes);
+
+        return atencionDAO.contarPorVeterinarioEnMes(idVeterinario, anio, mes);
+    }
+
+    @Override
+    public double sumarMontosNetosPorMes(int anio, int mes) throws Exception {
+        validarAnioMes(anio, mes);
+        return atencionDAO.sumarMontosNetosPorMes(anio, mes);
+    }
+
+    @Override
+    public List<ServicioAtencionResumen> topServiciosPorVeterinario(
+            int idVeterinario,
+            int anio,
+            int mes,
+            int limite
+    ) throws Exception {
+        if (idVeterinario <= 0) {
+            throw new Exception("El id del veterinario debe ser mayor que cero.");
+        }
+
+        validarAnioMes(anio, mes);
+
+        if (limite <= 0) {
+            throw new Exception("El límite debe ser mayor que cero.");
+        }
+
+        return atencionDAO.topServiciosPorVeterinario(idVeterinario, anio, mes, limite);
+    }
+
+    @Override
+    public List<VeterinarioAtencionResumen> topVeterinariosPorAtenciones(
+            int anio,
+            int mes,
+            int limite
+    ) throws Exception {
+        validarAnioMes(anio, mes);
+
+        if (limite <= 0) {
+            throw new Exception("El límite debe ser mayor que cero.");
+        }
+
+        return atencionDAO.topVeterinariosPorAtenciones(anio, mes, limite);
+    }
+
+    private void validarAnioMes(int anio, int mes) throws Exception {
+        if (anio <= 0) {
+            throw new Exception("El año debe ser mayor que cero.");
+        }
+
+        if (mes < 1 || mes > 12) {
+            throw new Exception("El mes debe estar entre Enero y Diciembre.");
+        }
+    }
+
     private void validar(Atencion atencion, boolean esModificacion) throws Exception {
         if (atencion == null) {
             throw new Exception("La atención no puede ser nula.");
@@ -126,10 +198,5 @@ public class AtencionBOImpl implements IAtencionBO {
             atencion.setDiagnostico(diagnostico);
         }
 
-        Configuracion conf = configuracionBO.obtenerConfiguracionActual();
-        if (atencion.getDescuentoAplicado() > conf.getDescuentoMaximoPermitido()) {
-            throw new Exception("El descuento aplicado supera el máximo permitido ("
-                    + conf.getDescuentoMaximoPermitido() + "%).");
-        }
     }
 }

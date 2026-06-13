@@ -8,6 +8,8 @@ import pe.edu.pucp.vetcitas.usuario.model.Administrador;
 import pe.edu.pucp.vetcitas.usuario.model.RolSistema;
 import pe.edu.pucp.vetcitas.usuario.model.Usuario;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.List;
 
 public class AdministradorBOImpl implements IAdministradorBO {
@@ -25,6 +27,8 @@ public class AdministradorBOImpl implements IAdministradorBO {
             throw new Exception("El username '" + admin.getUsername() + "' ya está en uso.");
         }
 
+        admin.setContrasenaHash(hashSiNoEstaHasheada(admin.getContrasenaHash()));
+
         return administradorDAO.insertar(admin);
     }
 
@@ -35,6 +39,8 @@ public class AdministradorBOImpl implements IAdministradorBO {
         if (administradorDAO.existeUsername(admin.getUsername(), admin.getId())) {
             throw new Exception("El username '" + admin.getUsername() + "' ya está ocupado por otro usuario.");
         }
+
+        admin.setContrasenaHash(hashSiNoEstaHasheada(admin.getContrasenaHash()));
 
         return administradorDAO.modificar(admin);
     }
@@ -168,5 +174,36 @@ public class AdministradorBOImpl implements IAdministradorBO {
         if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
             throw new Exception("El email no tiene un formato válido.");
         }
+    }
+
+    private String hashSiNoEstaHasheada(String contrasena) throws Exception {
+        if (contrasena == null || contrasena.trim().isEmpty()) {
+            throw new Exception("La contraseña es obligatoria.");
+        }
+
+        contrasena = contrasena.trim();
+
+        if (esSha256(contrasena)) {
+            return contrasena.toLowerCase();
+        }
+
+        return generarSha256(contrasena);
+    }
+
+    private boolean esSha256(String texto) {
+        return texto != null && texto.matches("^[0-9a-fA-F]{64}$");
+    }
+
+    private String generarSha256(String texto) throws Exception {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] hashBytes = digest.digest(texto.getBytes(StandardCharsets.UTF_8));
+
+        StringBuilder sb = new StringBuilder();
+
+        for (byte b : hashBytes) {
+            sb.append(String.format("%02x", b));
+        }
+
+        return sb.toString();
     }
 }

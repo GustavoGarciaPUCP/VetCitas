@@ -4,16 +4,33 @@ package pe.edu.pucp.vetcitas.cita.dao;
 import pe.edu.pucp.vetcitas.cita.model.Cita;
 import pe.edu.pucp.vetcitas.dao.IDAO;
 
+import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.util.List;
 
 public interface ICitaDAO extends IDAO<Cita> {
-    void cancelarCita(int idCita, int modifiedBy);
+    void cancelarCita(int idCita, String motivoCancelacion,int modifiedBy);
     void confirmarCita(int idCita, int modifiedBy);
     void marcarAtendida(int idCita, int modifiedBy);
     void marcarNoAsistio(int idCita, int modifiedBy);
     List<Cita> listarPorVeterinarioYFecha(int idVeterinario, LocalDate fecha);
     List<Cita> listarFiltradas(Integer idVeterinario, LocalDate fechaInicio, LocalDate fechaFin, String estado, String textoBusqueda);
     void marcarEnConsulta(int idCita, int modifiedBy);
+    //Nuevos
+    void reprogramar(int idCita,
+                     LocalDateTime nuevaFechaHoraInicio,
+                     LocalDateTime nuevaFechaHoraFin,
+                     String motivoReprogramacion,
+                     int modifiedBy);
+
+    void cambiarVeterinario(int idCita, int idNuevoVeterinario, int modifiedBy);
+
+    boolean validarDisponibilidadSlot(int idVeterinario,
+                                      LocalDateTime fechaHoraInicio,
+                                      LocalDateTime fechaHoraFin);
+
+    int contarPorEstadoEnRango(String estado, LocalDateTime desde, LocalDateTime hasta);
+
+    int contarPorVeterinarioEnRango(int idVeterinario, LocalDateTime desde, LocalDateTime hasta);
 
 }

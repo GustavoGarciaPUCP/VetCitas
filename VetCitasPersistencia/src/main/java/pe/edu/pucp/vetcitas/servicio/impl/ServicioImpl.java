@@ -1,5 +1,6 @@
 package pe.edu.pucp.vetcitas.servicio.impl;
 
+import pe.edu.pucp.vetcitas.cita.model.ServicioAtencionResumen;
 import pe.edu.pucp.vetcitas.servicio.dao.IServicioDAO;
 import pe.edu.pucp.vetcitas.servicio.model.Servicio;
 import pe.edu.pucp.vetcitas.common.enums.TipoServicio;
@@ -269,5 +270,61 @@ public class ServicioImpl implements IServicioDAO {
 
         return servicios;
     }
+
+    @Override
+    public List<ServicioAtencionResumen> topNMasDemandados(
+            LocalDateTime desde,
+            LocalDateTime hasta,
+            int limite
+    ) {
+        List<ServicioAtencionResumen> resumenes = new ArrayList<>();
+        Connection con = null;
+        CallableStatement cs = null;
+        ResultSet rs = null;
+
+        try {
+            con = DBManager.getInstance().getConnection();
+            cs = con.prepareCall("{CALL top_servicios_mas_demandados(?, ?, ?)}");
+
+            cs.setTimestamp(1, Timestamp.valueOf(desde));
+            cs.setTimestamp(2, Timestamp.valueOf(hasta));
+            cs.setInt(3, limite);
+
+            rs = cs.executeQuery();
+
+            while (rs.next()) {
+                Servicio servicio = new Servicio();
+                servicio.setId(rs.getInt("id_servicio"));
+                servicio.setNombre(rs.getString("nombre"));
+                servicio.setDescripcion(rs.getString("descripcion"));
+                servicio.setTipoServicio(TipoServicio.valueOf(rs.getString("tipo_servicio")));
+                servicio.setDuracionMinutos(rs.getInt("duracion_minutos"));
+                servicio.setPrecioReferencial(rs.getDouble("precio_referencial"));
+                servicio.setActivo(rs.getBoolean("activo"));
+
+                ServicioAtencionResumen resumen = new ServicioAtencionResumen();
+                resumen.setServicio(servicio);
+                resumen.setTotalAtenciones(rs.getInt("total_atenciones"));
+                resumen.setMontoNetoTotal(rs.getDouble("monto_neto_total"));
+
+                resumenes.add(resumen);
+            }
+
+        } catch (Exception ex) {
+            System.out.println("ERROR obteniendo top servicios más demandados: " + ex.getMessage());
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (cs != null) cs.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("ERROR cerrando recursos en topNMasDemandados: " + ex.getMessage());
+            }
+        }
+
+        return resumenes;
+    }
+
+
 
 }

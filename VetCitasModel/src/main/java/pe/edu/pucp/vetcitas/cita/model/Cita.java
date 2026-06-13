@@ -17,27 +17,40 @@ public class Cita extends EntidadAuditable{
     private Mascota mascota;
     private Veterinario veterinario;
     private Servicio servicio;
+    private String motivoCancelacion;
+    private String motivoReprogramacion;
+    private LocalDateTime fechaCancelacion;
+    private Usuario usuarioCancelacion;
 
     public Cita() {
         super();
         this.id = 0;
         this.fechaHoraInicio = null;
+        this.motivoReprogramacion = "";
         this.fechaHoraFin = null;
         this.estado = null;
         this.mascota = null;
+        this.usuarioCancelacion = null;
         this.veterinario = null;
         this.servicio = null;
+        this.motivoCancelacion = "";
+        this.fechaCancelacion = null;
     }
 
     public Cita(int id, LocalDateTime fechaHoraInicio, LocalDateTime fechaHoraFin,
                 EstadoCita estado, Mascota mascota, Veterinario veterinario,
                 Servicio servicio, LocalDateTime createdOn,
-                LocalDateTime modifiedOn, Usuario modifiedBy) {
+                LocalDateTime modifiedOn, Usuario modifiedBy, String motivoCancelacion,String motivoReprogramacion,
+                LocalDateTime fechaCancelacion, Usuario usuarioCancelacion) {
         super(createdOn, modifiedOn, modifiedBy);
         this.id = id;
+        this.usuarioCancelacion = usuarioCancelacion;
+        this.motivoReprogramacion = motivoReprogramacion;
         this.fechaHoraInicio = fechaHoraInicio;
         this.fechaHoraFin = fechaHoraFin;
+        this.fechaCancelacion = fechaCancelacion;
         this.estado = estado;
+        this.motivoCancelacion = motivoCancelacion;
         this.mascota = (mascota == null) ? null : new Mascota(mascota);
         this.veterinario = (veterinario == null) ? null : new Veterinario(veterinario);
         this.servicio = (servicio == null) ? null : new Servicio(servicio);
@@ -46,12 +59,51 @@ public class Cita extends EntidadAuditable{
     public Cita(Cita otra) {
         super(otra);
         this.id = otra.id;
+        this.usuarioCancelacion = otra.usuarioCancelacion != null
+                ? new Usuario(otra.usuarioCancelacion)
+                : null;
+        this.fechaCancelacion = otra.fechaCancelacion;
+        this.motivoReprogramacion = otra.motivoReprogramacion;
+        this.motivoCancelacion = otra.motivoCancelacion;
         this.fechaHoraInicio = otra.fechaHoraInicio;
         this.fechaHoraFin = otra.fechaHoraFin;
         this.estado = otra.estado;
         this.mascota = (otra.mascota == null) ? null : new Mascota(otra.mascota);
         this.veterinario = (otra.veterinario == null) ? null : new Veterinario(otra.veterinario);
         this.servicio = (otra.servicio == null) ? null : new Servicio(otra.servicio);
+    }
+
+    public String getMotivoReprogramacion() {
+        return motivoReprogramacion;
+    }
+
+    public void setMotivoReprogramacion(String motivoReprogramacion) {
+        this.motivoReprogramacion = motivoReprogramacion;
+    }
+
+    public Usuario getUsuarioCancelacion() {
+        return usuarioCancelacion;
+    }
+
+
+    public void setUsuarioCancelacion(Usuario usuarioCancelacion) {
+        this.usuarioCancelacion = usuarioCancelacion;
+    }
+
+    public LocalDateTime getFechaCancelacion() {
+        return fechaCancelacion;
+    }
+
+    public void setFechaCancelacion(LocalDateTime fechaCancelacion) {
+        this.fechaCancelacion = fechaCancelacion;
+    }
+
+    public String getMotivoCancelacion() {
+        return motivoCancelacion;
+    }
+
+    public void setMotivoCancelacion(String motivoCancelacion) {
+        this.motivoCancelacion = motivoCancelacion;
     }
 
     public int getId() {

@@ -9,6 +9,7 @@ import pe.edu.pucp.vetcitas.common.enums.CodigoRol;
 import pe.edu.pucp.vetcitas.common.enums.TipoServicio;
 import pe.edu.pucp.vetcitas.config.DBManager;
 import pe.edu.pucp.vetcitas.servicio.model.Servicio;
+import pe.edu.pucp.vetcitas.usuario.model.Usuario;
 import pe.edu.pucp.vetcitas.usuario.model.Veterinario;
 
 import java.sql.*;
@@ -18,6 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CitaImpl implements ICitaDAO {
+
+
     @Override
     public int insertar(Cita cita) {
         int idGenerado = 0;
@@ -155,14 +158,15 @@ public class CitaImpl implements ICitaDAO {
     }
 
     @Override
-    public void cancelarCita(int idCita, int modifiedBy) {
+    public void cancelarCita(int idCita,String motivoCancelacion, int modifiedBy) {
         Connection con = null;
         CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{CALL cancelar_cita(?, ?)}");
+            cs = con.prepareCall("{CALL cancelar_cita(?, ?,?)}");
             cs.setInt(1, idCita);
-            cs.setInt(2, modifiedBy);
+            cs.setString(2, motivoCancelacion);
+            cs.setInt(3, modifiedBy);
             cs.executeUpdate();
 
         } catch (Exception ex) {
@@ -283,6 +287,13 @@ public class CitaImpl implements ICitaDAO {
         cita.setFechaHoraInicio(rs.getTimestamp("fecha_hora_inicio").toLocalDateTime());
         cita.setFechaHoraFin(rs.getTimestamp("fecha_hora_fin").toLocalDateTime());
         cita.setEstado(EstadoCita.valueOf(rs.getString("estado")));
+        cita.setMotivoCancelacion(rs.getString("motivo_cancelacion"));
+        Timestamp fechaCancelacion = rs.getTimestamp("fecha_cancelacion");
+        if (fechaCancelacion != null) {
+            cita.setFechaCancelacion(fechaCancelacion.toLocalDateTime());
+        }
+        cita.setUsuarioCancelacion(mapearUsuarioCancelacion(rs));
+        cita.setMotivoReprogramacion(rs.getString("motivo_reprogramacion"));
 
         Mascota mascota = new Mascota();
         mascota.setId(rs.getInt("id_mascota"));
@@ -335,6 +346,13 @@ public class CitaImpl implements ICitaDAO {
                 cita.setFechaHoraInicio(rs.getTimestamp("fecha_hora_inicio").toLocalDateTime());
                 cita.setFechaHoraFin(rs.getTimestamp("fecha_hora_fin").toLocalDateTime());
                 cita.setEstado(EstadoCita.valueOf(rs.getString("estado")));
+                cita.setMotivoCancelacion(rs.getString("motivo_cancelacion"));
+                Timestamp fechaCancelacion = rs.getTimestamp("fecha_cancelacion");
+                if (fechaCancelacion != null) {
+                    cita.setFechaCancelacion(fechaCancelacion.toLocalDateTime());
+                }
+                cita.setUsuarioCancelacion(mapearUsuarioCancelacion(rs));
+                cita.setMotivoReprogramacion(rs.getString("motivo_reprogramacion"));
 
                 Mascota mascota = new Mascota();
                 mascota.setId(rs.getInt("id_mascota"));
@@ -379,6 +397,169 @@ public class CitaImpl implements ICitaDAO {
 
         return citas;
     }
+
+    @Override
+    public void reprogramar(int idCita,
+                            LocalDateTime nuevaFechaHoraInicio,
+                            LocalDateTime nuevaFechaHoraFin,
+                            String motivoReprogramacion,
+                            int modifiedBy) {
+        Connection con = null;
+        CallableStatement cs = null;
+
+        try {
+            con = DBManager.getInstance().getConnection();
+            cs = con.prepareCall("{CALL reprogramar_cita(?, ?, ?, ?, ?)}");
+
+            cs.setInt(1, idCita);
+            cs.setTimestamp(2, Timestamp.valueOf(nuevaFechaHoraInicio));
+            cs.setTimestamp(3, Timestamp.valueOf(nuevaFechaHoraFin));
+            cs.setString(4, motivoReprogramacion);
+            cs.setInt(5, modifiedBy);
+
+            cs.executeUpdate();
+
+        } catch (Exception ex) {
+            System.out.println("ERROR reprogramando cita: " + ex.getMessage());
+        } finally {
+            try {
+                if (cs != null) cs.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("ERROR cerrando recursos en reprogramar: " + ex.getMessage());
+            }
+        }
+    }
+
+    @Override
+    public void cambiarVeterinario(int idCita, int idNuevoVeterinario, int modifiedBy) {
+        Connection con = null;
+        CallableStatement cs = null;
+
+        try {
+            con = DBManager.getInstance().getConnection();
+            cs = con.prepareCall("{CALL cambiar_veterinario_cita(?, ?, ?)}");
+
+            cs.setInt(1, idCita);
+            cs.setInt(2, idNuevoVeterinario);
+            cs.setInt(3, modifiedBy);
+
+            cs.executeUpdate();
+
+        } catch (Exception ex) {
+            System.out.println("ERROR cambiando veterinario de cita: " + ex.getMessage());
+        } finally {
+            try {
+                if (cs != null) cs.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("ERROR cerrando recursos en cambiarVeterinario: " + ex.getMessage());
+            }
+        }
+    }
+
+    @Override
+    public boolean validarDisponibilidadSlot(int idVeterinario,
+                                             LocalDateTime fechaHoraInicio,
+                                             LocalDateTime fechaHoraFin) {
+        boolean disponible = false;
+        Connection con = null;
+        CallableStatement cs = null;
+
+        try {
+            con = DBManager.getInstance().getConnection();
+            cs = con.prepareCall("{CALL validar_disponibilidad_slot(?, ?, ?, ?, ?)}");
+
+            cs.setInt(1, idVeterinario);
+            cs.setTimestamp(2, Timestamp.valueOf(fechaHoraInicio));
+            cs.setTimestamp(3, Timestamp.valueOf(fechaHoraFin));
+            cs.setNull(4, Types.INTEGER);
+            cs.registerOutParameter(5, Types.TINYINT);
+
+            cs.execute();
+
+            disponible = cs.getInt(5) == 1;
+
+        } catch (Exception ex) {
+            System.out.println("ERROR validando disponibilidad de slot: " + ex.getMessage());
+        } finally {
+            try {
+                if (cs != null) cs.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("ERROR cerrando recursos en validarDisponibilidadSlot: " + ex.getMessage());
+            }
+        }
+
+        return disponible;
+    }
+
+    @Override
+    public int contarPorEstadoEnRango(String estado, LocalDateTime desde, LocalDateTime hasta) {
+        int total = 0;
+        Connection con = null;
+        CallableStatement cs = null;
+
+        try {
+            con = DBManager.getInstance().getConnection();
+            cs = con.prepareCall("{CALL contar_citas_por_estado_en_rango(?, ?, ?, ?)}");
+
+            cs.setString(1, estado);
+            cs.setTimestamp(2, Timestamp.valueOf(desde));
+            cs.setTimestamp(3, Timestamp.valueOf(hasta));
+            cs.registerOutParameter(4, Types.INTEGER);
+
+            cs.execute();
+
+            total = cs.getInt(4);
+
+        } catch (Exception ex) {
+            System.out.println("ERROR contando citas por estado: " + ex.getMessage());
+        } finally {
+            try {
+                if (cs != null) cs.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("ERROR cerrando recursos en contarPorEstadoEnRango: " + ex.getMessage());
+            }
+        }
+
+        return total;
+    }
+
+    @Override
+    public int contarPorVeterinarioEnRango(int idVeterinario, LocalDateTime desde, LocalDateTime hasta) {
+        int total = 0;
+        Connection con = null;
+        CallableStatement cs = null;
+
+        try {
+            con = DBManager.getInstance().getConnection();
+            cs = con.prepareCall("{CALL contar_citas_por_veterinario_en_rango(?, ?, ?, ?)}");
+
+            cs.setInt(1, idVeterinario);
+            cs.setTimestamp(2, Timestamp.valueOf(desde));
+            cs.setTimestamp(3, Timestamp.valueOf(hasta));
+            cs.registerOutParameter(4, Types.INTEGER);
+
+            cs.execute();
+
+            total = cs.getInt(4);
+
+        } catch (Exception ex) {
+            System.out.println("ERROR contando citas por veterinario: " + ex.getMessage());
+        } finally {
+            try {
+                if (cs != null) cs.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("ERROR cerrando recursos en contarPorVeterinarioEnRango: " + ex.getMessage());
+            }
+        }
+
+        return total;
+    }
+
     @Override
     public void marcarEnConsulta(int idCita, int modifiedBy) {
         Connection con = null;
@@ -400,5 +581,22 @@ public class CitaImpl implements ICitaDAO {
                 System.out.println("ERROR cerrando recursos en marcarEnConsulta: " + ex.getMessage());
             }
         }
+    }
+
+    private Usuario mapearUsuarioCancelacion(ResultSet rs) throws SQLException {
+        int idUsuarioCancelacion = rs.getInt("id_usuario_cancelacion");
+
+        if (rs.wasNull()) {
+            return null;
+        }
+
+        Usuario usuario = new Usuario();
+        usuario.setId(idUsuarioCancelacion);
+        usuario.setUsername(rs.getString("username_usuario_cancelacion"));
+        usuario.setNombres(rs.getString("nombres_usuario_cancelacion"));
+        usuario.setApellidos(rs.getString("apellidos_usuario_cancelacion"));
+        usuario.setEmail(rs.getString("email_usuario_cancelacion"));
+
+        return usuario;
     }
 }
