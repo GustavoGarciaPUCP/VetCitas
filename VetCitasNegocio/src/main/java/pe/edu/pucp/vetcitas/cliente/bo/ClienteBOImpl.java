@@ -58,6 +58,26 @@ public class ClienteBOImpl implements IClienteBO {
         return clienteDAO.listarPorNombreApellidoODni(texto);
     }
 
+    @Override
+    public int contarActivos() throws Exception {
+        return clienteDAO.contarActivos();
+    }
+
+    @Override
+    public int contarNuevosEnMes(int anio, int mes) throws Exception {
+        validarAnioMes(anio, mes);
+        return clienteDAO.contarNuevosEnMes(anio, mes);
+    }
+
+    private void validarAnioMes(int anio, int mes) throws Exception {
+        if (anio <= 0) {
+            throw new Exception("El año debe ser mayor que cero.");
+        }
+
+        if (mes < 1 || mes > 12) {
+            throw new Exception("El mes debe estar entre Enero y Diciembre");
+        }
+    }
 
     private void validar(Cliente cliente, boolean esModificacion) throws Exception {
         if (cliente == null) {

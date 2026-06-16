@@ -8,4 +8,5 @@ import java.util.List;
 public interface MascotaDAO extends IDAO<Mascota> {
     List<Mascota> listarPorNombreODueno(String texto);
     List<Mascota> listarPorCliente(int idCliente);
+    int contarActivas();
 }

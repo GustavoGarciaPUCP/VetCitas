@@ -5,6 +5,8 @@ import pe.edu.pucp.vetcitas.usuario.dao.IVeterinarioDAO;
 import pe.edu.pucp.vetcitas.usuario.impl.VeterinarioImpl;
 import pe.edu.pucp.vetcitas.usuario.model.Veterinario;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -18,12 +20,14 @@ public class VeterinarioBOImpl implements IVeterinarioBO {
     @Override
     public int insertar(Veterinario veterinario) throws Exception {
         validar(veterinario, false);
+        veterinario.setContrasenaHash(hashSiNoEstaHasheada(veterinario.getContrasenaHash()));
         return veterinarioDAO.insertar(veterinario);
     }
 
     @Override
     public int modificar(Veterinario veterinario) throws Exception {
         validar(veterinario, true);
+        veterinario.setContrasenaHash(hashSiNoEstaHasheada(veterinario.getContrasenaHash()));
         return veterinarioDAO.modificar(veterinario);
     }
 
@@ -106,4 +110,36 @@ public class VeterinarioBOImpl implements IVeterinarioBO {
             throw new Exception("El email no tiene un formato válido.");
         }
     }
+
+    private String hashSiNoEstaHasheada(String contrasena) throws Exception {
+        if (contrasena == null || contrasena.trim().isEmpty()) {
+            throw new Exception("La contraseña es obligatoria.");
+        }
+
+        contrasena = contrasena.trim();
+
+        if (esSha256(contrasena)) {
+            return contrasena.toLowerCase();
+        }
+
+        return generarSha256(contrasena);
+    }
+
+    private boolean esSha256(String texto) {
+        return texto != null && texto.matches("^[0-9a-fA-F]{64}$");
+    }
+
+    private String generarSha256(String texto) throws Exception {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] hashBytes = digest.digest(texto.getBytes(StandardCharsets.UTF_8));
+
+        StringBuilder sb = new StringBuilder();
+
+        for (byte b : hashBytes) {
+            sb.append(String.format("%02x", b));
+        }
+
+        return sb.toString();
+    }
+
 }

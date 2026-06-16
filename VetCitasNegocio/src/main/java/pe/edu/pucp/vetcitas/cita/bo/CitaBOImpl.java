@@ -43,6 +43,159 @@ public class CitaBOImpl implements ICitaBO {
     }
 
     @Override
+    public void reprogramar(int idCita,
+                            LocalDateTime nuevaFechaHoraInicio,
+                            LocalDateTime nuevaFechaHoraFin,
+                            String motivoReprogramacion,
+                            int modifiedBy) throws Exception {
+        if (idCita <= 0) {
+            throw new Exception("El id de la cita debe ser mayor que cero.");
+        }
+
+        if (nuevaFechaHoraInicio == null || nuevaFechaHoraFin == null) {
+            throw new Exception("La nueva fecha de inicio y fin son obligatorias.");
+        }
+
+        if (!nuevaFechaHoraFin.isAfter(nuevaFechaHoraInicio)) {
+            throw new Exception("La nueva fecha de fin debe ser posterior a la fecha de inicio.");
+        }
+
+        if (motivoReprogramacion == null || motivoReprogramacion.trim().isEmpty()) {
+            throw new Exception("El motivo de reprogramación es obligatorio.");
+        }
+
+        motivoReprogramacion = motivoReprogramacion.trim();
+
+        if (motivoReprogramacion.length() > 255) {
+            throw new Exception("El motivo de reprogramación no puede superar los 255 caracteres.");
+        }
+
+        if (modifiedBy <= 0) {
+            throw new Exception("El usuario que modifica es obligatorio.");
+        }
+
+        Cita cita = buscarPorId(idCita);
+
+        if (cita.getEstado() != EstadoCita.PENDIENTE &&
+                cita.getEstado() != EstadoCita.CONFIRMADA) {
+            throw new Exception("Solo se pueden reprogramar citas pendientes o confirmadas.");
+        }
+
+        boolean disponible = citaDAO.validarDisponibilidadSlot(
+                cita.getVeterinario().getId(),
+                nuevaFechaHoraInicio,
+                nuevaFechaHoraFin
+        );
+
+        if (!disponible) {
+            throw new Exception("El veterinario no está disponible en el nuevo horario.");
+        }
+
+        citaDAO.reprogramar(
+                idCita,
+                nuevaFechaHoraInicio,
+                nuevaFechaHoraFin,
+                motivoReprogramacion,
+                modifiedBy
+        );
+    }
+
+    @Override
+    public void cambiarVeterinario(int idCita, int idNuevoVeterinario, int modifiedBy) throws Exception {
+        if (idCita <= 0) {
+            throw new Exception("El id de la cita debe ser mayor que cero.");
+        }
+
+        if (idNuevoVeterinario <= 0) {
+            throw new Exception("El id del nuevo veterinario debe ser mayor que cero.");
+        }
+
+        if (modifiedBy <= 0) {
+            throw new Exception("El usuario que modifica es obligatorio.");
+        }
+
+        Cita cita = buscarPorId(idCita);
+
+        if (cita.getEstado() != EstadoCita.PENDIENTE &&
+                cita.getEstado() != EstadoCita.CONFIRMADA) {
+            throw new Exception("Solo se puede cambiar el veterinario de citas pendientes o confirmadas.");
+        }
+
+        boolean disponible = citaDAO.validarDisponibilidadSlot(
+                idNuevoVeterinario,
+                cita.getFechaHoraInicio(),
+                cita.getFechaHoraFin()
+        );
+
+        if (!disponible) {
+            throw new Exception("El nuevo veterinario no está disponible en el horario de la cita.");
+        }
+
+        citaDAO.cambiarVeterinario(idCita, idNuevoVeterinario, modifiedBy);
+    }
+
+    @Override
+    public boolean validarDisponibilidadSlot(int idVeterinario,
+                                             LocalDateTime fechaHoraInicio,
+                                             LocalDateTime fechaHoraFin) throws Exception {
+        if (idVeterinario <= 0) {
+            throw new Exception("El id del veterinario debe ser mayor que cero.");
+        }
+
+        if (fechaHoraInicio == null || fechaHoraFin == null) {
+            throw new Exception("La fecha de inicio y fin son obligatorias.");
+        }
+
+        if (!fechaHoraFin.isAfter(fechaHoraInicio)) {
+            throw new Exception("La fecha de fin debe ser posterior a la fecha de inicio.");
+        }
+
+        return citaDAO.validarDisponibilidadSlot(idVeterinario, fechaHoraInicio, fechaHoraFin);
+    }
+
+    @Override
+    public int contarPorEstadoEnRango(String estado, LocalDateTime desde, LocalDateTime hasta) throws Exception {
+        if (estado == null || estado.trim().isEmpty()) {
+            throw new Exception("El estado es obligatorio.");
+        }
+
+        estado = estado.trim();
+
+        try {
+            EstadoCita.valueOf(estado);
+        } catch (Exception ex) {
+            throw new Exception("El estado de cita no es válido.");
+        }
+
+        if (desde == null || hasta == null) {
+            throw new Exception("El rango de fechas es obligatorio.");
+        }
+
+        if (hasta.isBefore(desde)) {
+            throw new Exception("La fecha final no puede ser menor que la fecha inicial.");
+        }
+
+        return citaDAO.contarPorEstadoEnRango(estado, desde, hasta);
+    }
+
+    @Override
+    public int contarPorVeterinarioEnRango(int idVeterinario, LocalDateTime desde, LocalDateTime hasta) throws Exception {
+        if (idVeterinario <= 0) {
+            throw new Exception("El id del veterinario debe ser mayor que cero.");
+        }
+
+        if (desde == null || hasta == null) {
+            throw new Exception("El rango de fechas es obligatorio.");
+        }
+
+        if (hasta.isBefore(desde)) {
+            throw new Exception("La fecha final no puede ser menor que la fecha inicial.");
+        }
+
+        return citaDAO.contarPorVeterinarioEnRango(idVeterinario, desde, hasta);
+    }
+
+    @Override
     public Cita buscarPorId(int id) throws Exception {
         if (id <= 0) {
             throw new Exception("El id de la cita debe ser mayor que cero.");
@@ -62,6 +215,10 @@ public class CitaBOImpl implements ICitaBO {
 
         if (modifiedBy <= 0) {
             throw new Exception("El id del usuario que cancela debe ser mayor que cero.");
+        }
+
+        if (motivoCancelacion == null || motivoCancelacion.trim().isEmpty()) {
+            throw new Exception("El motivo de cancelación es obligatorio.");
         }
 
         motivoCancelacion = motivoCancelacion.trim();

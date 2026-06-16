@@ -286,4 +286,61 @@ public class RecordatorioImpl implements IRecordatorioDAO {
 
         return recordatorios;
     }
+    @Override
+    public void marcarEnviado(int idRecordatorio, int modifiedBy) {
+        Connection con = null;
+        CallableStatement cs = null;
+
+        try {
+            con = DBManager.getInstance().getConnection();
+            cs = con.prepareCall("{CALL marcar_recordatorio_enviado(?, ?)}");
+
+            cs.setInt(1, idRecordatorio);
+            cs.setInt(2, modifiedBy);
+
+            cs.executeUpdate();
+
+        } catch (Exception ex) {
+            System.out.println("ERROR marcando recordatorio como enviado: " + ex.getMessage());
+        } finally {
+            try {
+                if (cs != null) cs.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("ERROR cerrando recursos en marcarEnviado: " + ex.getMessage());
+            }
+        }
+    }
+
+    @Override
+    public int contarPendientes() {
+        int total = 0;
+        Connection con = null;
+        CallableStatement cs = null;
+
+        try {
+            con = DBManager.getInstance().getConnection();
+            cs = con.prepareCall("{CALL contar_recordatorios_pendientes(?)}");
+
+            cs.registerOutParameter(1, Types.INTEGER);
+
+            cs.execute();
+
+            total = cs.getInt(1);
+
+        } catch (Exception ex) {
+            System.out.println("ERROR contando recordatorios pendientes: " + ex.getMessage());
+        } finally {
+            try {
+                if (cs != null) cs.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("ERROR cerrando recursos en contarPendientes: " + ex.getMessage());
+            }
+        }
+
+        return total;
+    }
+
+
 }

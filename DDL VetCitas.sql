@@ -1,4 +1,4 @@
-DROP schema vetcitas_db;
+DROP schema if exists vetcitas_db;
 CREATE SCHEMA vetcitas_db;
 USE vetcitas_db;
 
@@ -26,7 +26,7 @@ SET FOREIGN_KEY_CHECKS = 1;
 CREATE TABLE usuario (
     id_usuario INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
-    contrasena_hash VARCHAR(255) NOT NULL,
+    contrasena_hash CHAR(64) NOT NULL,
     nombres VARCHAR(100) NOT NULL,
     apellidos VARCHAR(100) NOT NULL,
     telefono VARCHAR(20),
@@ -152,6 +152,7 @@ CREATE TABLE cita (
     motivo_cancelacion VARCHAR(255) NULL,
     fecha_cancelacion DATETIME NULL,
     id_usuario_cancelacion INT NULL,
+    motivo_reprogramacion VARCHAR(255) NULL,
     id_mascota INT NOT NULL,
     id_veterinario INT NOT NULL,
     id_servicio INT NOT NULL,
@@ -239,7 +240,7 @@ INSERT INTO usuario(
 )
 VALUES(
     'superadmin',
-    'hash_superadmin',
+    SHA2('SuperAdmin123',256),
     'Super',
     'Admin',
     '999999999',

@@ -1,10 +1,12 @@
 package pe.edu.pucp.vetcitas.servicio.bo;
 
+import pe.edu.pucp.vetcitas.cita.model.ServicioAtencionResumen;
 import pe.edu.pucp.vetcitas.servicio.boi.IServicioBO;
 import pe.edu.pucp.vetcitas.servicio.dao.IServicioDAO;
 import pe.edu.pucp.vetcitas.servicio.impl.ServicioImpl;
 import pe.edu.pucp.vetcitas.servicio.model.Servicio;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class ServicioBOImpl implements IServicioBO {
@@ -76,6 +78,27 @@ public class ServicioBOImpl implements IServicioBO {
     @Override
     public List<Servicio> listarPorEstado(boolean activo) throws Exception {
         return servicioDAO.listarPorEstado(activo);
+    }
+
+    @Override
+    public List<ServicioAtencionResumen> topNMasDemandados(
+            LocalDateTime desde,
+            LocalDateTime hasta,
+            int limite
+    ) throws Exception {
+        if (desde == null || hasta == null) {
+            throw new Exception("El rango de fechas es obligatorio.");
+        }
+
+        if (hasta.isBefore(desde)) {
+            throw new Exception("La fecha final no puede ser menor que la fecha inicial.");
+        }
+
+        if (limite <= 0) {
+            throw new Exception("El límite debe ser mayor que cero.");
+        }
+
+        return servicioDAO.topNMasDemandados(desde, hasta, limite);
     }
 
     private void validar(Servicio servicio, boolean esModificacion) throws Exception {

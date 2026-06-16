@@ -18,6 +18,7 @@ public class Cita extends EntidadAuditable{
     private Veterinario veterinario;
     private Servicio servicio;
     private String motivoCancelacion;
+    private String motivoReprogramacion;
     private LocalDateTime fechaCancelacion;
     private Usuario usuarioCancelacion;
 
@@ -25,6 +26,7 @@ public class Cita extends EntidadAuditable{
         super();
         this.id = 0;
         this.fechaHoraInicio = null;
+        this.motivoReprogramacion = "";
         this.fechaHoraFin = null;
         this.estado = null;
         this.mascota = null;
@@ -38,11 +40,12 @@ public class Cita extends EntidadAuditable{
     public Cita(int id, LocalDateTime fechaHoraInicio, LocalDateTime fechaHoraFin,
                 EstadoCita estado, Mascota mascota, Veterinario veterinario,
                 Servicio servicio, LocalDateTime createdOn,
-                LocalDateTime modifiedOn, Usuario modifiedBy, String motivoCancelacion,
+                LocalDateTime modifiedOn, Usuario modifiedBy, String motivoCancelacion,String motivoReprogramacion,
                 LocalDateTime fechaCancelacion, Usuario usuarioCancelacion) {
         super(createdOn, modifiedOn, modifiedBy);
         this.id = id;
         this.usuarioCancelacion = usuarioCancelacion;
+        this.motivoReprogramacion = motivoReprogramacion;
         this.fechaHoraInicio = fechaHoraInicio;
         this.fechaHoraFin = fechaHoraFin;
         this.fechaCancelacion = fechaCancelacion;
@@ -60,6 +63,7 @@ public class Cita extends EntidadAuditable{
                 ? new Usuario(otra.usuarioCancelacion)
                 : null;
         this.fechaCancelacion = otra.fechaCancelacion;
+        this.motivoReprogramacion = otra.motivoReprogramacion;
         this.motivoCancelacion = otra.motivoCancelacion;
         this.fechaHoraInicio = otra.fechaHoraInicio;
         this.fechaHoraFin = otra.fechaHoraFin;
@@ -69,9 +73,18 @@ public class Cita extends EntidadAuditable{
         this.servicio = (otra.servicio == null) ? null : new Servicio(otra.servicio);
     }
 
+    public String getMotivoReprogramacion() {
+        return motivoReprogramacion;
+    }
+
+    public void setMotivoReprogramacion(String motivoReprogramacion) {
+        this.motivoReprogramacion = motivoReprogramacion;
+    }
+
     public Usuario getUsuarioCancelacion() {
         return usuarioCancelacion;
     }
+
 
     public void setUsuarioCancelacion(Usuario usuarioCancelacion) {
         this.usuarioCancelacion = usuarioCancelacion;

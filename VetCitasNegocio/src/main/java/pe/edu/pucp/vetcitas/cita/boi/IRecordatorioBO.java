@@ -9,4 +9,6 @@ import java.util.List;
 public interface IRecordatorioBO extends IBaseBO<Recordatorio> {
     List<Recordatorio> listarPorMascotaOCliente(String texto) throws Exception;
     List<Recordatorio> listarPorEstadoYFecha(String estado, LocalDate fecha) throws Exception;
+    void marcarEnviado(int idRecordatorio, int modifiedBy) throws Exception;
+    int contarPendientes() throws Exception;
 }
