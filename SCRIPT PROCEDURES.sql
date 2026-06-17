@@ -661,6 +661,38 @@ END $$
 
 CREATE PROCEDURE eliminar_cliente(IN p_id_cliente INT, IN p_modified_on DATETIME, IN p_modified_by INT)
 BEGIN
+    DECLARE v_confirmadas INT DEFAULT 0;
+
+    -- Bloqueo: no se puede eliminar si el cliente tiene una cita CONFIRMADA en el futuro
+    SELECT COUNT(*) INTO v_confirmadas
+    FROM cita c
+    INNER JOIN mascota m ON m.id_mascota = c.id_mascota
+    WHERE m.id_cliente = p_id_cliente
+      AND c.estado = 'CONFIRMADA'
+      AND c.fecha_hora_inicio > NOW();
+
+    IF v_confirmadas > 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'No se puede eliminar: el cliente tiene una cita confirmada en el futuro.';
+    END IF;
+
+    -- Cancelar automáticamente las citas pendientes del cliente
+    UPDATE cita c
+    INNER JOIN mascota m ON m.id_mascota = c.id_mascota
+    SET c.estado = 'CANCELADA',
+        c.motivo_cancelacion = 'Cliente eliminado',
+        c.fecha_cancelacion = p_modified_on,
+        c.id_usuario_cancelacion = p_modified_by,
+        c.modified_on = p_modified_on,
+        c.modified_by = p_modified_by
+    WHERE m.id_cliente = p_id_cliente
+      AND c.estado = 'PENDIENTE';
+
+    -- Al eliminar un cliente, también se desactivan (eliminan lógicamente) sus mascotas
+    UPDATE mascota
+    SET activo = 0, modified_on = p_modified_on, modified_by = p_modified_by
+    WHERE id_cliente = p_id_cliente;
+
     UPDATE cliente
     SET activo = 0, modified_on = p_modified_on, modified_by = p_modified_by
     WHERE id_cliente = p_id_cliente;
@@ -696,6 +728,22 @@ BEGIN
         activo
     FROM cliente
     WHERE activo = 1
+    ORDER BY nombres, apellidos;
+END $$
+
+DROP PROCEDURE IF EXISTS listar_clientes_todos $$
+CREATE PROCEDURE listar_clientes_todos()
+BEGIN
+    SELECT
+        id_cliente,
+        dni,
+        nombres,
+        apellidos,
+        telefono,
+        email,
+        observaciones,
+        activo
+    FROM cliente
     ORDER BY nombres, apellidos;
 END $$
 
@@ -820,6 +868,23 @@ BEGIN
     ORDER BY nombre;
 END $$
 
+DROP PROCEDURE IF EXISTS listar_mascotas_todos $$
+CREATE PROCEDURE listar_mascotas_todos()
+BEGIN
+    SELECT
+        id_mascota,
+        nombre,
+        especie,
+        raza,
+        fecha_nacimiento,
+        peso,
+        esterilizado,
+        activo,
+        id_cliente
+    FROM mascota
+    ORDER BY nombre;
+END $$
+
 CREATE PROCEDURE insertar_servicio(
     IN p_nombre VARCHAR(100),
     IN p_descripcion VARCHAR(255),
@@ -859,6 +924,7 @@ CREATE PROCEDURE modificar_servicio(
     IN p_tipo_servicio VARCHAR(20),
     IN p_duracion_minutos INT,
     IN p_precio_referencial DECIMAL(10,2),
+    IN p_activo TINYINT(1),
     IN p_modified_on DATETIME,
     IN p_modified_by INT
 )
@@ -869,6 +935,7 @@ BEGIN
         tipo_servicio = p_tipo_servicio,
         duracion_minutos = p_duracion_minutos,
         precio_referencial = p_precio_referencial,
+        activo = p_activo,
         modified_on = p_modified_on,
         modified_by = p_modified_by
     WHERE id_servicio = p_id_servicio;
@@ -1603,8 +1670,6 @@ BEGIN
     FROM mascota m
     INNER JOIN cliente c ON c.id_cliente = m.id_cliente
     WHERE m.id_cliente = p_id_cliente
-      AND m.activo = 1
-      AND c.activo = 1
     ORDER BY m.nombre;
 END $$
 

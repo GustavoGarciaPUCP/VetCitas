@@ -7,6 +7,7 @@ import pe.edu.pucp.vetcitas.cliente.model.Cliente;
 import pe.edu.pucp.vetcitas.cliente.model.Mascota;
 import pe.edu.pucp.vetcitas.common.enums.CanalRecordatorio;
 import pe.edu.pucp.vetcitas.common.enums.EstadoSeguimiento;
+import pe.edu.pucp.vetcitas.common.enums.EstadoCita;
 import pe.edu.pucp.vetcitas.config.DBManager;
 
 import java.sql.*;
@@ -192,6 +193,10 @@ public class RecordatorioImpl implements IRecordatorioDAO {
 
                 Cita cita = new Cita();
                 cita.setId(rs.getInt("id_cita"));
+                // Valores no-nulos requeridos por el cliente (no se muestran en la vista de recordatorios)
+                cita.setEstado(EstadoCita.PENDIENTE);
+                cita.setFechaHoraInicio(r.getFechaProgramada());
+                cita.setFechaHoraFin(r.getFechaProgramada());
 
                 Mascota mascota = new Mascota();
                 mascota.setId(rs.getInt("id_mascota"));

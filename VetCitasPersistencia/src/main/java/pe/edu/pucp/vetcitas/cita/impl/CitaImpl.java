@@ -34,7 +34,8 @@ public class CitaImpl implements ICitaDAO {
             cs.setInt(3, cita.getMascota().getId());
             cs.setInt(4, cita.getVeterinario().getId());
             cs.setInt(5, cita.getServicio().getId());
-            cs.setTimestamp(6, Timestamp.valueOf(cita.getCreatedOn()));
+            // El servidor genera la marca de creación (el frontend no la envía)
+            cs.setTimestamp(6, Timestamp.valueOf(java.time.LocalDateTime.now()));
             cs.registerOutParameter(7, Types.INTEGER);
 
             cs.executeUpdate();

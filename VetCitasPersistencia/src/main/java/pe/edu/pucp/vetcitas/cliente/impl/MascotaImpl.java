@@ -38,17 +38,10 @@ public class MascotaImpl implements MascotaDAO {
             cs.setBoolean(7, mascota.isActivo());
             cs.setInt(8, mascota.getCliente().getId());
 
-            if (mascota.getCreatedOn() != null) {
-                cs.setTimestamp(9, Timestamp.valueOf(mascota.getCreatedOn()));
-            } else {
-                cs.setTimestamp(9, null);
-            }
-
-            if (mascota.getModifiedOn() != null) {
-                cs.setTimestamp(10, Timestamp.valueOf(mascota.getModifiedOn()));
-            } else {
-                cs.setTimestamp(10, null);
-            }
+            // El servidor genera las marcas de auditoría (no dependemos del cliente)
+            Timestamp ahora = Timestamp.valueOf(java.time.LocalDateTime.now());
+            cs.setTimestamp(9, ahora);   // created_on
+            cs.setTimestamp(10, ahora);  // modified_on
 
             if (mascota.getModifiedBy() != null) {
                 cs.setInt(11, mascota.getModifiedBy().getId());
@@ -104,11 +97,8 @@ public class MascotaImpl implements MascotaDAO {
             cs.setBoolean(8, mascota.isActivo());
             cs.setInt(9, mascota.getCliente().getId());
 
-            if (mascota.getModifiedOn() != null) {
-                cs.setTimestamp(10, Timestamp.valueOf(mascota.getModifiedOn()));
-            } else {
-                cs.setTimestamp(10, null);
-            }
+            // El servidor sella la fecha de modificación
+            cs.setTimestamp(10, Timestamp.valueOf(java.time.LocalDateTime.now()));
 
             if (mascota.getModifiedBy() != null) {
                 cs.setInt(11, mascota.getModifiedBy().getId());
@@ -217,7 +207,7 @@ public class MascotaImpl implements MascotaDAO {
         ResultSet rs = null;
         try {
             con = DBManager.getInstance().getConnection();
-            String sql = "{CALL listar_mascotas_activas()}";
+            String sql = "{CALL listar_mascotas_todos()}";
             cs = con.prepareCall(sql);
 
             rs = cs.executeQuery();
@@ -280,7 +270,10 @@ public class MascotaImpl implements MascotaDAO {
                 mascota.setEspecie(TipoEspecie.valueOf(rs.getString("especie")));
                 mascota.setRaza(rs.getString("raza"));
                 mascota.setPeso(rs.getDouble("peso"));
-                mascota.setFechaNacimiento(rs.getDate("fecha_nacimiento").toLocalDate());
+                Date fechaNac = rs.getDate("fecha_nacimiento");
+                if (fechaNac != null) {
+                    mascota.setFechaNacimiento(fechaNac.toLocalDate());
+                }
                 mascota.setEsterilizado(rs.getBoolean("esterilizado"));
                 mascota.setActivo(rs.getBoolean("activo"));
 
@@ -329,7 +322,10 @@ public class MascotaImpl implements MascotaDAO {
                 mascota.setEspecie(TipoEspecie.valueOf(rs.getString("especie")));
                 mascota.setRaza(rs.getString("raza"));
                 mascota.setPeso(rs.getDouble("peso"));
-                mascota.setFechaNacimiento(rs.getDate("fecha_nacimiento").toLocalDate());
+                Date fechaNac = rs.getDate("fecha_nacimiento");
+                if (fechaNac != null) {
+                    mascota.setFechaNacimiento(fechaNac.toLocalDate());
+                }
                 mascota.setEsterilizado(rs.getBoolean("esterilizado"));
                 mascota.setActivo(rs.getBoolean("activo"));
 

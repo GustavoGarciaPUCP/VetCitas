@@ -2,25 +2,54 @@ package pe.edu.pucp.vetcitas.cita.bo;
 
 import pe.edu.pucp.vetcitas.cita.boi.ICitaBO;
 import pe.edu.pucp.vetcitas.cita.dao.ICitaDAO;
+import pe.edu.pucp.vetcitas.cita.dao.IRecordatorioDAO;
 import pe.edu.pucp.vetcitas.cita.impl.CitaImpl;
+import pe.edu.pucp.vetcitas.cita.impl.RecordatorioImpl;
 import pe.edu.pucp.vetcitas.cita.model.Cita;
+import pe.edu.pucp.vetcitas.cita.model.Recordatorio;
 import pe.edu.pucp.vetcitas.common.enums.EstadoCita;
+import pe.edu.pucp.vetcitas.common.enums.CanalRecordatorio;
+import pe.edu.pucp.vetcitas.common.enums.EstadoSeguimiento;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class CitaBOImpl implements ICitaBO {
     private ICitaDAO citaDAO;
+    private IRecordatorioDAO recordatorioDAO;
 
     public CitaBOImpl() {
         this.citaDAO = new CitaImpl();
+        this.recordatorioDAO = new RecordatorioImpl();
     }
 
     @Override
     public int insertar(Cita cita) throws Exception {
         validar(cita, false);
-        return citaDAO.insertar(cita);
+
+        // Validación de horario del veterinario y solapamiento (cruces) con otras citas.
+        // Antes solo se hacía en el chequeo previo del frontend; ahora el backend la exige
+        // en el propio insert, igual que reprogramar() y cambiarVeterinario().
+        boolean disponible = citaDAO.validarDisponibilidadSlot(
+                cita.getVeterinario().getId(),
+                cita.getFechaHoraInicio(),
+                cita.getFechaHoraFin()
+        );
+        if (!disponible) {
+            throw new Exception("El veterinario no está disponible en ese horario: está fuera de su horario de atención o se cruza con otra cita.");
+        }
+
+        int idGenerado = citaDAO.insertar(cita);
+
+        // Recordatorio automático: pedir al cliente que confirme su asistencia
+        Cita creada = citaDAO.buscarPorId(idGenerado);
+        if (creada != null) {
+            crearRecordatorio(creada, mensajeConfirmacion(creada), LocalDateTime.now());
+        }
+
+        return idGenerado;
     }
 
     @Override
@@ -98,6 +127,9 @@ public class CitaBOImpl implements ICitaBO {
                 motivoReprogramacion,
                 modifiedBy
         );
+
+        // Recordatorio automático: avisar la nueva fecha/hora
+        crearRecordatorio(cita, mensajeReprogramacion(cita, nuevaFechaHoraInicio), LocalDateTime.now());
     }
 
     @Override
@@ -237,6 +269,9 @@ public class CitaBOImpl implements ICitaBO {
             throw new Exception("El usuario que modifica es obligatorio.");
         }
         citaDAO.cancelarCita(idCita,motivoCancelacion, modifiedBy);
+
+        // Recordatorio automático: avisar la cancelación e invitar a reagendar
+        crearRecordatorio(cita, mensajeCancelacion(cita), LocalDateTime.now());
     }
 
     @Override
@@ -249,6 +284,9 @@ public class CitaBOImpl implements ICitaBO {
             throw new Exception("El usuario que modifica es obligatorio.");
         }
         citaDAO.confirmarCita(idCita, modifiedBy);
+
+        // Recordatorio automático previo (se enviará el día anterior a la cita)
+        crearRecordatorio(cita, mensajePrevio(cita), fechaProgramadaPrevio(cita));
     }
 
     @Override
@@ -286,6 +324,64 @@ public class CitaBOImpl implements ICitaBO {
             throw new Exception("El usuario que modifica es obligatorio.");
         }
         citaDAO.marcarNoAsistio(idCita, modifiedBy);
+
+        // Recordatorio automático: avisar la inasistencia e invitar a reagendar
+        crearRecordatorio(cita, mensajeNoAsistio(cita), LocalDateTime.now());
+    }
+
+    // ======== Recordatorios automáticos (WhatsApp) ========
+    private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy 'a las' HH:mm");
+
+    private void crearRecordatorio(Cita cita, String mensaje, LocalDateTime fechaProgramada) {
+        try {
+            Recordatorio r = new Recordatorio();
+            r.setCita(cita);
+            r.setCanal(CanalRecordatorio.WHATSAPP);
+            r.setEstadoSeguimiento(EstadoSeguimiento.PENDIENTE);
+            r.setMensaje(mensaje);
+            r.setFechaProgramada(fechaProgramada);
+            recordatorioDAO.insertar(r);
+        } catch (Exception ex) {
+            // Un fallo en el recordatorio no debe afectar la operación principal de la cita
+            System.out.println("No se pudo crear el recordatorio automático: " + ex.getMessage());
+        }
+    }
+
+    private String nombreMascota(Cita c) {
+        return (c.getMascota() != null && c.getMascota().getNombre() != null) ? c.getMascota().getNombre() : "su mascota";
+    }
+
+    private String nombreServicio(Cita c) {
+        return (c.getServicio() != null && c.getServicio().getNombre() != null) ? c.getServicio().getNombre() : "atención";
+    }
+
+    private LocalDateTime fechaProgramadaPrevio(Cita c) {
+        LocalDateTime previo = c.getFechaHoraInicio().minusDays(1);
+        return previo.isBefore(LocalDateTime.now()) ? LocalDateTime.now() : previo;
+    }
+
+    private String mensajeConfirmacion(Cita c) {
+        return "Hola, le recordamos que " + nombreMascota(c) + " tiene una cita de " + nombreServicio(c)
+                + " el " + c.getFechaHoraInicio().format(FMT) + ". Por favor, confirme su asistencia.";
+    }
+
+    private String mensajePrevio(Cita c) {
+        return "Le recordamos su cita de " + nombreServicio(c) + " para " + nombreMascota(c)
+                + " el " + c.getFechaHoraInicio().format(FMT) + ". ¡Lo esperamos!";
+    }
+
+    private String mensajeCancelacion(Cita c) {
+        return "La cita de " + nombreMascota(c) + " programada para el " + c.getFechaHoraInicio().format(FMT)
+                + " ha sido cancelada. Puede reagendar cuando guste.";
+    }
+
+    private String mensajeReprogramacion(Cita c, LocalDateTime nuevaInicio) {
+        return "La cita de " + nombreMascota(c) + " ha sido reprogramada para el " + nuevaInicio.format(FMT) + ".";
+    }
+
+    private String mensajeNoAsistio(Cita c) {
+        return "No registramos su asistencia a la cita de " + nombreMascota(c) + " del " + c.getFechaHoraInicio().format(FMT)
+                + ". Comuníquese para reagendar.";
     }
 
     @Override

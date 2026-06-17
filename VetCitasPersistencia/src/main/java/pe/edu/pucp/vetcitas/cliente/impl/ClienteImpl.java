@@ -15,6 +15,7 @@ public class ClienteImpl implements ClienteDAO {
     @Override
     public int insertar(Cliente cliente) {
         int resultado = 0;
+        int idNuevo = 0;
         Connection con = null;
         CallableStatement cs = null;
         try {
@@ -36,17 +37,10 @@ public class ClienteImpl implements ClienteDAO {
             cs.setString(6, cliente.getObservaciones());
             cs.setBoolean(7, cliente.isActivo());
 
-            if (cliente.getCreatedOn() != null) {
-                cs.setTimestamp(8, java.sql.Timestamp.valueOf(cliente.getCreatedOn()));
-            } else {
-                cs.setTimestamp(8, null);
-            }
-
-            if (cliente.getModifiedOn() != null) {
-                cs.setTimestamp(9, java.sql.Timestamp.valueOf(cliente.getModifiedOn()));
-            } else {
-                cs.setTimestamp(9, null);
-            }
+            // El servidor genera las marcas de auditoría (no dependemos del cliente)
+            java.sql.Timestamp ahora = java.sql.Timestamp.valueOf(java.time.LocalDateTime.now());
+            cs.setTimestamp(8, ahora);   // created_on
+            cs.setTimestamp(9, ahora);   // modified_on
 
             if (cliente.getModifiedBy() != null) {
                 cs.setInt(10, cliente.getModifiedBy().getId());
@@ -58,7 +52,7 @@ public class ClienteImpl implements ClienteDAO {
 
             resultado = cs.executeUpdate();
 
-            int idNuevo = cs.getInt(11);
+            idNuevo = cs.getInt(11);
             cliente.setId(idNuevo);
 
         } catch (Exception ex) {
@@ -71,7 +65,9 @@ public class ClienteImpl implements ClienteDAO {
                 System.out.println("ERROR: " + ex.getMessage());
             }
         }
-        return resultado;
+        // Devolvemos el id generado (no las filas afectadas) para poder
+        // asociar mascotas recién creadas al nuevo cliente.
+        return idNuevo;
     }
 
     @Override
@@ -99,11 +95,8 @@ public class ClienteImpl implements ClienteDAO {
             cs.setString(7, cliente.getObservaciones());
             cs.setBoolean(8, cliente.isActivo());
 
-            if (cliente.getModifiedOn() != null) {
-                cs.setTimestamp(9, java.sql.Timestamp.valueOf(cliente.getModifiedOn()));
-            } else {
-                cs.setTimestamp(9, null);
-            }
+            // El servidor sella la fecha de modificación
+            cs.setTimestamp(9, java.sql.Timestamp.valueOf(java.time.LocalDateTime.now()));
 
             if (cliente.getModifiedBy() != null) {
                 cs.setInt(10, cliente.getModifiedBy().getId());
@@ -140,10 +133,18 @@ public class ClienteImpl implements ClienteDAO {
             cs.setTimestamp(2, java.sql.Timestamp.valueOf(java.time.LocalDateTime.now()));
             cs.setNull(3, java.sql.Types.INTEGER);
 
-            resultado = cs.executeUpdate();
+            cs.executeUpdate();
+            // El procedure ejecuta varios UPDATE; si no hubo excepción, fue correcto.
+            resultado = 1;
 
         } catch (Exception ex) {
             System.out.println("ERROR: " + ex.getMessage());
+            // El procedure usa SIGNAL para bloquear cuando hay una cita confirmada futura
+            if (ex.getMessage() != null && ex.getMessage().contains("cita confirmada")) {
+                resultado = -1;
+            } else {
+                resultado = 0;
+            }
         } finally {
             try {
                 if (cs != null) cs.close();
@@ -203,7 +204,7 @@ public class ClienteImpl implements ClienteDAO {
         ResultSet rs = null;
         try {
             con = DBManager.getInstance().getConnection();
-            String sql = "{CALL listar_clientes_activos()}";
+            String sql = "{CALL listar_clientes_todos()}";
             cs = con.prepareCall(sql);
 
             rs = cs.executeQuery();

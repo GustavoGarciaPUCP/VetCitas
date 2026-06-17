@@ -56,13 +56,13 @@ SET FOREIGN_KEY_CHECKS = 1;
 INSERT INTO usuario
     (id_usuario, username, contrasena_hash, nombres, apellidos, telefono, email, activo, created_on, modified_on, modified_by)
 VALUES
-    (2, 'rvega',     'hash_rvega',     'Roberto', 'Vega Campos',     '987100002', 'rvega@vetcitas.com',     1, NOW(), NOW(), 1),
-    (3, 'csanchez',  'hash_csanchez',  'Carlos',  'Sanchez Rios',    '987100003', 'csanchez@vetcitas.com',  1, NOW(), NOW(), 1),
-    (4, 'mtorres',   'hash_mtorres',   'Maria',   'Torres Leon',     '987100004', 'mtorres@vetcitas.com',   1, NOW(), NOW(), 1),
-    (5, 'jramirez',  'hash_jramirez',  'Jorge',   'Ramirez Paz',     '987100005', 'jramirez@vetcitas.com',  1, NOW(), NOW(), 1),
-    (6, 'lfernandez','hash_lfernandez','Lucia',   'Fernandez Sosa',  '987100006', 'lfernandez@vetcitas.com',1, NOW(), NOW(), 1),
-    (7, 'agomez',    'hash_agomez',    'Ana',     'Gomez Mora',      '987100007', 'agomez@vetcitas.com',    1, NOW(), NOW(), 1),
-    (8, 'pdiaz',     'hash_pdiaz',     'Pedro',   'Diaz Nunez',      '987100008', 'pdiaz@vetcitas.com',     0, NOW(), NOW(), 1);
+    (2, 'rvega',     'hash_rvega',     'Roberto', 'Vega Campos',     '51987100002', 'rvega@vetcitas.com',     1, NOW(), NOW(), 1),
+    (3, 'csanchez',  'hash_csanchez',  'Carlos',  'Sanchez Rios',    '51987100003', 'csanchez@vetcitas.com',  1, NOW(), NOW(), 1),
+    (4, 'mtorres',   'hash_mtorres',   'Maria',   'Torres Leon',     '51987100004', 'mtorres@vetcitas.com',   1, NOW(), NOW(), 1),
+    (5, 'jramirez',  'hash_jramirez',  'Jorge',   'Ramirez Paz',     '51987100005', 'jramirez@vetcitas.com',  1, NOW(), NOW(), 1),
+    (6, 'lfernandez','hash_lfernandez','Lucia',   'Fernandez Sosa',  '51987100006', 'lfernandez@vetcitas.com',1, NOW(), NOW(), 1),
+    (7, 'agomez',    'hash_agomez',    'Ana',     'Gomez Mora',      '51987100007', 'agomez@vetcitas.com',    1, NOW(), NOW(), 1),
+    (8, 'pdiaz',     'hash_pdiaz',     'Pedro',   'Diaz Nunez',      '51987100008', 'pdiaz@vetcitas.com',     0, NOW(), NOW(), 1);
 
 -- Subtipo ADMINISTRADOR (id 2). El superadmin (id 1) ya existe en administrador.
 INSERT INTO administrador (id_administrador, area, es_super_admin) VALUES
