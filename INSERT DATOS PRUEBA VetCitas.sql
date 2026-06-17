@@ -32,6 +32,7 @@ USE vetcitas_db;
 --    rol_permiso y el superadmin id=1)
 -- ---------------------------------------------------------------------
 SET FOREIGN_KEY_CHECKS = 0;
+SET SQL_SAFE_UPDATES = 0;
 
 DELETE FROM recordatorio;
 DELETE FROM atencion;
@@ -284,3 +285,4 @@ VALUES
 -- =====================================================================
 -- FIN DEL SCRIPT DE DATOS DE PRUEBA
 -- =====================================================================
+SET SQL_SAFE_UPDATES = 1;
