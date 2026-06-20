@@ -19,7 +19,7 @@ public class ServicioImpl implements IServicioDAO {
         CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{call insertar_servicio(?,?,?,?,?,?,?)}");
+            cs = con.prepareCall("{call insertar_servicio(?,?,?,?,?,?,?,?)}");
             cs.setString("p_nombre", servicio.getNombre());
 
             if (servicio.getDescripcion() != null && !servicio.getDescripcion().trim().isEmpty()) {
@@ -31,6 +31,7 @@ public class ServicioImpl implements IServicioDAO {
             cs.setString("p_tipo_servicio", servicio.getTipoServicio().name());
             cs.setInt("p_duracion_minutos", servicio.getDuracionMinutos());
             cs.setDouble("p_precio_referencial", servicio.getPrecioReferencial());
+            cs.setBoolean("p_activo", servicio.isActivo());
             cs.setTimestamp("p_created_on", Timestamp.valueOf(LocalDateTime.now()));
             cs.registerOutParameter("p_id_generado", Types.INTEGER);
             cs.executeUpdate();

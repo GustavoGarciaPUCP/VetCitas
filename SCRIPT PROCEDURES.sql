@@ -891,6 +891,7 @@ CREATE PROCEDURE insertar_servicio(
     IN p_tipo_servicio VARCHAR(20),
     IN p_duracion_minutos INT,
     IN p_precio_referencial DECIMAL(10,2),
+    IN p_activo TINYINT(1),
     IN p_created_on DATETIME,
     OUT p_id_generado INT
 )
@@ -910,7 +911,7 @@ BEGIN
         p_tipo_servicio,
         p_duracion_minutos,
         p_precio_referencial,
-        1,
+        p_activo,
         p_created_on
     );
 
@@ -943,7 +944,11 @@ END $$
 
 CREATE PROCEDURE eliminar_servicio(IN p_id_servicio INT, IN p_modified_on DATETIME, IN p_modified_by INT)
 BEGIN
-    DELETE FROM servicio WHERE id_servicio = p_id_servicio;
+    -- Borrado lógico: el servicio puede estar referenciado por citas/atenciones (FK),
+    -- por lo que no se elimina físicamente.
+    UPDATE servicio
+    SET activo = 0, modified_on = p_modified_on, modified_by = p_modified_by
+    WHERE id_servicio = p_id_servicio;
 END $$
 
 CREATE PROCEDURE deshabilitar_servicio(IN p_id_servicio INT, IN p_modified_on DATETIME, IN p_modified_by INT)
