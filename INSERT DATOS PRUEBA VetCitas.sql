@@ -13,19 +13,39 @@
 --   - Estados de cita validos: PENDIENTE, CONFIRMADA, EN_CONSULTA,
 --     ATENDIDA, NO_ASISTIO, CANCELADA.
 --   - Cada cita cae en un dia/hora dentro del horario del veterinario
---     (Lun-Vie 08:00-17:00, refrigerio 13:00-14:00) y NO se solapa con
---     otra cita activa del mismo veterinario.
+--     y NO se solapa con otra cita activa del mismo veterinario.
 --   - fecha_hora_fin = fecha_hora_inicio + duracion del servicio.
 --   - dia_semana sigue la convencion del backend: WEEKDAY()+1
 --     (Lunes=1 ... Domingo=7).
---   - Fecha de referencia "hoy": 2026-06-15 (lunes).
+--   - Las citas de prueba usan CURDATE() para que "Citas de hoy"
+--     siempre tenga datos al cargar la base en cualquier fecha.
 --
---  NOTA sobre contrasena_hash: se usan valores placeholder (texto plano
---  con prefijo) siguiendo el estilo del DDL. Ajustalos al formato real
---  de hash que espere tu backend si vas a probar el login.
+--  Credenciales de prueba:
+--    superadmin       / SuperAdmin123  (creado en DDL)
+--    admin_demo       / Admin123       (ADMINISTRADOR)
+--    vet_carlos       / Vet123         (VETERINARIO, con citas hoy)
+--    vet_maria        / Vet123         (VETERINARIO, con cita hoy)
+--    vet_jorge        / Vet123         (VETERINARIO, con cita hoy)
+--    vet_lucia        / Vet123         (VETERINARIO, con cita futura)
+--    recep_ana        / Recep123       (RECEPCIONISTA)
+--    recep_inactivo   / Recep123       (RECEPCIONISTA inactivo)
+--    vet_sin_citas    / VetSinCitas123 (VETERINARIO activo sin citas)
+--    admin_recep      / Multi123       (ADMINISTRADOR + RECEPCIONISTA)
+--    vet_recep        / VetRecep123    (VETERINARIO + RECEPCIONISTA)
+--    vet_inactivo     / VetInactivo123 (VETERINARIO inactivo)
 -- =====================================================================
 
 USE vetcitas_db;
+
+SET @hoy = CURDATE();
+SET @ayer = DATE_SUB(@hoy, INTERVAL 1 DAY);
+SET @manana = DATE_ADD(@hoy, INTERVAL 1 DAY);
+SET @mas_2 = DATE_ADD(@hoy, INTERVAL 2 DAY);
+SET @mas_3 = DATE_ADD(@hoy, INTERVAL 3 DAY);
+SET @menos_4 = DATE_SUB(@hoy, INTERVAL 4 DAY);
+SET @menos_5 = DATE_SUB(@hoy, INTERVAL 5 DAY);
+SET @menos_6 = DATE_SUB(@hoy, INTERVAL 6 DAY);
+SET @menos_7 = DATE_SUB(@hoy, INTERVAL 7 DAY);
 
 -- ---------------------------------------------------------------------
 -- 0) LIMPIEZA (hace el script re-ejecutable; conserva roles, permisos,
@@ -57,29 +77,39 @@ SET FOREIGN_KEY_CHECKS = 1;
 INSERT INTO usuario
     (id_usuario, username, contrasena_hash, nombres, apellidos, telefono, email, activo, created_on, modified_on, modified_by)
 VALUES
-    (2, 'rvega',     'hash_rvega',     'Roberto', 'Vega Campos',     '51987100002', 'rvega@vetcitas.com',     1, NOW(), NOW(), 1),
-    (3, 'csanchez',  'hash_csanchez',  'Carlos',  'Sanchez Rios',    '51987100003', 'csanchez@vetcitas.com',  1, NOW(), NOW(), 1),
-    (4, 'mtorres',   'hash_mtorres',   'Maria',   'Torres Leon',     '51987100004', 'mtorres@vetcitas.com',   1, NOW(), NOW(), 1),
-    (5, 'jramirez',  'hash_jramirez',  'Jorge',   'Ramirez Paz',     '51987100005', 'jramirez@vetcitas.com',  1, NOW(), NOW(), 1),
-    (6, 'lfernandez','hash_lfernandez','Lucia',   'Fernandez Sosa',  '51987100006', 'lfernandez@vetcitas.com',1, NOW(), NOW(), 1),
-    (7, 'agomez',    'hash_agomez',    'Ana',     'Gomez Mora',      '51987100007', 'agomez@vetcitas.com',    1, NOW(), NOW(), 1),
-    (8, 'pdiaz',     'hash_pdiaz',     'Pedro',   'Diaz Nunez',      '51987100008', 'pdiaz@vetcitas.com',     0, NOW(), NOW(), 1);
+    (2,  'admin_demo',     SHA2('Admin123',256),       'Roberto', 'Vega Campos',       '51987100002', 'admin.demo@vetcitas.com',     1, NOW(), NOW(), 1),
+    (3,  'vet_carlos',     SHA2('Vet123',256),         'Carlos',  'Sanchez Rios',      '51987100003', 'vet.carlos@vetcitas.com',     1, NOW(), NOW(), 1),
+    (4,  'vet_maria',      SHA2('Vet123',256),         'Maria',   'Torres Leon',       '51987100004', 'vet.maria@vetcitas.com',      1, NOW(), NOW(), 1),
+    (5,  'vet_jorge',      SHA2('Vet123',256),         'Jorge',   'Ramirez Paz',       '51987100005', 'vet.jorge@vetcitas.com',      1, NOW(), NOW(), 1),
+    (6,  'vet_lucia',      SHA2('Vet123',256),         'Lucia',   'Fernandez Sosa',    '51987100006', 'vet.lucia@vetcitas.com',      1, NOW(), NOW(), 1),
+    (7,  'recep_ana',      SHA2('Recep123',256),       'Ana',     'Gomez Mora',        '51987100007', 'recep.ana@vetcitas.com',      1, NOW(), NOW(), 1),
+    (8,  'recep_inactivo', SHA2('Recep123',256),       'Pedro',   'Diaz Nunez',        '51987100008', 'recep.inactivo@vetcitas.com', 0, NOW(), NOW(), 1),
+    (9,  'vet_sin_citas',  SHA2('VetSinCitas123',256), 'Valeria', 'Mendoza Arias',     '51987100009', 'vet.sin.citas@vetcitas.com',  1, NOW(), NOW(), 1),
+    (10, 'admin_recep',    SHA2('Multi123',256),       'Paula',   'Campos Ruiz',       '51987100010', 'admin.recep@vetcitas.com',    1, NOW(), NOW(), 1),
+    (11, 'vet_recep',      SHA2('VetRecep123',256),    'Diego',   'Salinas Paredes',   '51987100011', 'vet.recep@vetcitas.com',      1, NOW(), NOW(), 1),
+    (12, 'vet_inactivo',   SHA2('VetInactivo123',256), 'Elena',   'Navarro Quiroz',    '51987100012', 'vet.inactivo@vetcitas.com',   0, NOW(), NOW(), 1);
 
 -- Subtipo ADMINISTRADOR (id 2). El superadmin (id 1) ya existe en administrador.
 INSERT INTO administrador (id_administrador, area, es_super_admin) VALUES
-    (2, 'Administracion', 0);
+    (2, 'Administracion', 0),
+    (10, 'Administracion y Recepcion', 0);
 
--- Subtipo VETERINARIO (id 3..6)
+-- Subtipo VETERINARIO (id 3..6, 9, 11, 12)
 INSERT INTO veterinario (id_veterinario, cmpv, especialidad) VALUES
     (3, 'CMP-12345', 'Medicina General'),
     (4, 'CMP-23456', 'Cirugia'),
     (5, 'CMP-34567', 'Dermatologia'),
-    (6, 'CMP-45678', 'Medicina General');
+    (6, 'CMP-45678', 'Medicina General'),
+    (9, 'CMP-56789', 'Medicina General'),
+    (11, 'CMP-67890', 'Medicina Interna'),
+    (12, 'CMP-78901', 'Medicina General');
 
--- Subtipo RECEPCIONISTA (id 7..8)
+-- Subtipo RECEPCIONISTA (id 7, 8, 10, 11)
 INSERT INTO recepcionista (id_recepcionista, area) VALUES
     (7, 'Recepcion'),
-    (8, 'Recepcion');
+    (8, 'Recepcion'),
+    (10, 'Recepcion'),
+    (11, 'Recepcion y triaje');
 
 -- Asignacion de roles (sin asumir ids de rol_sistema; se resuelve por codigo).
 -- El superadmin (id 1) ya tiene ADMINISTRADOR asignado por el DDL.
@@ -93,6 +123,12 @@ FROM (
     UNION ALL SELECT 6, 'VETERINARIO'
     UNION ALL SELECT 7, 'RECEPCIONISTA'
     UNION ALL SELECT 8, 'RECEPCIONISTA'
+    UNION ALL SELECT 9, 'VETERINARIO'
+    UNION ALL SELECT 10, 'ADMINISTRADOR'
+    UNION ALL SELECT 10, 'RECEPCIONISTA'
+    UNION ALL SELECT 11, 'VETERINARIO'
+    UNION ALL SELECT 11, 'RECEPCIONISTA'
+    UNION ALL SELECT 12, 'VETERINARIO'
 ) x
 JOIN rol_sistema r ON r.codigo = x.codigo;
 
@@ -150,9 +186,9 @@ VALUES
 
 -- =====================================================================
 -- 5) HORARIOS DE VETERINARIO
---    Vets 3,4,5,6: Lun-Vie 08:00-17:00, refrigerio 13:00-14:00.
---    Vet 6 ademas atiende sabado 09:00-13:00 (sin refrigerio).
---    dia_semana: 1=Lun ... 6=Sab.
+--    Se cubren los 7 dias para que los datos relativos a CURDATE()
+--    siempre tengan horarios validos al ejecutar el seed.
+--    dia_semana: 1=Lun ... 7=Dom.
 -- =====================================================================
 INSERT INTO horario_veterinario
     (id_veterinario, dia_semana, hora_inicio, hora_fin, hora_descanso_inicio, hora_descanso_fin, activo, created_on, modified_on, modified_by)
@@ -163,61 +199,90 @@ VALUES
     (3, 3, '08:00:00', '17:00:00', '13:00:00', '14:00:00', 1, NOW(), NOW(), 1),
     (3, 4, '08:00:00', '17:00:00', '13:00:00', '14:00:00', 1, NOW(), NOW(), 1),
     (3, 5, '08:00:00', '17:00:00', '13:00:00', '14:00:00', 1, NOW(), NOW(), 1),
+    (3, 6, '08:00:00', '17:00:00', '13:00:00', '14:00:00', 1, NOW(), NOW(), 1),
+    (3, 7, '08:00:00', '17:00:00', '13:00:00', '14:00:00', 1, NOW(), NOW(), 1),
     -- Vet 4 (Maria Torres)
     (4, 1, '08:00:00', '17:00:00', '13:00:00', '14:00:00', 1, NOW(), NOW(), 1),
     (4, 2, '08:00:00', '17:00:00', '13:00:00', '14:00:00', 1, NOW(), NOW(), 1),
     (4, 3, '08:00:00', '17:00:00', '13:00:00', '14:00:00', 1, NOW(), NOW(), 1),
     (4, 4, '08:00:00', '17:00:00', '13:00:00', '14:00:00', 1, NOW(), NOW(), 1),
     (4, 5, '08:00:00', '17:00:00', '13:00:00', '14:00:00', 1, NOW(), NOW(), 1),
+    (4, 6, '08:00:00', '17:00:00', '13:00:00', '14:00:00', 1, NOW(), NOW(), 1),
+    (4, 7, '08:00:00', '17:00:00', '13:00:00', '14:00:00', 1, NOW(), NOW(), 1),
     -- Vet 5 (Jorge Ramirez)
     (5, 1, '08:00:00', '17:00:00', '13:00:00', '14:00:00', 1, NOW(), NOW(), 1),
     (5, 2, '08:00:00', '17:00:00', '13:00:00', '14:00:00', 1, NOW(), NOW(), 1),
     (5, 3, '08:00:00', '17:00:00', '13:00:00', '14:00:00', 1, NOW(), NOW(), 1),
     (5, 4, '08:00:00', '17:00:00', '13:00:00', '14:00:00', 1, NOW(), NOW(), 1),
     (5, 5, '08:00:00', '17:00:00', '13:00:00', '14:00:00', 1, NOW(), NOW(), 1),
+    (5, 6, '08:00:00', '17:00:00', '13:00:00', '14:00:00', 1, NOW(), NOW(), 1),
+    (5, 7, '08:00:00', '17:00:00', '13:00:00', '14:00:00', 1, NOW(), NOW(), 1),
     -- Vet 6 (Lucia Fernandez)
     (6, 1, '09:00:00', '18:00:00', '13:00:00', '14:00:00', 1, NOW(), NOW(), 1),
     (6, 2, '09:00:00', '18:00:00', '13:00:00', '14:00:00', 1, NOW(), NOW(), 1),
     (6, 3, '09:00:00', '18:00:00', '13:00:00', '14:00:00', 1, NOW(), NOW(), 1),
     (6, 4, '09:00:00', '18:00:00', '13:00:00', '14:00:00', 1, NOW(), NOW(), 1),
     (6, 5, '09:00:00', '18:00:00', '13:00:00', '14:00:00', 1, NOW(), NOW(), 1),
-    (6, 6, '09:00:00', '13:00:00', NULL,        NULL,       1, NOW(), NOW(), 1);
+    (6, 6, '09:00:00', '13:00:00', NULL,        NULL,       1, NOW(), NOW(), 1),
+    (6, 7, '09:00:00', '13:00:00', NULL,        NULL,       1, NOW(), NOW(), 1),
+    -- Vet 9 (Valeria Mendoza, activa sin citas)
+    (9, 1, '08:00:00', '12:00:00', NULL,        NULL,       1, NOW(), NOW(), 1),
+    (9, 2, '08:00:00', '12:00:00', NULL,        NULL,       1, NOW(), NOW(), 1),
+    (9, 3, '08:00:00', '12:00:00', NULL,        NULL,       1, NOW(), NOW(), 1),
+    (9, 4, '08:00:00', '12:00:00', NULL,        NULL,       1, NOW(), NOW(), 1),
+    (9, 5, '08:00:00', '12:00:00', NULL,        NULL,       1, NOW(), NOW(), 1),
+    (9, 6, '08:00:00', '12:00:00', NULL,        NULL,       1, NOW(), NOW(), 1),
+    (9, 7, '08:00:00', '12:00:00', NULL,        NULL,       1, NOW(), NOW(), 1),
+    -- Vet 11 (Diego Salinas, usuario multirol)
+    (11, 1, '14:00:00', '18:00:00', NULL,       NULL,       1, NOW(), NOW(), 1),
+    (11, 2, '14:00:00', '18:00:00', NULL,       NULL,       1, NOW(), NOW(), 1),
+    (11, 3, '14:00:00', '18:00:00', NULL,       NULL,       1, NOW(), NOW(), 1),
+    (11, 4, '14:00:00', '18:00:00', NULL,       NULL,       1, NOW(), NOW(), 1),
+    (11, 5, '14:00:00', '18:00:00', NULL,       NULL,       1, NOW(), NOW(), 1),
+    (11, 6, '14:00:00', '18:00:00', NULL,       NULL,       1, NOW(), NOW(), 1),
+    (11, 7, '14:00:00', '18:00:00', NULL,       NULL,       1, NOW(), NOW(), 1),
+    -- Vet 12 (inactivo; horarios desactivados para probar filtros)
+    (12, 1, '08:00:00', '17:00:00', '13:00:00', '14:00:00', 0, NOW(), NOW(), 1),
+    (12, 2, '08:00:00', '17:00:00', '13:00:00', '14:00:00', 0, NOW(), NOW(), 1),
+    (12, 3, '08:00:00', '17:00:00', '13:00:00', '14:00:00', 0, NOW(), NOW(), 1),
+    (12, 4, '08:00:00', '17:00:00', '13:00:00', '14:00:00', 0, NOW(), NOW(), 1),
+    (12, 5, '08:00:00', '17:00:00', '13:00:00', '14:00:00', 0, NOW(), NOW(), 1);
 
 -- =====================================================================
 -- 6) CITAS  (id explicito; fecha_hora_fin = inicio + duracion servicio)
 --    Estados distribuidos: pasadas (ATENDIDA/NO_ASISTIO/CANCELADA),
 --    de hoy (EN_CONSULTA/CONFIRMADA/PENDIENTE) y futuras.
---    Referencia "hoy" = 2026-06-15.
+--    Referencia "hoy" = CURDATE().
 -- =====================================================================
 INSERT INTO cita
     (id_cita, fecha_hora_inicio, fecha_hora_fin, estado, motivo_cancelacion, fecha_cancelacion, id_usuario_cancelacion,
      id_mascota, id_veterinario, id_servicio, created_on, modified_on, modified_by)
 VALUES
-    -- ----- SEMANA PASADA (08-12 jun) -----
-    (1,  '2026-06-08 09:00:00', '2026-06-08 09:30:00', 'ATENDIDA',   NULL, NULL, NULL,  1, 3, 1, '2026-06-05 10:00:00', '2026-06-08 09:30:00', 3),
-    (2,  '2026-06-08 10:00:00', '2026-06-08 10:20:00', 'ATENDIDA',   NULL, NULL, NULL,  3, 3, 2, '2026-06-05 10:05:00', '2026-06-08 10:20:00', 3),
-    (3,  '2026-06-09 09:00:00', '2026-06-09 10:30:00', 'ATENDIDA',   NULL, NULL, NULL,  6, 4, 3, '2026-06-04 11:00:00', '2026-06-09 10:30:00', 4),
-    (4,  '2026-06-10 11:00:00', '2026-06-10 11:45:00', 'ATENDIDA',   NULL, NULL, NULL,  4, 5, 8, '2026-06-06 09:30:00', '2026-06-10 11:45:00', 5),
-    (5,  '2026-06-11 15:00:00', '2026-06-11 15:30:00', 'ATENDIDA',   NULL, NULL, NULL,  8, 3, 1, '2026-06-08 12:00:00', '2026-06-11 15:30:00', 3),
-    (6,  '2026-06-12 09:30:00', '2026-06-12 09:50:00', 'NO_ASISTIO', NULL, NULL, NULL,  9, 4, 2, '2026-06-09 16:00:00', '2026-06-12 10:00:00', 4),
-    (7,  '2026-06-12 10:00:00', '2026-06-12 10:30:00', 'CANCELADA',
-         'El cliente solicito cancelar por viaje.', '2026-06-11 18:20:00', 7,
-         12, 5, 1, '2026-06-08 14:00:00', '2026-06-11 18:20:00', 7),
+    -- ----- DIAS PREVIOS -----
+    (1,  TIMESTAMP(@menos_7, '09:00:00'), TIMESTAMP(@menos_7, '09:30:00'), 'ATENDIDA',   NULL, NULL, NULL,  1, 3, 1, TIMESTAMP(DATE_SUB(@menos_7, INTERVAL 3 DAY), '10:00:00'), TIMESTAMP(@menos_7, '09:30:00'), 3),
+    (2,  TIMESTAMP(@menos_7, '10:00:00'), TIMESTAMP(@menos_7, '10:20:00'), 'ATENDIDA',   NULL, NULL, NULL,  3, 3, 2, TIMESTAMP(DATE_SUB(@menos_7, INTERVAL 3 DAY), '10:05:00'), TIMESTAMP(@menos_7, '10:20:00'), 3),
+    (3,  TIMESTAMP(@menos_6, '09:00:00'), TIMESTAMP(@menos_6, '10:30:00'), 'ATENDIDA',   NULL, NULL, NULL,  6, 4, 3, TIMESTAMP(DATE_SUB(@menos_6, INTERVAL 5 DAY), '11:00:00'), TIMESTAMP(@menos_6, '10:30:00'), 4),
+    (4,  TIMESTAMP(@menos_5, '11:00:00'), TIMESTAMP(@menos_5, '11:45:00'), 'ATENDIDA',   NULL, NULL, NULL,  4, 5, 8, TIMESTAMP(DATE_SUB(@menos_5, INTERVAL 4 DAY), '09:30:00'), TIMESTAMP(@menos_5, '11:45:00'), 5),
+    (5,  TIMESTAMP(@menos_4, '15:00:00'), TIMESTAMP(@menos_4, '15:30:00'), 'ATENDIDA',   NULL, NULL, NULL,  8, 3, 1, TIMESTAMP(DATE_SUB(@menos_4, INTERVAL 3 DAY), '12:00:00'), TIMESTAMP(@menos_4, '15:30:00'), 3),
+    (6,  TIMESTAMP(@ayer,    '09:30:00'), TIMESTAMP(@ayer,    '09:50:00'), 'NO_ASISTIO', NULL, NULL, NULL,  9, 4, 2, TIMESTAMP(@menos_4, '16:00:00'), TIMESTAMP(@ayer, '10:00:00'), 4),
+    (7,  TIMESTAMP(@ayer,    '10:00:00'), TIMESTAMP(@ayer,    '10:30:00'), 'CANCELADA',
+         'El cliente solicito cancelar por viaje.', TIMESTAMP(@ayer, '08:20:00'), 7,
+         12, 5, 1, TIMESTAMP(@menos_4, '14:00:00'), TIMESTAMP(@ayer, '08:20:00'), 7),
 
-    -- ----- HOY (15 jun, lunes) -----
-    (8,  '2026-06-15 09:00:00', '2026-06-15 09:30:00', 'EN_CONSULTA',NULL, NULL, NULL,  2, 3, 1, '2026-06-12 09:00:00', '2026-06-15 09:00:00', 7),
-    (9,  '2026-06-15 10:00:00', '2026-06-15 10:20:00', 'CONFIRMADA', NULL, NULL, NULL,  5, 3, 2, '2026-06-12 09:05:00', '2026-06-13 10:00:00', 7),
-    (10, '2026-06-15 11:00:00', '2026-06-15 12:30:00', 'CONFIRMADA', NULL, NULL, NULL, 13, 4, 3, '2026-06-10 15:00:00', '2026-06-13 11:00:00', 7),
-    (11, '2026-06-15 14:30:00', '2026-06-15 15:00:00', 'PENDIENTE',  NULL, NULL, NULL,  7, 5, 1, '2026-06-13 17:00:00', '2026-06-13 17:00:00', 7),
-    (12, '2026-06-15 15:00:00', '2026-06-15 15:15:00', 'PENDIENTE',  NULL, NULL, NULL, 10, 3, 5, '2026-06-14 11:00:00', '2026-06-14 11:00:00', 7),
+    -- ----- HOY -----
+    (8,  TIMESTAMP(@hoy, '09:00:00'), TIMESTAMP(@hoy, '09:30:00'), 'EN_CONSULTA',NULL, NULL, NULL,  2, 3, 1, TIMESTAMP(@menos_4, '09:00:00'), TIMESTAMP(@hoy, '09:00:00'), 7),
+    (9,  TIMESTAMP(@hoy, '10:00:00'), TIMESTAMP(@hoy, '10:20:00'), 'CONFIRMADA', NULL, NULL, NULL,  5, 3, 2, TIMESTAMP(@menos_4, '09:05:00'), TIMESTAMP(@ayer, '10:00:00'), 7),
+    (10, TIMESTAMP(@hoy, '11:00:00'), TIMESTAMP(@hoy, '12:30:00'), 'CONFIRMADA', NULL, NULL, NULL, 13, 4, 3, TIMESTAMP(@menos_5, '15:00:00'), TIMESTAMP(@ayer, '11:00:00'), 7),
+    (11, TIMESTAMP(@hoy, '14:30:00'), TIMESTAMP(@hoy, '15:00:00'), 'PENDIENTE',  NULL, NULL, NULL,  7, 5, 1, TIMESTAMP(@ayer, '17:00:00'), TIMESTAMP(@ayer, '17:00:00'), 7),
+    (12, TIMESTAMP(@hoy, '15:00:00'), TIMESTAMP(@hoy, '15:15:00'), 'PENDIENTE',  NULL, NULL, NULL, 10, 3, 5, TIMESTAMP(@ayer, '11:00:00'), TIMESTAMP(@ayer, '11:00:00'), 7),
 
     -- ----- PROXIMOS DIAS -----
-    (13, '2026-06-16 10:00:00', '2026-06-16 10:20:00', 'CONFIRMADA', NULL, NULL, NULL,  6, 4, 4, '2026-06-09 11:00:00', '2026-06-13 12:00:00', 7),
-    (14, '2026-06-16 09:00:00', '2026-06-16 09:30:00', 'CONFIRMADA', NULL, NULL, NULL,  1, 3, 1, '2026-06-13 09:00:00', '2026-06-13 09:00:00', 7),
-    (15, '2026-06-17 11:00:00', '2026-06-17 11:45:00', 'PENDIENTE',  NULL, NULL, NULL,  4, 5, 8, '2026-06-14 10:00:00', '2026-06-14 10:00:00', 7),
-    (16, '2026-06-18 15:00:00', '2026-06-18 16:00:00', 'CONFIRMADA', NULL, NULL, NULL, 14, 3, 6, '2026-06-13 16:00:00', '2026-06-13 16:00:00', 7),
-    (17, '2026-06-19 09:00:00', '2026-06-19 10:30:00', 'PENDIENTE',  NULL, NULL, NULL, 13, 4, 3, '2026-06-14 12:00:00', '2026-06-14 12:00:00', 7),
-    (18, '2026-06-16 09:00:00', '2026-06-16 09:30:00', 'CONFIRMADA', NULL, NULL, NULL,  5, 6, 1, '2026-06-13 13:00:00', '2026-06-13 13:00:00', 7);
+    (13, TIMESTAMP(@manana, '10:00:00'), TIMESTAMP(@manana, '10:20:00'), 'CONFIRMADA', NULL, NULL, NULL,  6, 4, 4, TIMESTAMP(@menos_6, '11:00:00'), TIMESTAMP(@ayer, '12:00:00'), 7),
+    (14, TIMESTAMP(@manana, '09:00:00'), TIMESTAMP(@manana, '09:30:00'), 'CONFIRMADA', NULL, NULL, NULL,  1, 3, 1, TIMESTAMP(@ayer, '09:00:00'), TIMESTAMP(@ayer, '09:00:00'), 7),
+    (15, TIMESTAMP(@mas_2,  '11:00:00'), TIMESTAMP(@mas_2,  '11:45:00'), 'PENDIENTE',  NULL, NULL, NULL,  4, 5, 8, TIMESTAMP(@ayer, '10:00:00'), TIMESTAMP(@ayer, '10:00:00'), 7),
+    (16, TIMESTAMP(@mas_3,  '15:00:00'), TIMESTAMP(@mas_3,  '16:00:00'), 'CONFIRMADA', NULL, NULL, NULL, 14, 3, 6, TIMESTAMP(@ayer, '16:00:00'), TIMESTAMP(@ayer, '16:00:00'), 7),
+    (17, TIMESTAMP(@mas_3,  '09:00:00'), TIMESTAMP(@mas_3,  '10:30:00'), 'PENDIENTE',  NULL, NULL, NULL, 13, 4, 3, TIMESTAMP(@ayer, '12:00:00'), TIMESTAMP(@ayer, '12:00:00'), 7),
+    (18, TIMESTAMP(@manana, '09:00:00'), TIMESTAMP(@manana, '09:30:00'), 'CONFIRMADA', NULL, NULL, NULL,  5, 6, 1, TIMESTAMP(@ayer, '13:00:00'), TIMESTAMP(@ayer, '13:00:00'), 7);
 
 -- =====================================================================
 -- 7) ATENCIONES  (solo para citas ATENDIDA: 1,2,3,4,5)
@@ -227,41 +292,41 @@ INSERT INTO atencion
     (fecha_hora, nota_clinica, diagnostico, nota_pre_operatoria, nota_post_operatoria, recomendacion_control,
      monto_referencial, descuento_aplicado, id_cita, created_on, modified_on, modified_by, activo)
 VALUES
-    ('2026-06-08 09:30:00',
+    (TIMESTAMP(@menos_7, '09:30:00'),
      'Paciente activo y reactivo. Mucosas rosadas, temperatura 38.5 C. Sin hallazgos relevantes.',
      'Paciente sano',
      NULL, NULL,
      'Mantener calendario de vacunacion al dia.',
-      80.00,  0.00, 1, '2026-06-08 09:30:00', '2026-06-08 09:30:00', 3, 1),
+      80.00,  0.00, 1, TIMESTAMP(@menos_7, '09:30:00'), TIMESTAMP(@menos_7, '09:30:00'), 3, 1),
 
-    ('2026-06-08 10:20:00',
+    (TIMESTAMP(@menos_7, '10:20:00'),
      'Se aplica vacuna sextuple. Tolera bien el procedimiento.',
      'Inmunizacion de rutina',
      NULL, NULL,
      'Refuerzo en 21 dias.',
-      60.00,  0.00, 2, '2026-06-08 10:20:00', '2026-06-08 10:20:00', 3, 1),
+      60.00,  0.00, 2, TIMESTAMP(@menos_7, '10:20:00'), TIMESTAMP(@menos_7, '10:20:00'), 3, 1),
 
-    ('2026-06-09 10:30:00',
+    (TIMESTAMP(@menos_6, '10:30:00'),
      'Cirugia de esterilizacion sin complicaciones. Anestesia y recuperacion normales.',
      'Esterilizacion electiva',
      'Ayuno de 8 horas confirmado. Examenes prequirurgicos dentro de rango.',
      'Herida limpia, sin sangrado. Se indica analgesico por 3 dias.',
      'Control post-operatorio en 7 dias para retiro de puntos.',
-     350.00, 50.00, 3, '2026-06-09 10:30:00', '2026-06-09 10:30:00', 4, 1),
+     350.00, 50.00, 3, TIMESTAMP(@menos_6, '10:30:00'), TIMESTAMP(@menos_6, '10:30:00'), 4, 1),
 
-    ('2026-06-10 11:45:00',
+    (TIMESTAMP(@menos_5, '11:45:00'),
      'Profilaxis dental completa. Se retira sarro. Encias levemente inflamadas.',
      'Enfermedad periodontal leve',
      NULL, NULL,
      'Cepillado dental 2 veces por semana. Control en 6 meses.',
-     200.00, 20.00, 4, '2026-06-10 11:45:00', '2026-06-10 11:45:00', 5, 1),
+     200.00, 20.00, 4, TIMESTAMP(@menos_5, '11:45:00'), TIMESTAMP(@menos_5, '11:45:00'), 5, 1),
 
-    ('2026-06-11 15:30:00',
+    (TIMESTAMP(@menos_4, '15:30:00'),
      'Consulta por chequeo general. Peso adecuado. Sin signos de dolor.',
      'Paciente sano',
      NULL, NULL,
      'Dieta balanceada y ejercicio diario.',
-      80.00, 10.00, 5, '2026-06-11 15:30:00', '2026-06-11 15:30:00', 3, 1);
+      80.00, 10.00, 5, TIMESTAMP(@menos_4, '15:30:00'), TIMESTAMP(@menos_4, '15:30:00'), 3, 1);
 
 -- =====================================================================
 -- 8) RECORDATORIOS  (canal WHATSAPP; estado_seguimiento PENDIENTE/ENVIADO)
@@ -269,18 +334,18 @@ VALUES
 INSERT INTO recordatorio
     (fecha_programada, canal, estado_seguimiento, mensaje, id_cita, created_on, modified_on, modified_by)
 VALUES
-    ('2026-06-14 18:00:00', 'WHATSAPP', 'ENVIADO',
-     'Hola, le recordamos su cita de manana 15/06 a las 10:00 con el Dr. Sanchez.', 9,  NOW(), NOW(), 7),
-    ('2026-06-14 18:00:00', 'WHATSAPP', 'ENVIADO',
-     'Hola, le recordamos la cirugia de Lola el 15/06 a las 11:00. Ayuno de 8 horas.', 10, NOW(), NOW(), 7),
-    ('2026-06-15 18:00:00', 'WHATSAPP', 'PENDIENTE',
-     'Recordatorio: control post-operatorio de Max el 16/06 a las 10:00.', 13, NOW(), NOW(), 7),
-    ('2026-06-15 18:00:00', 'WHATSAPP', 'PENDIENTE',
-     'Recordatorio: consulta de Firulais el 16/06 a las 09:00 con el Dr. Sanchez.', 14, NOW(), NOW(), 7),
-    ('2026-06-15 18:00:00', 'WHATSAPP', 'PENDIENTE',
-     'Recordatorio: consulta de Toby el 16/06 a las 09:00 con la Dra. Fernandez.', 18, NOW(), NOW(), 7),
-    ('2026-06-18 18:00:00', 'WHATSAPP', 'PENDIENTE',
-     'Recordatorio: cirugia de Lola el 19/06 a las 09:00. Ayuno de 8 horas.', 17, NOW(), NOW(), 7);
+    (TIMESTAMP(@ayer, '18:00:00'), 'WHATSAPP', 'ENVIADO',
+     CONCAT('Hola, le recordamos su cita de hoy ', DATE_FORMAT(@hoy, '%d/%m'), ' a las 10:00 con el Dr. Sanchez.'), 9,  NOW(), NOW(), 7),
+    (TIMESTAMP(@ayer, '18:00:00'), 'WHATSAPP', 'ENVIADO',
+     CONCAT('Hola, le recordamos la cirugia de Lola hoy ', DATE_FORMAT(@hoy, '%d/%m'), ' a las 11:00. Ayuno de 8 horas.'), 10, NOW(), NOW(), 7),
+    (TIMESTAMP(@hoy, '18:00:00'), 'WHATSAPP', 'PENDIENTE',
+     CONCAT('Recordatorio: control post-operatorio de Max el ', DATE_FORMAT(@manana, '%d/%m'), ' a las 10:00.'), 13, NOW(), NOW(), 7),
+    (TIMESTAMP(@hoy, '18:00:00'), 'WHATSAPP', 'PENDIENTE',
+     CONCAT('Recordatorio: consulta de Firulais el ', DATE_FORMAT(@manana, '%d/%m'), ' a las 09:00 con el Dr. Sanchez.'), 14, NOW(), NOW(), 7),
+    (TIMESTAMP(@hoy, '18:00:00'), 'WHATSAPP', 'PENDIENTE',
+     CONCAT('Recordatorio: consulta de Toby el ', DATE_FORMAT(@manana, '%d/%m'), ' a las 09:00 con la Dra. Fernandez.'), 18, NOW(), NOW(), 7),
+    (TIMESTAMP(@mas_2, '18:00:00'), 'WHATSAPP', 'PENDIENTE',
+     CONCAT('Recordatorio: cirugia de Lola el ', DATE_FORMAT(@mas_3, '%d/%m'), ' a las 09:00. Ayuno de 8 horas.'), 17, NOW(), NOW(), 7);
 
 -- =====================================================================
 -- FIN DEL SCRIPT DE DATOS DE PRUEBA
