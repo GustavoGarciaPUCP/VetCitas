@@ -1589,6 +1589,7 @@ BEGIN
       AND (id_usuario != p_id_excluir OR p_id_excluir IS NULL);
 END$$
 
+DELIMITER ;
 USE vetcitas_db;
 DELIMITER $$
 

@@ -40,7 +40,7 @@ public class UsuarioImpl implements IUsuarioDAO {
             }
 
         } catch (Exception ex) {
-            System.out.println("ERROR autenticando usuario: " + ex.getMessage());
+            throw new RuntimeException("Error consultando credenciales de usuario.", ex);
         } finally {
             try {
                 if (rs != null) rs.close();
