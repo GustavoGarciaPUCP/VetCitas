@@ -68,28 +68,32 @@ public class HorarioVeterinarioImpl implements IHorarioVeterinarioDAO {
         CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{CALL modificar_horario_veterinario(?, ?, ?, ?, ?, ?)}");
+            cs = con.prepareCall("{CALL modificar_horario_veterinario(?, ?, ?, ?, ?, ?, ?, ?, ?)}");
 
             cs.setInt(1, horario.getId());
-            cs.setTime(2, Time.valueOf(horario.getHoraInicio()));
-            cs.setTime(3, Time.valueOf(horario.getHoraFin()));
+            cs.setInt(2, horario.getVeterinario().getId());
+            cs.setInt(3, horario.getDiaSemana());
+            cs.setTime(4, Time.valueOf(horario.getHoraInicio()));
+            cs.setTime(5, Time.valueOf(horario.getHoraFin()));
 
             if (horario.getHoraDescansoInicio() != null) {
-                cs.setTime(4, Time.valueOf(horario.getHoraDescansoInicio()));
+                cs.setTime(6, Time.valueOf(horario.getHoraDescansoInicio()));
             } else {
-                cs.setNull(4, Types.TIME);
+                cs.setNull(6, Types.TIME);
             }
 
             if (horario.getHoraDescansoFin() != null) {
-                cs.setTime(5, Time.valueOf(horario.getHoraDescansoFin()));
+                cs.setTime(7, Time.valueOf(horario.getHoraDescansoFin()));
             } else {
-                cs.setNull(5, Types.TIME);
+                cs.setNull(7, Types.TIME);
             }
 
+            cs.setBoolean(8, horario.isActivo());
+
             if (horario.getModifiedBy() != null) {
-                cs.setInt(6, horario.getModifiedBy().getId());
+                cs.setInt(9, horario.getModifiedBy().getId());
             } else {
-                cs.setNull(6, Types.INTEGER);
+                cs.setNull(9, Types.INTEGER);
             }
 
             resultado = cs.executeUpdate();

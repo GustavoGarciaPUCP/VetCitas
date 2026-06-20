@@ -326,6 +326,39 @@ public class AdministradorImpl implements IAdministradorDAO {
         }
         return existe;
     }
+
+    @Override
+    public int modificarUsuarioBasico(Usuario usuario, int modifiedBy) {
+        int resultado = 0;
+        Connection con = null;
+        CallableStatement cs = null;
+        try {
+            con = DBManager.getInstance().getConnection();
+            cs = con.prepareCall("{CALL modificar_usuario_basico(?, ?, ?, ?, ?, ?, ?, ?)}");
+            cs.setInt(1, usuario.getId());
+            cs.setString(2, usuario.getUsername());
+            cs.setString(3, usuario.getNombres());
+            cs.setString(4, usuario.getApellidos());
+            cs.setString(5, usuario.getTelefono());
+            cs.setString(6, usuario.getEmail());
+            cs.setBoolean(7, usuario.isActivo());
+            cs.setInt(8, modifiedBy);
+
+            resultado = cs.executeUpdate();
+
+        } catch (Exception ex) {
+            System.out.println("ERROR modificando usuario basico: " + ex.getMessage());
+        } finally {
+            try {
+                if (cs != null) cs.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("ERROR cerrando recursos en modificarUsuarioBasico: " + ex.getMessage());
+            }
+        }
+        return resultado;
+    }
+
     @Override
     public List<Usuario> listarUsuariosFiltrados(String texto, String codigoRol, Boolean activo) {
         List<Usuario> usuarios = new ArrayList<>();

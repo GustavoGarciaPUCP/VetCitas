@@ -9,5 +9,6 @@ import java.util.List;
 public interface IAdministradorBO extends IBaseBO<Administrador> {
     void asignarRol(int idUsuario, String codigoRol) throws Exception;
     void revocarRol(int idUsuario, String codigoRol) throws Exception;
+    int modificarUsuarioBasico(Usuario usuario, int modifiedBy) throws Exception;
     List<Usuario> listarUsuariosFiltrados(String texto, String codigoRol, Boolean activo) throws Exception;
 }

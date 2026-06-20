@@ -13,5 +13,6 @@ public interface IAdministradorDAO extends IDAO<Administrador> {
     List<RolSistema> listarRolesDeUsuario(int idUsuario);
     List<String> listarPermisosDeUsuario(int idUsuario);
     boolean existeUsername(String username, Integer idExcluir);
+    int modificarUsuarioBasico(Usuario usuario, int modifiedBy);
     List<Usuario> listarUsuariosFiltrados(String texto, String codigoRol, Boolean activo);
 }
