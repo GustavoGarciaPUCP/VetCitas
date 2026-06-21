@@ -25,6 +25,7 @@ DROP PROCEDURE IF EXISTS modificar_recepcionista $$
 DROP PROCEDURE IF EXISTS buscar_recepcionista_por_id $$
 DROP PROCEDURE IF EXISTS listar_recepcionistas $$
 DROP PROCEDURE IF EXISTS eliminar_usuario_logico $$
+DROP PROCEDURE IF EXISTS modificar_usuario_basico $$
 
 DROP PROCEDURE IF EXISTS insertar_permiso $$
 DROP PROCEDURE IF EXISTS modificar_permiso $$
@@ -248,6 +249,29 @@ BEGIN
 
     UPDATE usuario
     SET activo = 0, modified_on = NOW(), modified_by = p_modified_by
+    WHERE id_usuario = p_id_usuario;
+END $$
+
+CREATE PROCEDURE modificar_usuario_basico(
+    IN p_id_usuario INT,
+    IN p_username VARCHAR(50),
+    IN p_nombres VARCHAR(100),
+    IN p_apellidos VARCHAR(100),
+    IN p_telefono VARCHAR(20),
+    IN p_email VARCHAR(100),
+    IN p_activo TINYINT,
+    IN p_modified_by INT
+)
+BEGIN
+    UPDATE usuario
+    SET username = p_username,
+        nombres = p_nombres,
+        apellidos = p_apellidos,
+        telefono = p_telefono,
+        email = p_email,
+        activo = p_activo,
+        modified_on = NOW(),
+        modified_by = p_modified_by
     WHERE id_usuario = p_id_usuario;
 END $$
 
@@ -999,14 +1023,17 @@ BEGIN
 END $$
 
 CREATE PROCEDURE modificar_horario_veterinario(
-    IN p_id_horario INT, IN p_hora_inicio TIME, IN p_hora_fin TIME,
-    IN p_hora_descanso_inicio TIME, IN p_hora_descanso_fin TIME, IN p_modified_by INT
+    IN p_id_horario INT, IN p_id_veterinario INT, IN p_dia_semana TINYINT,
+    IN p_hora_inicio TIME, IN p_hora_fin TIME,
+    IN p_hora_descanso_inicio TIME, IN p_hora_descanso_fin TIME,
+    IN p_activo TINYINT, IN p_modified_by INT
 )
 BEGIN
     UPDATE horario_veterinario
-    SET hora_inicio = p_hora_inicio, hora_fin = p_hora_fin,
+    SET id_veterinario = p_id_veterinario, dia_semana = p_dia_semana,
+        hora_inicio = p_hora_inicio, hora_fin = p_hora_fin,
         hora_descanso_inicio = p_hora_descanso_inicio, hora_descanso_fin = p_hora_descanso_fin,
-        modified_on = NOW(), modified_by = p_modified_by
+        activo = p_activo, modified_on = NOW(), modified_by = p_modified_by
     WHERE id_horario = p_id_horario;
 END $$
 
@@ -1028,8 +1055,8 @@ CREATE PROCEDURE listar_horarios_veterinario(IN p_id_veterinario INT)
 BEGIN
     SELECT id_horario, id_veterinario, dia_semana, hora_inicio, hora_fin, hora_descanso_inicio, hora_descanso_fin, activo
     FROM horario_veterinario
-    WHERE id_veterinario = p_id_veterinario AND activo = 1
-    ORDER BY dia_semana;
+    WHERE id_veterinario = p_id_veterinario
+    ORDER BY dia_semana, hora_inicio;
 END $$
 
 CREATE PROCEDURE listar_horarios_veterinario_todos()
@@ -1562,6 +1589,7 @@ BEGIN
       AND (id_usuario != p_id_excluir OR p_id_excluir IS NULL);
 END$$
 
+DELIMITER ;
 USE vetcitas_db;
 DELIMITER $$
 
@@ -1998,16 +2026,17 @@ BEGIN
     WHERE (
             p_texto IS NULL
             OR TRIM(p_texto) = ''
-            OR u.username LIKE CONCAT('%', p_texto, '%')
-            OR u.nombres LIKE CONCAT('%', p_texto, '%')
-            OR u.apellidos LIKE CONCAT('%', p_texto, '%')
-            OR CONCAT(u.nombres, ' ', u.apellidos) LIKE CONCAT('%', p_texto, '%')
-            OR u.email LIKE CONCAT('%', p_texto, '%')
+            OR LOWER(u.username) LIKE CONCAT('%', LOWER(TRIM(p_texto)), '%')
+            OR LOWER(u.nombres) LIKE CONCAT('%', LOWER(TRIM(p_texto)), '%')
+            OR LOWER(u.apellidos) LIKE CONCAT('%', LOWER(TRIM(p_texto)), '%')
+            OR LOWER(CONCAT(u.nombres, ' ', u.apellidos)) LIKE CONCAT('%', LOWER(TRIM(p_texto)), '%')
+            OR LOWER(u.email) LIKE CONCAT('%', LOWER(TRIM(p_texto)), '%')
+            OR u.telefono LIKE CONCAT('%', TRIM(p_texto), '%')
           )
       AND (
             p_codigo_rol IS NULL
             OR TRIM(p_codigo_rol) = ''
-            OR rs.codigo = p_codigo_rol
+            OR rs.codigo = UPPER(TRIM(p_codigo_rol))
           )
       AND (
             p_activo IS NULL

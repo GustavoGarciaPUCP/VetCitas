@@ -119,6 +119,28 @@ public class AdministradorBOImpl implements IAdministradorBO {
     }
 
     @Override
+    public int modificarUsuarioBasico(Usuario usuario, int modifiedBy) throws Exception {
+        validarUsuarioBasico(usuario);
+
+        if (modifiedBy <= 0) {
+            throw new Exception("El usuario que modifica es obligatorio.");
+        }
+
+        if (administradorDAO.existeUsername(usuario.getUsername(), usuario.getId())) {
+            throw new Exception("El username '" + usuario.getUsername() + "' ya estÃ¡ ocupado por otro usuario.");
+        }
+
+        if (!usuario.isActivo()) {
+            Administrador admin = administradorDAO.buscarPorId(usuario.getId());
+            if (admin != null && admin.isEsSuperAdmin()) {
+                throw new Exception("OperaciÃ³n denegada: No se puede inactivar al Super Administrador.");
+            }
+        }
+
+        return administradorDAO.modificarUsuarioBasico(usuario, modifiedBy);
+    }
+
+    @Override
     public List<Usuario> listarUsuariosFiltrados(String texto, String codigoRol, Boolean activo) throws Exception {
         if (texto == null) texto = "";
         texto = texto.trim();
@@ -158,6 +180,31 @@ public class AdministradorBOImpl implements IAdministradorBO {
         }
         validarEmailObligatorio(admin.getEmail());
         admin.setEmail(admin.getEmail().trim());
+    }
+
+    private void validarUsuarioBasico(Usuario usuario) throws Exception {
+        if (usuario == null) {
+            throw new Exception("El usuario no puede ser nulo.");
+        }
+        if (usuario.getId() <= 0) {
+            throw new Exception("El id del usuario es obligatorio.");
+        }
+        if (usuario.getUsername() == null || usuario.getUsername().trim().isEmpty()) {
+            throw new Exception("El nombre de usuario es obligatorio.");
+        }
+        if (usuario.getNombres() == null || usuario.getNombres().trim().isEmpty()) {
+            throw new Exception("Los nombres son obligatorios.");
+        }
+        if (usuario.getApellidos() == null || usuario.getApellidos().trim().isEmpty()) {
+            throw new Exception("Los apellidos son obligatorios.");
+        }
+        validarEmailObligatorio(usuario.getEmail());
+
+        usuario.setUsername(usuario.getUsername().trim());
+        usuario.setNombres(usuario.getNombres().trim());
+        usuario.setApellidos(usuario.getApellidos().trim());
+        usuario.setEmail(usuario.getEmail().trim());
+        usuario.setTelefono(usuario.getTelefono() == null ? "" : usuario.getTelefono().trim());
     }
 
     private void validarEmailObligatorio(String email) throws Exception {

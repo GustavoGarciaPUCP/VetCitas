@@ -71,6 +71,14 @@ public class AdministradorRS {
         administradorBO.revocarRol(idUsuario, codigoRol);
     }
 
+    @PUT
+    @Path("/modificarUsuarioBasico/{modifiedBy}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public int modificarUsuarioBasico(Usuario usuario, @PathParam("modifiedBy") int modifiedBy) throws Exception {
+        return administradorBO.modificarUsuarioBasico(usuario, modifiedBy);
+    }
+
     @GET
     @Path("/listarUsuariosFiltrados")
     @Produces(MediaType.APPLICATION_JSON)

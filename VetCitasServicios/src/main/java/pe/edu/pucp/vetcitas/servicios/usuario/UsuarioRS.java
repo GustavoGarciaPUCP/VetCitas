@@ -2,6 +2,7 @@ package pe.edu.pucp.vetcitas.servicios.usuario;
 
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import pe.edu.pucp.vetcitas.usuario.model.Usuario;
 import pe.edu.pucp.vetcitas.usuario.bo.UsuarioBOImpl;
@@ -20,11 +21,31 @@ public class UsuarioRS {
     @Path("/autenticar")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
-    public Usuario autenticar(
+    public Response autenticar(
             @FormParam("username") String username,
-            @FormParam("contrasenaPlana") String contrasenaPlana) throws Exception {
+            @FormParam("contrasenaPlana") String contrasenaPlana) {
 
-        return usuarioBO.autenticar(username, contrasenaPlana);
+        try {
+            Usuario usuario = usuarioBO.autenticar(username, contrasenaPlana);
+            return Response.ok(usuario).build();
+        } catch (Exception ex) {
+            String mensaje = ex.getMessage() == null ? "" : ex.getMessage().toLowerCase();
+            boolean errorAutenticacion = mensaje.contains("credenciales")
+                    || mensaje.contains("username")
+                    || mensaje.contains("contrase");
+
+            Response.Status estado = errorAutenticacion
+                    ? Response.Status.UNAUTHORIZED
+                    : Response.Status.INTERNAL_SERVER_ERROR;
+            String respuesta = errorAutenticacion
+                    ? "{\"mensaje\":\"Usuario o contrasena incorrectos.\"}"
+                    : "{\"mensaje\":\"No se pudo validar el usuario. Verifica el backend y la base de datos.\"}";
+
+            return Response.status(estado)
+                    .entity(respuesta)
+                    .type(MediaType.APPLICATION_JSON)
+                    .build();
+        }
     }
 
     @POST
