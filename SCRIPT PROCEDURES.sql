@@ -83,6 +83,7 @@ DROP PROCEDURE IF EXISTS listar_atenciones $$
 DROP PROCEDURE IF EXISTS insertar_recordatorio $$
 DROP PROCEDURE IF EXISTS modificar_recordatorio $$
 DROP PROCEDURE IF EXISTS eliminar_recordatorio $$
+DROP PROCEDURE IF EXISTS eliminar_recordatorios_por_cita $$
 DROP PROCEDURE IF EXISTS buscar_recordatorio_por_id $$
 DROP PROCEDURE IF EXISTS listar_recordatorios $$
 
@@ -1138,6 +1139,20 @@ BEGIN
     ) THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La mascota ya tiene una cita en ese rango';
     END IF;
+
+    IF p_id_mascota IS NOT NULL AND EXISTS (
+        SELECT 1
+        FROM mascota m_nueva
+        INNER JOIN mascota m_existente ON m_existente.id_cliente = m_nueva.id_cliente
+        INNER JOIN cita c ON c.id_mascota = m_existente.id_mascota
+        WHERE m_nueva.id_mascota = p_id_mascota
+          AND c.estado IN ('PENDIENTE','CONFIRMADA','EN_CONSULTA')
+          AND (p_id_cita_excluir IS NULL OR c.id_cita <> p_id_cita_excluir)
+          AND p_fecha_hora_inicio < c.fecha_hora_fin
+          AND v_fecha_hora_fin > c.fecha_hora_inicio
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El cliente ya tiene una cita en ese rango';
+    END IF;
 END $$
 
 CREATE PROCEDURE listar_veterinarios_disponibles(
@@ -1575,6 +1590,19 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Estado de seguimiento invalido. Valores permitidos: PENDIENTE, ENVIADO.';
     END IF;
 
+    IF NOT EXISTS (
+        SELECT 1
+        FROM cita
+        WHERE id_cita = p_id_cita
+          AND estado = 'CONFIRMADA'
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Solo se pueden crear recordatorios para citas confirmadas.';
+    END IF;
+
+    DELETE FROM recordatorio
+    WHERE id_cita = p_id_cita
+      AND estado_seguimiento = 'PENDIENTE';
+
     INSERT INTO recordatorio(fecha_programada, canal, estado_seguimiento, mensaje, id_cita, created_on, modified_on, modified_by)
     VALUES(p_fecha_programada, p_canal, p_estado_seguimiento, p_mensaje, p_id_cita, NOW(), NOW(), p_modified_by);
     SET p_id_generado = LAST_INSERT_ID();
@@ -1589,6 +1617,15 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Estado de seguimiento invalido. Valores permitidos: PENDIENTE, ENVIADO.';
     END IF;
 
+    IF NOT EXISTS (
+        SELECT 1
+        FROM cita
+        WHERE id_cita = p_id_cita
+          AND estado = 'CONFIRMADA'
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Solo se pueden modificar recordatorios de citas confirmadas.';
+    END IF;
+
     UPDATE recordatorio
     SET fecha_programada = p_fecha_programada, canal = p_canal, estado_seguimiento = p_estado_seguimiento,
         mensaje = p_mensaje, id_cita = p_id_cita, modified_on = NOW(), modified_by = p_modified_by
@@ -1600,6 +1637,11 @@ BEGIN
     DELETE FROM recordatorio WHERE id_recordatorio = p_id_recordatorio;
 END $$
 
+CREATE PROCEDURE eliminar_recordatorios_por_cita(IN p_id_cita INT)
+BEGIN
+    DELETE FROM recordatorio WHERE id_cita = p_id_cita;
+END $$
+
 CREATE PROCEDURE buscar_recordatorio_por_id(IN p_id_recordatorio INT)
 BEGIN
     SELECT *
@@ -1609,9 +1651,11 @@ END $$
 
 CREATE PROCEDURE listar_recordatorios()
 BEGIN
-    SELECT *
-    FROM recordatorio
-    ORDER BY fecha_programada;
+    SELECT r.*
+    FROM recordatorio r
+    INNER JOIN cita ci ON ci.id_cita = r.id_cita
+    WHERE ci.estado = 'CONFIRMADA'
+    ORDER BY r.fecha_programada;
 END $$
 
 DELIMITER ;
@@ -1822,7 +1866,8 @@ BEGIN
     INNER JOIN cita ci ON ci.id_cita = r.id_cita
     INNER JOIN mascota m ON m.id_mascota = ci.id_mascota
     INNER JOIN cliente c ON c.id_cliente = m.id_cliente
-    WHERE (
+    WHERE ci.estado = 'CONFIRMADA'
+      AND (
             p_texto IS NULL
             OR TRIM(p_texto) = ''
             OR m.nombre LIKE CONCAT('%', p_texto, '%')
@@ -1857,7 +1902,8 @@ BEGIN
     INNER JOIN cita ci ON ci.id_cita = r.id_cita
     INNER JOIN mascota m ON m.id_mascota = ci.id_mascota
     INNER JOIN cliente c ON c.id_cliente = m.id_cliente
-    WHERE (
+    WHERE ci.estado = 'CONFIRMADA'
+      AND (
             p_estado IS NULL
             OR TRIM(p_estado) = ''
             OR r.estado_seguimiento = p_estado
@@ -2457,8 +2503,10 @@ CREATE PROCEDURE contar_recordatorios_pendientes(
 )
 BEGIN
     SELECT COUNT(*) INTO p_total
-    FROM recordatorio
-    WHERE estado_seguimiento = 'PENDIENTE';
+    FROM recordatorio r
+    INNER JOIN cita ci ON ci.id_cita = r.id_cita
+    WHERE r.estado_seguimiento = 'PENDIENTE'
+      AND ci.estado = 'CONFIRMADA';
 END $$
 
 CREATE PROCEDURE contar_citas_por_estado_en_rango(
