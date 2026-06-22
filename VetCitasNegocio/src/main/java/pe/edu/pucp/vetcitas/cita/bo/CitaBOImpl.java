@@ -29,18 +29,6 @@ public class CitaBOImpl implements ICitaBO {
     public int insertar(Cita cita) throws Exception {
         validar(cita, false);
 
-        // Validación de horario del veterinario y solapamiento (cruces) con otras citas.
-        // Antes solo se hacía en el chequeo previo del frontend; ahora el backend la exige
-        // en el propio insert, igual que reprogramar() y cambiarVeterinario().
-        boolean disponible = citaDAO.validarDisponibilidadSlot(
-                cita.getVeterinario().getId(),
-                cita.getFechaHoraInicio(),
-                cita.getFechaHoraFin()
-        );
-        if (!disponible) {
-            throw new Exception("El veterinario no está disponible en ese horario: está fuera de su horario de atención o se cruza con otra cita.");
-        }
-
         int idGenerado = citaDAO.insertar(cita);
 
         // Recordatorio automático: pedir al cliente que confirme su asistencia
@@ -108,16 +96,6 @@ public class CitaBOImpl implements ICitaBO {
         if (cita.getEstado() != EstadoCita.PENDIENTE &&
                 cita.getEstado() != EstadoCita.CONFIRMADA) {
             throw new Exception("Solo se pueden reprogramar citas pendientes o confirmadas.");
-        }
-
-        boolean disponible = citaDAO.validarDisponibilidadSlot(
-                cita.getVeterinario().getId(),
-                nuevaFechaHoraInicio,
-                nuevaFechaHoraFin
-        );
-
-        if (!disponible) {
-            throw new Exception("El veterinario no está disponible en el nuevo horario.");
         }
 
         citaDAO.reprogramar(
