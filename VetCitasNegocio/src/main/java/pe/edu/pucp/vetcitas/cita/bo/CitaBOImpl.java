@@ -29,27 +29,7 @@ public class CitaBOImpl implements ICitaBO {
     public int insertar(Cita cita) throws Exception {
         validar(cita, false);
 
-        // Validación de horario del veterinario y solapamiento (cruces) con otras citas.
-        // Antes solo se hacía en el chequeo previo del frontend; ahora el backend la exige
-        // en el propio insert, igual que reprogramar() y cambiarVeterinario().
-        boolean disponible = citaDAO.validarDisponibilidadSlot(
-                cita.getVeterinario().getId(),
-                cita.getFechaHoraInicio(),
-                cita.getFechaHoraFin()
-        );
-        if (!disponible) {
-            throw new Exception("El veterinario no está disponible en ese horario: está fuera de su horario de atención o se cruza con otra cita.");
-        }
-
-        int idGenerado = citaDAO.insertar(cita);
-
-        // Recordatorio automático: pedir al cliente que confirme su asistencia
-        Cita creada = citaDAO.buscarPorId(idGenerado);
-        if (creada != null) {
-            crearRecordatorio(creada, mensajeConfirmacion(creada), LocalDateTime.now());
-        }
-
-        return idGenerado;
+        return citaDAO.insertar(cita);
     }
 
     @Override
@@ -110,16 +90,6 @@ public class CitaBOImpl implements ICitaBO {
             throw new Exception("Solo se pueden reprogramar citas pendientes o confirmadas.");
         }
 
-        boolean disponible = citaDAO.validarDisponibilidadSlot(
-                cita.getVeterinario().getId(),
-                nuevaFechaHoraInicio,
-                nuevaFechaHoraFin
-        );
-
-        if (!disponible) {
-            throw new Exception("El veterinario no está disponible en el nuevo horario.");
-        }
-
         citaDAO.reprogramar(
                 idCita,
                 nuevaFechaHoraInicio,
@@ -128,8 +98,7 @@ public class CitaBOImpl implements ICitaBO {
                 modifiedBy
         );
 
-        // Recordatorio automático: avisar la nueva fecha/hora
-        crearRecordatorio(cita, mensajeReprogramacion(cita, nuevaFechaHoraInicio), LocalDateTime.now());
+        sincronizarRecordatorioConfirmado(idCita);
     }
 
     @Override
@@ -270,8 +239,7 @@ public class CitaBOImpl implements ICitaBO {
         }
         citaDAO.cancelarCita(idCita,motivoCancelacion, modifiedBy);
 
-        // Recordatorio automático: avisar la cancelación e invitar a reagendar
-        crearRecordatorio(cita, mensajeCancelacion(cita), LocalDateTime.now());
+        eliminarRecordatoriosDeCita(idCita);
     }
 
     @Override
@@ -286,7 +254,8 @@ public class CitaBOImpl implements ICitaBO {
         citaDAO.confirmarCita(idCita, modifiedBy);
 
         // Recordatorio automático previo (se enviará el día anterior a la cita)
-        crearRecordatorio(cita, mensajePrevio(cita), fechaProgramadaPrevio(cita));
+        Cita confirmada = buscarPorId(idCita);
+        reemplazarRecordatorioConfirmado(confirmada);
     }
 
     @Override
@@ -309,6 +278,7 @@ public class CitaBOImpl implements ICitaBO {
             throw new Exception("El usuario que modifica es obligatorio.");
         }
         citaDAO.marcarAtendida(idCita, modifiedBy);
+        eliminarRecordatoriosDeCita(idCita);
     }
 
     @Override
@@ -325,12 +295,45 @@ public class CitaBOImpl implements ICitaBO {
         }
         citaDAO.marcarNoAsistio(idCita, modifiedBy);
 
-        // Recordatorio automático: avisar la inasistencia e invitar a reagendar
-        crearRecordatorio(cita, mensajeNoAsistio(cita), LocalDateTime.now());
+        eliminarRecordatoriosDeCita(idCita);
     }
 
     // ======== Recordatorios automáticos (WhatsApp) ========
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy 'a las' HH:mm");
+
+    private void sincronizarRecordatorioConfirmado(int idCita) {
+        try {
+            Cita actualizada = citaDAO.buscarPorId(idCita);
+            if (actualizada != null && actualizada.getEstado() == EstadoCita.CONFIRMADA) {
+                reemplazarRecordatorioConfirmado(actualizada);
+            } else {
+                eliminarRecordatoriosDeCita(idCita);
+            }
+        } catch (Exception ex) {
+            System.out.println("No se pudo sincronizar el recordatorio de la cita: " + ex.getMessage());
+        }
+    }
+
+    private void reemplazarRecordatorioConfirmado(Cita cita) {
+        if (cita == null || cita.getId() <= 0) {
+            return;
+        }
+
+        eliminarRecordatoriosDeCita(cita.getId());
+
+        if (cita.getEstado() == EstadoCita.CONFIRMADA) {
+            crearRecordatorio(cita, mensajePrevio(cita), fechaProgramadaPrevio(cita));
+        }
+    }
+
+    private void eliminarRecordatoriosDeCita(int idCita) {
+        try {
+            recordatorioDAO.eliminarPorCita(idCita);
+        } catch (Exception ex) {
+            // Un fallo en recordatorios no debe revertir la operacion principal de la cita.
+            System.out.println("No se pudieron eliminar recordatorios de la cita: " + ex.getMessage());
+        }
+    }
 
     private void crearRecordatorio(Cita cita, String mensaje, LocalDateTime fechaProgramada) {
         try {

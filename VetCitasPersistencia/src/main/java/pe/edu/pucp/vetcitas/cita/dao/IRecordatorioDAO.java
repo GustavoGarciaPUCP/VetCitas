@@ -10,5 +10,6 @@ public interface IRecordatorioDAO extends IDAO<Recordatorio> {
     List<Recordatorio> listarPorMascotaOCliente(String texto);
     List<Recordatorio> listarPorEstadoYFecha(String estado, LocalDate fecha);
     void marcarEnviado(int idRecordatorio, int modifiedBy);
+    int eliminarPorCita(int idCita);
     int contarPendientes();
 }

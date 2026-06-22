@@ -31,7 +31,7 @@ public class DBManager {
             // Comentamos el println para que no te sature la consola con cada consulta
             // System.out.println("Se ha realizado la conexión");
         } catch (Exception ex) {
-            System.out.println("Error al conectarse con la BD: " + ex.getMessage());
+            throw new RuntimeException("Error al conectarse con la BD: " + ex.getMessage(), ex);
         }
         return con;
     }

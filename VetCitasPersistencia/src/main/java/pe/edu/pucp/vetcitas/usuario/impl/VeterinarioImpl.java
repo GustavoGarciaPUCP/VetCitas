@@ -41,7 +41,7 @@ public class VeterinarioImpl implements IVeterinarioDAO {
             veterinario.setId(idGenerado);
 
         } catch (Exception ex) {
-            System.out.println("ERROR insertando veterinario: " + ex.getMessage());
+            throw new RuntimeException("ERROR insertando veterinario: " + ex.getMessage(), ex);
         } finally {
             try {
                 if (cs != null) cs.close();
@@ -81,7 +81,7 @@ public class VeterinarioImpl implements IVeterinarioDAO {
             resultado = cs.executeUpdate();
 
         } catch (Exception ex) {
-            System.out.println("ERROR modificando veterinario: " + ex.getMessage());
+            throw new RuntimeException("ERROR modificando veterinario: " + ex.getMessage(), ex);
         } finally {
             try {
                 if (cs != null) cs.close();
@@ -106,7 +106,7 @@ public class VeterinarioImpl implements IVeterinarioDAO {
             resultado = cs.executeUpdate();
 
         } catch (Exception ex) {
-            System.out.println("ERROR eliminando veterinario: " + ex.getMessage());
+            throw new RuntimeException("ERROR eliminando veterinario: " + ex.getMessage(), ex);
         } finally {
             try {
                 if (cs != null) cs.close();

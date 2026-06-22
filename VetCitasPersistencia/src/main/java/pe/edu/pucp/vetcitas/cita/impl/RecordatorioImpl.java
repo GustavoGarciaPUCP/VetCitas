@@ -96,6 +96,25 @@ public class RecordatorioImpl implements IRecordatorioDAO {
     }
 
     @Override
+    public int eliminarPorCita(int idCita) {
+        int resultado = 0;
+        Connection con = null;
+        CallableStatement cs = null;
+        try {
+            con = DBManager.getInstance().getConnection();
+            cs = con.prepareCall("{CALL eliminar_recordatorios_por_cita(?)}");
+            cs.setInt(1, idCita);
+            resultado = cs.executeUpdate();
+        } catch (Exception ex) {
+            System.out.println("ERROR eliminando recordatorios por cita: " + ex.getMessage());
+        } finally {
+            try { if (cs != null) cs.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+            try { if (con != null) con.close(); } catch (Exception ex) { System.out.println("ERROR: " + ex.getMessage()); }
+        }
+        return resultado;
+    }
+
+    @Override
     public Recordatorio buscarPorId(int id) {
         Recordatorio recordatorio = null;
         Connection con = null;

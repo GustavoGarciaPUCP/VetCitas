@@ -52,7 +52,7 @@ public class AdministradorImpl implements IAdministradorDAO {
             administrador.setId(idGenerado);
 
         } catch (Exception ex) {
-            System.out.println("ERROR insertando administrador: " + ex.getMessage());
+            throw new RuntimeException("ERROR insertando administrador: " + ex.getMessage(), ex);
         } finally {
             try {
                 if (cs != null) cs.close();
@@ -92,7 +92,7 @@ public class AdministradorImpl implements IAdministradorDAO {
             resultado = cs.executeUpdate();
 
         } catch (Exception ex) {
-            System.out.println("ERROR modificando administrador: " + ex.getMessage());
+            throw new RuntimeException("ERROR modificando administrador: " + ex.getMessage(), ex);
         } finally {
             try {
                 if (cs != null) cs.close();
@@ -117,7 +117,7 @@ public class AdministradorImpl implements IAdministradorDAO {
             resultado = cs.executeUpdate();
 
         } catch (Exception ex) {
-            System.out.println("ERROR eliminando administrador: " + ex.getMessage());
+            throw new RuntimeException("ERROR eliminando administrador: " + ex.getMessage(), ex);
         } finally {
             try {
                 if (cs != null) cs.close();
@@ -224,7 +224,7 @@ public class AdministradorImpl implements IAdministradorDAO {
             cs.executeUpdate();
 
         } catch (Exception ex) {
-            System.out.println("ERROR asignando rol a usuario: " + ex.getMessage());
+            throw new RuntimeException("ERROR asignando rol a usuario: " + ex.getMessage(), ex);
         } finally {
             try {
                 if (cs != null) cs.close();
@@ -247,7 +247,7 @@ public class AdministradorImpl implements IAdministradorDAO {
             cs.executeUpdate();
 
         } catch (Exception ex) {
-            System.out.println("ERROR revocando rol de usuario: " + ex.getMessage());
+            throw new RuntimeException("ERROR revocando rol de usuario: " + ex.getMessage(), ex);
         } finally {
             try {
                 if (cs != null) cs.close();
@@ -315,7 +315,7 @@ public class AdministradorImpl implements IAdministradorDAO {
             existe = cs.getBoolean(3);
 
         } catch (Exception ex) {
-            System.out.println("ERROR verificando username: " + ex.getMessage());
+            throw new RuntimeException("ERROR verificando username: " + ex.getMessage(), ex);
         } finally {
             try {
                 if (cs != null) cs.close();
@@ -347,7 +347,7 @@ public class AdministradorImpl implements IAdministradorDAO {
             resultado = cs.executeUpdate();
 
         } catch (Exception ex) {
-            System.out.println("ERROR modificando usuario basico: " + ex.getMessage());
+            throw new RuntimeException("ERROR modificando usuario basico: " + ex.getMessage(), ex);
         } finally {
             try {
                 if (cs != null) cs.close();
@@ -419,7 +419,7 @@ public class AdministradorImpl implements IAdministradorDAO {
             usuarios.addAll(mapa.values());
 
         } catch (Exception ex) {
-            System.out.println("ERROR listando usuarios filtrados: " + ex.getMessage());
+            throw new RuntimeException("ERROR listando usuarios filtrados: " + ex.getMessage(), ex);
         } finally {
             try {
                 if (rs != null) rs.close();

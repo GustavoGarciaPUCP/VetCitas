@@ -345,7 +345,7 @@ VALUES
     (TIMESTAMP(@hoy, '18:00:00'), 'WHATSAPP', 'PENDIENTE',
      CONCAT('Recordatorio: consulta de Toby el ', DATE_FORMAT(@manana, '%d/%m'), ' a las 09:00 con la Dra. Fernandez.'), 18, NOW(), NOW(), 7),
     (TIMESTAMP(@mas_2, '18:00:00'), 'WHATSAPP', 'PENDIENTE',
-     CONCAT('Recordatorio: cirugia de Lola el ', DATE_FORMAT(@mas_3, '%d/%m'), ' a las 09:00. Ayuno de 8 horas.'), 17, NOW(), NOW(), 7);
+     CONCAT('Recordatorio: bano de Duque el ', DATE_FORMAT(@mas_3, '%d/%m'), ' a las 15:00.'), 16, NOW(), NOW(), 7);
 
 -- =====================================================================
 -- FIN DEL SCRIPT DE DATOS DE PRUEBA
