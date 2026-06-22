@@ -1084,7 +1084,7 @@ BEGIN
 END $$
 
 CREATE PROCEDURE validar_disponibilidad_cita(
-    IN p_id_veterinario INT, IN p_id_servicio INT, IN p_fecha_hora_inicio DATETIME, IN p_id_cita_excluir INT
+    IN p_id_veterinario INT, IN p_id_servicio INT, IN p_fecha_hora_inicio DATETIME, IN p_id_mascota INT, IN p_id_cita_excluir INT
 )
 BEGIN
     DECLARE v_duracion INT;
@@ -1125,6 +1125,18 @@ BEGIN
 
     IF v_solapa = 1 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El veterinario ya tiene una cita en ese rango';
+    END IF;
+
+    IF p_id_mascota IS NOT NULL AND EXISTS (
+        SELECT 1
+        FROM cita c
+        WHERE c.id_mascota = p_id_mascota
+          AND c.estado IN ('PENDIENTE','CONFIRMADA','EN_CONSULTA')
+          AND (p_id_cita_excluir IS NULL OR c.id_cita <> p_id_cita_excluir)
+          AND p_fecha_hora_inicio < c.fecha_hora_fin
+          AND v_fecha_hora_fin > c.fecha_hora_inicio
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La mascota ya tiene una cita en ese rango';
     END IF;
 END $$
 
@@ -1190,7 +1202,7 @@ BEGIN
     DECLARE v_duracion INT;
     DECLARE v_fecha_hora_fin DATETIME;
 
-    CALL validar_disponibilidad_cita(p_id_veterinario, p_id_servicio, p_fecha_hora_inicio, NULL);
+    CALL validar_disponibilidad_cita(p_id_veterinario, p_id_servicio, p_fecha_hora_inicio, p_id_mascota, NULL);
 
     SELECT duracion_minutos INTO v_duracion FROM servicio WHERE id_servicio = p_id_servicio;
     SET v_fecha_hora_fin = DATE_ADD(p_fecha_hora_inicio, INTERVAL v_duracion MINUTE);
@@ -1209,7 +1221,7 @@ BEGIN
     DECLARE v_duracion INT;
     DECLARE v_fecha_hora_fin DATETIME;
 
-    CALL validar_disponibilidad_cita(p_id_veterinario, p_id_servicio, p_fecha_hora_inicio, p_id_cita);
+    CALL validar_disponibilidad_cita(p_id_veterinario, p_id_servicio, p_fecha_hora_inicio, p_id_mascota, p_id_cita);
 
     SELECT duracion_minutos INTO v_duracion FROM servicio WHERE id_servicio = p_id_servicio;
     SET v_fecha_hora_fin = DATE_ADD(p_fecha_hora_inicio, INTERVAL v_duracion MINUTE);
@@ -1236,11 +1248,24 @@ BEGIN
         modified_by = p_modified_by
     WHERE id_cita = p_id_cita
       AND estado IN ('PENDIENTE', 'CONFIRMADA', 'EN_CONSULTA');
+
+    IF ROW_COUNT() = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La cita no existe o no se puede cancelar en su estado actual';
+    END IF;
 END $$
 
 CREATE PROCEDURE confirmar_cita(IN p_id_cita INT, IN p_modified_by INT)
 BEGIN
-    UPDATE cita SET estado = 'CONFIRMADA', modified_on = NOW(), modified_by = p_modified_by WHERE id_cita = p_id_cita;
+    UPDATE cita
+    SET estado = 'CONFIRMADA',
+        modified_on = NOW(),
+        modified_by = p_modified_by
+    WHERE id_cita = p_id_cita
+      AND estado = 'PENDIENTE';
+
+    IF ROW_COUNT() = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La cita no existe o no se puede confirmar en su estado actual';
+    END IF;
 END $$
 
 CREATE PROCEDURE marcar_cita_en_consulta(
@@ -1254,6 +1279,10 @@ BEGIN
         modified_by = p_modified_by
     WHERE id_cita = p_id_cita
       AND estado = 'CONFIRMADA';
+
+    IF ROW_COUNT() = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La cita no existe o no puede pasar a consulta desde su estado actual';
+    END IF;
 END $$
 
 CREATE PROCEDURE marcar_cita_atendida(
@@ -1267,11 +1296,24 @@ BEGIN
         modified_by = p_modified_by
     WHERE id_cita = p_id_cita
       AND estado = 'EN_CONSULTA';
+
+    IF ROW_COUNT() = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La cita no existe o no puede marcarse como atendida desde su estado actual';
+    END IF;
 END $$
 
 CREATE PROCEDURE marcar_cita_no_asistio(IN p_id_cita INT, IN p_modified_by INT)
 BEGIN
-    UPDATE cita SET estado = 'NO_ASISTIO', modified_on = NOW(), modified_by = p_modified_by WHERE id_cita = p_id_cita;
+    UPDATE cita
+    SET estado = 'NO_ASISTIO',
+        modified_on = NOW(),
+        modified_by = p_modified_by
+    WHERE id_cita = p_id_cita
+      AND estado IN ('PENDIENTE', 'CONFIRMADA');
+
+    IF ROW_COUNT() = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La cita no existe o no puede marcarse como no asistio desde su estado actual';
+    END IF;
 END $$
 
 DROP PROCEDURE IF EXISTS buscar_cita_por_id $$
@@ -2327,14 +2369,41 @@ CREATE PROCEDURE reprogramar_cita(
     IN p_modified_by INT
 )
 BEGIN
+    DECLARE v_id_veterinario INT DEFAULT NULL;
+    DECLARE v_id_mascota INT DEFAULT NULL;
+    DECLARE v_id_servicio INT DEFAULT NULL;
+    DECLARE v_duracion INT DEFAULT 0;
+    DECLARE v_fecha_hora_fin DATETIME;
+
+    SELECT id_veterinario, id_mascota, id_servicio
+    INTO v_id_veterinario, v_id_mascota, v_id_servicio
+    FROM cita
+    WHERE id_cita = p_id_cita;
+
+    IF v_id_veterinario IS NULL OR v_id_mascota IS NULL OR v_id_servicio IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La cita no existe o esta incompleta';
+    END IF;
+
+    CALL validar_disponibilidad_cita(v_id_veterinario, v_id_servicio, p_fecha_hora_inicio, v_id_mascota, p_id_cita);
+
+    SELECT duracion_minutos INTO v_duracion
+    FROM servicio
+    WHERE id_servicio = v_id_servicio AND activo = 1;
+
+    SET v_fecha_hora_fin = DATE_ADD(p_fecha_hora_inicio, INTERVAL v_duracion MINUTE);
+
     UPDATE cita
     SET fecha_hora_inicio = p_fecha_hora_inicio,
-        fecha_hora_fin = p_fecha_hora_fin,
+        fecha_hora_fin = v_fecha_hora_fin,
         motivo_reprogramacion = p_motivo_reprogramacion,
         modified_on = NOW(),
         modified_by = p_modified_by
     WHERE id_cita = p_id_cita
       AND estado IN ('PENDIENTE', 'CONFIRMADA');
+
+    IF ROW_COUNT() = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La cita no existe o no se puede reprogramar en su estado actual';
+    END IF;
 END $$
 
 CREATE PROCEDURE cambiar_veterinario_cita(
@@ -2343,12 +2412,31 @@ CREATE PROCEDURE cambiar_veterinario_cita(
     IN p_modified_by INT
 )
 BEGIN
+    DECLARE v_id_mascota INT DEFAULT NULL;
+    DECLARE v_id_servicio INT DEFAULT NULL;
+    DECLARE v_fecha_hora_inicio DATETIME DEFAULT NULL;
+
+    SELECT id_mascota, id_servicio, fecha_hora_inicio
+    INTO v_id_mascota, v_id_servicio, v_fecha_hora_inicio
+    FROM cita
+    WHERE id_cita = p_id_cita;
+
+    IF v_id_mascota IS NULL OR v_id_servicio IS NULL OR v_fecha_hora_inicio IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La cita no existe o esta incompleta';
+    END IF;
+
+    CALL validar_disponibilidad_cita(p_id_nuevo_veterinario, v_id_servicio, v_fecha_hora_inicio, v_id_mascota, p_id_cita);
+
     UPDATE cita
     SET id_veterinario = p_id_nuevo_veterinario,
         modified_on = NOW(),
         modified_by = p_modified_by
     WHERE id_cita = p_id_cita
       AND estado IN ('PENDIENTE', 'CONFIRMADA');
+
+    IF ROW_COUNT() = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La cita no existe o no se puede cambiar de veterinario en su estado actual';
+    END IF;
 END $$
 
 CREATE PROCEDURE marcar_recordatorio_enviado(

@@ -1,7 +1,9 @@
 package pe.edu.pucp.vetcitas.usuario.bo;
 
 import pe.edu.pucp.vetcitas.usuario.boi.IRecepcionistaBO;
+import pe.edu.pucp.vetcitas.usuario.dao.IAdministradorDAO;
 import pe.edu.pucp.vetcitas.usuario.dao.IRecepcionistaDAO;
+import pe.edu.pucp.vetcitas.usuario.impl.AdministradorImpl;
 import pe.edu.pucp.vetcitas.usuario.impl.RecepcionistaImpl;
 import pe.edu.pucp.vetcitas.usuario.model.Recepcionista;
 
@@ -11,14 +13,19 @@ import java.util.List;
 
 public class RecepcionistaBOImpl implements IRecepcionistaBO {
     private IRecepcionistaDAO recepcionistaDAO;
+    private IAdministradorDAO usuarioDAO;
 
     public RecepcionistaBOImpl() {
         this.recepcionistaDAO = new RecepcionistaImpl();
+        this.usuarioDAO = new AdministradorImpl();
     }
 
     @Override
     public int insertar(Recepcionista recepcionista) throws Exception {
         validar(recepcionista, false);
+        if (usuarioDAO.existeUsername(recepcionista.getUsername(), null)) {
+            throw new Exception("El username '" + recepcionista.getUsername() + "' ya esta en uso.");
+        }
         recepcionista.setContrasenaHash(hashSiNoEstaHasheada(recepcionista.getContrasenaHash()));
         return recepcionistaDAO.insertar(recepcionista);
     }
@@ -26,6 +33,9 @@ public class RecepcionistaBOImpl implements IRecepcionistaBO {
     @Override
     public int modificar(Recepcionista recepcionista) throws Exception {
         validar(recepcionista, true);
+        if (usuarioDAO.existeUsername(recepcionista.getUsername(), recepcionista.getId())) {
+            throw new Exception("El username '" + recepcionista.getUsername() + "' ya esta ocupado por otro usuario.");
+        }
         recepcionista.setContrasenaHash(hashSiNoEstaHasheada(recepcionista.getContrasenaHash()));
         return recepcionistaDAO.modificar(recepcionista);
     }

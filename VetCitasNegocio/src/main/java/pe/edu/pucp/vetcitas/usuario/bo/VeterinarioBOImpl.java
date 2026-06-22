@@ -1,7 +1,9 @@
 package pe.edu.pucp.vetcitas.usuario.bo;
 
 import pe.edu.pucp.vetcitas.usuario.boi.IVeterinarioBO;
+import pe.edu.pucp.vetcitas.usuario.dao.IAdministradorDAO;
 import pe.edu.pucp.vetcitas.usuario.dao.IVeterinarioDAO;
+import pe.edu.pucp.vetcitas.usuario.impl.AdministradorImpl;
 import pe.edu.pucp.vetcitas.usuario.impl.VeterinarioImpl;
 import pe.edu.pucp.vetcitas.usuario.model.Veterinario;
 
@@ -12,14 +14,19 @@ import java.util.List;
 
 public class VeterinarioBOImpl implements IVeterinarioBO {
     private IVeterinarioDAO veterinarioDAO;
+    private IAdministradorDAO usuarioDAO;
 
     public VeterinarioBOImpl() {
         this.veterinarioDAO = new VeterinarioImpl();
+        this.usuarioDAO = new AdministradorImpl();
     }
 
     @Override
     public int insertar(Veterinario veterinario) throws Exception {
         validar(veterinario, false);
+        if (usuarioDAO.existeUsername(veterinario.getUsername(), null)) {
+            throw new Exception("El username '" + veterinario.getUsername() + "' ya esta en uso.");
+        }
         veterinario.setContrasenaHash(hashSiNoEstaHasheada(veterinario.getContrasenaHash()));
         return veterinarioDAO.insertar(veterinario);
     }
@@ -27,6 +34,9 @@ public class VeterinarioBOImpl implements IVeterinarioBO {
     @Override
     public int modificar(Veterinario veterinario) throws Exception {
         validar(veterinario, true);
+        if (usuarioDAO.existeUsername(veterinario.getUsername(), veterinario.getId())) {
+            throw new Exception("El username '" + veterinario.getUsername() + "' ya esta ocupado por otro usuario.");
+        }
         veterinario.setContrasenaHash(hashSiNoEstaHasheada(veterinario.getContrasenaHash()));
         return veterinarioDAO.modificar(veterinario);
     }

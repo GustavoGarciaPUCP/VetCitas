@@ -44,7 +44,7 @@ public class CitaImpl implements ICitaDAO {
             cita.setId(idGenerado);
 
         } catch (Exception ex) {
-            System.out.println("ERROR insertando cita: " + ex.getMessage());
+            throw new RuntimeException("ERROR insertando cita: " + ex.getMessage(), ex);
         } finally {
             try {
                 if (cs != null) cs.close();
@@ -82,7 +82,7 @@ public class CitaImpl implements ICitaDAO {
             resultado = cs.executeUpdate();
 
         } catch (Exception ex) {
-            System.out.println("ERROR modificando cita: " + ex.getMessage());
+            throw new RuntimeException("ERROR modificando cita: " + ex.getMessage(), ex);
         } finally {
             try {
                 if (cs != null) cs.close();
@@ -116,7 +116,7 @@ public class CitaImpl implements ICitaDAO {
             }
 
         } catch (Exception ex) {
-            System.out.println("ERROR buscando cita por id: " + ex.getMessage());
+            throw new RuntimeException("ERROR buscando cita por id: " + ex.getMessage(), ex);
         } finally {
             try {
                 if (rs != null) rs.close();
@@ -145,7 +145,7 @@ public class CitaImpl implements ICitaDAO {
             }
 
         } catch (Exception ex) {
-            System.out.println("ERROR listando citas: " + ex.getMessage());
+            throw new RuntimeException("ERROR listando citas: " + ex.getMessage(), ex);
         } finally {
             try {
                 if (rs != null) rs.close();
@@ -171,7 +171,7 @@ public class CitaImpl implements ICitaDAO {
             cs.executeUpdate();
 
         } catch (Exception ex) {
-            System.out.println("ERROR cancelando cita: " + ex.getMessage());
+            throw new RuntimeException("ERROR cancelando cita: " + ex.getMessage(), ex);
         } finally {
             try {
                 if (cs != null) cs.close();
@@ -194,7 +194,7 @@ public class CitaImpl implements ICitaDAO {
             cs.executeUpdate();
 
         } catch (Exception ex) {
-            System.out.println("ERROR confirmando cita: " + ex.getMessage());
+            throw new RuntimeException("ERROR confirmando cita: " + ex.getMessage(), ex);
         } finally {
             try {
                 if (cs != null) cs.close();
@@ -217,7 +217,7 @@ public class CitaImpl implements ICitaDAO {
             cs.executeUpdate();
 
         } catch (Exception ex) {
-            System.out.println("ERROR marcando cita atendida: " + ex.getMessage());
+            throw new RuntimeException("ERROR marcando cita atendida: " + ex.getMessage(), ex);
         } finally {
             try {
                 if (cs != null) cs.close();
@@ -240,7 +240,7 @@ public class CitaImpl implements ICitaDAO {
             cs.executeUpdate();
 
         } catch (Exception ex) {
-            System.out.println("ERROR marcando cita no asistió: " + ex.getMessage());
+            throw new RuntimeException("ERROR marcando cita no asistio: " + ex.getMessage(), ex);
         } finally {
             try {
                 if (cs != null) cs.close();
@@ -269,7 +269,7 @@ public class CitaImpl implements ICitaDAO {
             }
 
         } catch (Exception ex) {
-            System.out.println("ERROR listando citas por veterinario y fecha: " + ex.getMessage());
+            throw new RuntimeException("ERROR listando citas por veterinario y fecha: " + ex.getMessage(), ex);
         } finally {
             try {
                 if (rs != null) rs.close();
@@ -385,7 +385,7 @@ public class CitaImpl implements ICitaDAO {
             }
 
         } catch (Exception ex) {
-            System.out.println("ERROR listando citas filtradas: " + ex.getMessage());
+            throw new RuntimeException("ERROR listando citas filtradas: " + ex.getMessage(), ex);
         } finally {
             try {
                 if (rs != null) rs.close();
@@ -421,7 +421,7 @@ public class CitaImpl implements ICitaDAO {
             cs.executeUpdate();
 
         } catch (Exception ex) {
-            System.out.println("ERROR reprogramando cita: " + ex.getMessage());
+            throw new RuntimeException("ERROR reprogramando cita: " + ex.getMessage(), ex);
         } finally {
             try {
                 if (cs != null) cs.close();
@@ -448,7 +448,7 @@ public class CitaImpl implements ICitaDAO {
             cs.executeUpdate();
 
         } catch (Exception ex) {
-            System.out.println("ERROR cambiando veterinario de cita: " + ex.getMessage());
+            throw new RuntimeException("ERROR cambiando veterinario de cita: " + ex.getMessage(), ex);
         } finally {
             try {
                 if (cs != null) cs.close();
@@ -482,7 +482,7 @@ public class CitaImpl implements ICitaDAO {
             disponible = cs.getInt(5) == 1;
 
         } catch (Exception ex) {
-            System.out.println("ERROR validando disponibilidad de slot: " + ex.getMessage());
+            throw new RuntimeException("ERROR validando disponibilidad de slot: " + ex.getMessage(), ex);
         } finally {
             try {
                 if (cs != null) cs.close();
@@ -515,7 +515,7 @@ public class CitaImpl implements ICitaDAO {
             total = cs.getInt(4);
 
         } catch (Exception ex) {
-            System.out.println("ERROR contando citas por estado: " + ex.getMessage());
+            throw new RuntimeException("ERROR contando citas por estado: " + ex.getMessage(), ex);
         } finally {
             try {
                 if (cs != null) cs.close();
@@ -548,7 +548,7 @@ public class CitaImpl implements ICitaDAO {
             total = cs.getInt(4);
 
         } catch (Exception ex) {
-            System.out.println("ERROR contando citas por veterinario: " + ex.getMessage());
+            throw new RuntimeException("ERROR contando citas por veterinario: " + ex.getMessage(), ex);
         } finally {
             try {
                 if (cs != null) cs.close();
@@ -573,7 +573,7 @@ public class CitaImpl implements ICitaDAO {
             cs.executeUpdate();
 
         } catch (Exception ex) {
-            System.out.println("ERROR marcando cita en consulta: " + ex.getMessage());
+            throw new RuntimeException("ERROR marcando cita en consulta: " + ex.getMessage(), ex);
         } finally {
             try {
                 if (cs != null) cs.close();

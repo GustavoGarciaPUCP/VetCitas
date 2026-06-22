@@ -41,7 +41,7 @@ public class RecepcionistaImpl implements IRecepcionistaDAO {
             recepcionista.setId(idGenerado);
 
         } catch (Exception ex) {
-            System.out.println("ERROR insertando recepcionista: " + ex.getMessage());
+            throw new RuntimeException("ERROR insertando recepcionista: " + ex.getMessage(), ex);
         } finally {
             try {
                 if (cs != null) cs.close();
@@ -80,7 +80,7 @@ public class RecepcionistaImpl implements IRecepcionistaDAO {
             resultado = cs.executeUpdate();
 
         } catch (Exception ex) {
-            System.out.println("ERROR modificando recepcionista: " + ex.getMessage());
+            throw new RuntimeException("ERROR modificando recepcionista: " + ex.getMessage(), ex);
         } finally {
             try {
                 if (cs != null) cs.close();
@@ -105,7 +105,7 @@ public class RecepcionistaImpl implements IRecepcionistaDAO {
             resultado = cs.executeUpdate();
 
         } catch (Exception ex) {
-            System.out.println("ERROR eliminando recepcionista: " + ex.getMessage());
+            throw new RuntimeException("ERROR eliminando recepcionista: " + ex.getMessage(), ex);
         } finally {
             try {
                 if (cs != null) cs.close();
