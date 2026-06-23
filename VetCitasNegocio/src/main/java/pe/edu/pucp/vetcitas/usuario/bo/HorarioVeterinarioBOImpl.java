@@ -31,10 +31,15 @@ public class HorarioVeterinarioBOImpl implements IHorarioVeterinarioBO {
 
     @Override
     public int eliminar(int id) throws Exception {
+        return eliminar(id, 0);
+    }
+
+    @Override
+    public int eliminar(int id, int modifiedBy) throws Exception {
         if (id <= 0) {
             throw new Exception("El id del horario debe ser mayor que cero.");
         }
-        return horarioDAO.eliminar(id);
+        return horarioDAO.eliminar(id, modifiedBy);
     }
 
     @Override

@@ -9,6 +9,8 @@ import java.util.List;
 
 public interface IServicioDAO extends IDAO<Servicio> {
     int deshabilitar(int id);
+    int deshabilitar(int id, int modifiedBy);
+    int eliminar(int id, int modifiedBy);
     List<Servicio> listarPorNombreOTipo(String texto);
     List<Servicio> listarPorEstado(boolean activo);
     List<ServicioAtencionResumen> topNMasDemandados(

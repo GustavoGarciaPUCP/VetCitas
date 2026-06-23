@@ -9,6 +9,7 @@ import pe.edu.pucp.vetcitas.cliente.model.Cliente;
 import pe.edu.pucp.vetcitas.cliente.model.Mascota;
 import pe.edu.pucp.vetcitas.common.enums.EstadoCita;
 import pe.edu.pucp.vetcitas.common.enums.TipoServicio;
+import pe.edu.pucp.vetcitas.common.util.AuditClock;
 import pe.edu.pucp.vetcitas.config.DBManager;
 import pe.edu.pucp.vetcitas.servicio.model.Servicio;
 import pe.edu.pucp.vetcitas.usuario.model.Usuario;
@@ -44,13 +45,13 @@ public class AtencionImpl implements IAtencionDAO {
             if (atencion.getCreatedOn() != null) {
                 cs.setTimestamp("p_created_on", Timestamp.valueOf(atencion.getCreatedOn()));
             } else {
-                cs.setTimestamp("p_created_on", Timestamp.valueOf(LocalDateTime.now()));
+                cs.setTimestamp("p_created_on", AuditClock.timestampNow());
             }
 
             if (atencion.getModifiedOn() != null) {
                 cs.setTimestamp("p_modified_on", Timestamp.valueOf(atencion.getModifiedOn()));
             } else {
-                cs.setTimestamp("p_modified_on", Timestamp.valueOf(LocalDateTime.now()));
+                cs.setTimestamp("p_modified_on", AuditClock.timestampNow());
             }
 
             if (atencion.getModifiedBy() != null) {
@@ -102,7 +103,7 @@ public class AtencionImpl implements IAtencionDAO {
             if (atencion.getModifiedOn() != null) {
                 cs.setTimestamp("p_modified_on", Timestamp.valueOf(atencion.getModifiedOn()));
             } else {
-                cs.setTimestamp("p_modified_on", Timestamp.valueOf(LocalDateTime.now()));
+                cs.setTimestamp("p_modified_on", AuditClock.timestampNow());
             }
 
             if (atencion.getModifiedBy() != null) {
@@ -131,7 +132,7 @@ public class AtencionImpl implements IAtencionDAO {
             con = DBManager.getInstance().getConnection();
             cs = con.prepareCall("{call eliminar_atencion(?,?,?)}");
             cs.setInt("p_id_atencion", id);
-            cs.setTimestamp("p_modified_on", Timestamp.valueOf(LocalDateTime.now()));
+            cs.setTimestamp("p_modified_on", AuditClock.timestampNow());
             cs.setNull("p_modified_by", Types.INTEGER);
 
             resultado = cs.executeUpdate();

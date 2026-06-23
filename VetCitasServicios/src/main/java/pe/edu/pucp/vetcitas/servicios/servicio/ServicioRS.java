@@ -49,9 +49,15 @@ public class ServicioRS {
     @DELETE
     @Path("eliminar/{id}")
     public int eliminar(@PathParam("id") int id) {
+        return eliminar(id, 0);
+    }
+
+    @DELETE
+    @Path("eliminar/{id}/{modifiedBy}")
+    public int eliminar(@PathParam("id") int id, @PathParam("modifiedBy") int modifiedBy) {
         int resultado = 0;
         try {
-            resultado = servicioBO.eliminar(id);
+            resultado = servicioBO.eliminar(id, modifiedBy);
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
@@ -85,9 +91,15 @@ public class ServicioRS {
     @PUT
     @Path("deshabilitar/{id}")
     public int deshabilitar(@PathParam("id") int id) {
+        return deshabilitar(id, 0);
+    }
+
+    @PUT
+    @Path("deshabilitar/{id}/{modifiedBy}")
+    public int deshabilitar(@PathParam("id") int id, @PathParam("modifiedBy") int modifiedBy) {
         int resultado = 0;
         try {
-            resultado = servicioBO.deshabilitar(id);
+            resultado = servicioBO.deshabilitar(id, modifiedBy);
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
         }

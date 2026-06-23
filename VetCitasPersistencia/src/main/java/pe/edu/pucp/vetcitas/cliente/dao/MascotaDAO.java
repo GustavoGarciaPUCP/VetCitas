@@ -6,6 +6,7 @@ import pe.edu.pucp.vetcitas.dao.IDAO;
 import java.util.List;
 
 public interface MascotaDAO extends IDAO<Mascota> {
+    int eliminar(int idMascota, int modifiedBy);
     List<Mascota> listarPorNombreODueno(String texto);
     List<Mascota> listarPorCliente(int idCliente);
     int contarActivas();
