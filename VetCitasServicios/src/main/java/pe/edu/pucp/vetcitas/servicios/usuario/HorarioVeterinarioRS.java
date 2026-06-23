@@ -37,7 +37,14 @@ public class HorarioVeterinarioRS {
     @Path("/eliminar/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public int eliminar(@PathParam("id") int id) throws Exception {
-        return horarioVeterinarioBO.eliminar(id);
+        return horarioVeterinarioBO.eliminar(id, 0);
+    }
+
+    @DELETE
+    @Path("/eliminar/{id}/{modifiedBy}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public int eliminar(@PathParam("id") int id, @PathParam("modifiedBy") int modifiedBy) throws Exception {
+        return horarioVeterinarioBO.eliminar(id, modifiedBy);
     }
 
     @GET

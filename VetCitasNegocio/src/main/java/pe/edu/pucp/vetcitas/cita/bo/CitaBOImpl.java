@@ -10,6 +10,7 @@ import pe.edu.pucp.vetcitas.cita.model.Recordatorio;
 import pe.edu.pucp.vetcitas.common.enums.EstadoCita;
 import pe.edu.pucp.vetcitas.common.enums.CanalRecordatorio;
 import pe.edu.pucp.vetcitas.common.enums.EstadoSeguimiento;
+import pe.edu.pucp.vetcitas.common.util.AuditClock;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -360,7 +361,8 @@ public class CitaBOImpl implements ICitaBO {
 
     private LocalDateTime fechaProgramadaPrevio(Cita c) {
         LocalDateTime previo = c.getFechaHoraInicio().minusDays(1);
-        return previo.isBefore(LocalDateTime.now()) ? LocalDateTime.now() : previo;
+        LocalDateTime ahora = AuditClock.now();
+        return previo.isBefore(ahora) ? ahora : previo;
     }
 
     private String mensajeConfirmacion(Cita c) {
@@ -466,7 +468,7 @@ public class CitaBOImpl implements ICitaBO {
         if (!fin.isAfter(inicio)) {
             throw new Exception("La hora de fin debe ser posterior a la hora de inicio.");
         }
-        if (!esModificacion && inicio.isBefore(LocalDateTime.now())) {
+        if (!esModificacion && inicio.isBefore(AuditClock.now())) {
             throw new Exception("La fecha y hora de inicio no puede ser en el pasado.");
         }
         if (cita.getMascota() == null || cita.getMascota().getId() <= 0) {

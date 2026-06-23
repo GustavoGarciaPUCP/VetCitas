@@ -7,6 +7,8 @@ import pe.edu.pucp.vetcitas.cliente.model.Mascota;
 import pe.edu.pucp.vetcitas.common.enums.EstadoCita;
 import pe.edu.pucp.vetcitas.common.enums.CodigoRol;
 import pe.edu.pucp.vetcitas.common.enums.TipoServicio;
+import pe.edu.pucp.vetcitas.common.enums.TipoEspecie;
+import pe.edu.pucp.vetcitas.common.util.AuditClock;
 import pe.edu.pucp.vetcitas.config.DBManager;
 import pe.edu.pucp.vetcitas.servicio.model.Servicio;
 import pe.edu.pucp.vetcitas.usuario.model.Usuario;
@@ -28,19 +30,25 @@ public class CitaImpl implements ICitaDAO {
         CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{CALL insertar_cita(?, ?, ?, ?, ?, ?, ?)}");
+            cs = con.prepareCall("{CALL insertar_cita(?, ?, ?, ?, ?, ?, ?, ?)}");
             cs.setTimestamp(1, Timestamp.valueOf(cita.getFechaHoraInicio()));
             cs.setString(2, cita.getEstado().name());
             cs.setInt(3, cita.getMascota().getId());
             cs.setInt(4, cita.getVeterinario().getId());
             cs.setInt(5, cita.getServicio().getId());
             // El servidor genera la marca de creación (el frontend no la envía)
-            cs.setTimestamp(6, Timestamp.valueOf(java.time.LocalDateTime.now()));
-            cs.registerOutParameter(7, Types.INTEGER);
+            Timestamp ahora = AuditClock.timestampNow();
+            cs.setTimestamp(6, ahora);
+            if (cita.getModifiedBy() != null) {
+                cs.setInt(7, cita.getModifiedBy().getId());
+            } else {
+                cs.setNull(7, Types.INTEGER);
+            }
+            cs.registerOutParameter(8, Types.INTEGER);
 
             cs.executeUpdate();
 
-            idGenerado = cs.getInt(7);
+            idGenerado = cs.getInt(8);
             cita.setId(idGenerado);
 
         } catch (Exception ex) {
@@ -299,6 +307,11 @@ public class CitaImpl implements ICitaDAO {
         Mascota mascota = new Mascota();
         mascota.setId(rs.getInt("id_mascota"));
         mascota.setNombre(rs.getString("nombre_mascota"));
+        String especieMascota = leerStringSiExiste(rs, "especie_mascota");
+        if (especieMascota != null && !especieMascota.isBlank()) {
+            mascota.setEspecie(TipoEspecie.valueOf(especieMascota));
+        }
+        mascota.setRaza(leerStringSiExiste(rs, "raza_mascota"));
         mascota.setPeso(rs.getDouble("peso_mascota"));
         cita.setMascota(mascota);
 
@@ -358,6 +371,11 @@ public class CitaImpl implements ICitaDAO {
                 Mascota mascota = new Mascota();
                 mascota.setId(rs.getInt("id_mascota"));
                 mascota.setNombre(rs.getString("nombre_mascota"));
+                String especieMascota = leerStringSiExiste(rs, "especie_mascota");
+                if (especieMascota != null && !especieMascota.isBlank()) {
+                    mascota.setEspecie(TipoEspecie.valueOf(especieMascota));
+                }
+                mascota.setRaza(leerStringSiExiste(rs, "raza_mascota"));
                 mascota.setPeso(rs.getDouble("peso_mascota"));
 
                 Cliente cliente = new Cliente();
@@ -599,5 +617,13 @@ public class CitaImpl implements ICitaDAO {
         usuario.setEmail(rs.getString("email_usuario_cancelacion"));
 
         return usuario;
+    }
+
+    private String leerStringSiExiste(ResultSet rs, String columna) throws SQLException {
+        try {
+            return rs.getString(columna);
+        } catch (SQLException ex) {
+            return null;
+        }
     }
 }

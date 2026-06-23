@@ -4,6 +4,7 @@ import pe.edu.pucp.vetcitas.cita.model.ServicioAtencionResumen;
 import pe.edu.pucp.vetcitas.servicio.dao.IServicioDAO;
 import pe.edu.pucp.vetcitas.servicio.model.Servicio;
 import pe.edu.pucp.vetcitas.common.enums.TipoServicio;
+import pe.edu.pucp.vetcitas.common.util.AuditClock;
 import pe.edu.pucp.vetcitas.config.DBManager;
 
 import java.sql.*;
@@ -19,7 +20,7 @@ public class ServicioImpl implements IServicioDAO {
         CallableStatement cs = null;
         try {
             con = DBManager.getInstance().getConnection();
-            cs = con.prepareCall("{call insertar_servicio(?,?,?,?,?,?,?,?)}");
+            cs = con.prepareCall("{call insertar_servicio(?,?,?,?,?,?,?,?,?,?)}");
             cs.setString("p_nombre", servicio.getNombre());
 
             if (servicio.getDescripcion() != null && !servicio.getDescripcion().trim().isEmpty()) {
@@ -32,7 +33,14 @@ public class ServicioImpl implements IServicioDAO {
             cs.setInt("p_duracion_minutos", servicio.getDuracionMinutos());
             cs.setDouble("p_precio_referencial", servicio.getPrecioReferencial());
             cs.setBoolean("p_activo", servicio.isActivo());
-            cs.setTimestamp("p_created_on", Timestamp.valueOf(LocalDateTime.now()));
+            Timestamp ahora = AuditClock.timestampNow();
+            cs.setTimestamp("p_created_on", ahora);
+            cs.setTimestamp("p_modified_on", ahora);
+            if (servicio.getModifiedBy() != null) {
+                cs.setInt("p_modified_by", servicio.getModifiedBy().getId());
+            } else {
+                cs.setNull("p_modified_by", Types.INTEGER);
+            }
             cs.registerOutParameter("p_id_generado", Types.INTEGER);
             cs.executeUpdate();
             resultado = cs.getInt("p_id_generado");
@@ -66,7 +74,7 @@ public class ServicioImpl implements IServicioDAO {
             cs.setInt("p_duracion_minutos", servicio.getDuracionMinutos());
             cs.setDouble("p_precio_referencial", servicio.getPrecioReferencial());
             cs.setBoolean("p_activo", servicio.isActivo());
-            cs.setTimestamp("p_modified_on", Timestamp.valueOf(LocalDateTime.now()));
+            cs.setTimestamp("p_modified_on", AuditClock.timestampNow());
 
             if (servicio.getModifiedBy() != null) {
                 cs.setInt("p_modified_by", servicio.getModifiedBy().getId());
@@ -85,6 +93,10 @@ public class ServicioImpl implements IServicioDAO {
 
     @Override
     public int eliminar(int id) {
+        return eliminar(id, 0);
+    }
+
+    public int eliminar(int id, int modifiedBy) {
         int resultado = 0;
         Connection con = null;
         CallableStatement cs = null;
@@ -92,8 +104,12 @@ public class ServicioImpl implements IServicioDAO {
             con = DBManager.getInstance().getConnection();
             cs = con.prepareCall("{call eliminar_servicio(?,?,?)}");
             cs.setInt("p_id_servicio", id);
-            cs.setTimestamp("p_modified_on", Timestamp.valueOf(LocalDateTime.now()));
-            cs.setNull("p_modified_by", Types.INTEGER);
+            cs.setTimestamp("p_modified_on", AuditClock.timestampNow());
+            if (modifiedBy > 0) {
+                cs.setInt("p_modified_by", modifiedBy);
+            } else {
+                cs.setNull("p_modified_by", Types.INTEGER);
+            }
 
             resultado = cs.executeUpdate();
         } catch (Exception ex) {
@@ -107,6 +123,10 @@ public class ServicioImpl implements IServicioDAO {
 
     @Override
     public int deshabilitar(int id) {
+        return deshabilitar(id, 0);
+    }
+
+    public int deshabilitar(int id, int modifiedBy) {
         int resultado = 0;
         Connection con = null;
         CallableStatement cs = null;
@@ -114,8 +134,12 @@ public class ServicioImpl implements IServicioDAO {
             con = DBManager.getInstance().getConnection();
             cs = con.prepareCall("{call deshabilitar_servicio(?,?,?)}");
             cs.setInt("p_id_servicio", id);
-            cs.setTimestamp("p_modified_on", Timestamp.valueOf(LocalDateTime.now()));
-            cs.setNull("p_modified_by", Types.INTEGER);
+            cs.setTimestamp("p_modified_on", AuditClock.timestampNow());
+            if (modifiedBy > 0) {
+                cs.setInt("p_modified_by", modifiedBy);
+            } else {
+                cs.setNull("p_modified_by", Types.INTEGER);
+            }
 
             resultado = cs.executeUpdate();
         } catch (Exception ex) {

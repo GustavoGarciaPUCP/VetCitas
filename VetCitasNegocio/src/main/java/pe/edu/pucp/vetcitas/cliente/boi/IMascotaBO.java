@@ -6,6 +6,7 @@ import pe.edu.pucp.vetcitas.cliente.model.Mascota;
 import java.util.List;
 
 public interface IMascotaBO extends IBaseBO<Mascota> {
+    int eliminar(int id, int modifiedBy) throws Exception;
     List<Mascota> listarPorNombreODueno(String texto) throws Exception;
     List<Mascota> listarPorCliente(int idCliente) throws Exception;
     int contarActivas() throws Exception;

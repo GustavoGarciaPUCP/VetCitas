@@ -4,6 +4,7 @@ import pe.edu.pucp.vetcitas.cliente.boi.IMascotaBO;
 import pe.edu.pucp.vetcitas.cliente.dao.MascotaDAO;
 import pe.edu.pucp.vetcitas.cliente.impl.MascotaImpl;
 import pe.edu.pucp.vetcitas.cliente.model.Mascota;
+import pe.edu.pucp.vetcitas.common.util.AuditClock;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -29,10 +30,15 @@ public class MascotaBOImpl implements IMascotaBO {
 
     @Override
     public int eliminar(int id) throws Exception {
+        return eliminar(id, 0);
+    }
+
+    @Override
+    public int eliminar(int id, int modifiedBy) throws Exception {
         if (id <= 0) {
             throw new Exception("El id de la mascota debe ser mayor que cero.");
         }
-        return mascotaDAO.eliminar(id);
+        return mascotaDAO.eliminar(id, modifiedBy);
     }
 
     @Override
@@ -85,7 +91,7 @@ public class MascotaBOImpl implements IMascotaBO {
         if (mascota.getEspecie() == null) {
             throw new Exception("La especie es obligatoria.");
         }
-        if (mascota.getFechaNacimiento() != null && mascota.getFechaNacimiento().isAfter(LocalDate.now())) {
+        if (mascota.getFechaNacimiento() != null && mascota.getFechaNacimiento().isAfter(AuditClock.today())) {
             throw new Exception("La fecha de nacimiento no puede ser futura.");
         }
         if (mascota.getCliente() == null || mascota.getCliente().getId() <= 0) {

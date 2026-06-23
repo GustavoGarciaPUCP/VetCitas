@@ -30,10 +30,15 @@ public class ServicioBOImpl implements IServicioBO {
 
     @Override
     public int eliminar(int id) throws Exception {
+        return eliminar(id, 0);
+    }
+
+    @Override
+    public int eliminar(int id, int modifiedBy) throws Exception {
         if (id <= 0) {
             throw new Exception("El id del servicio debe ser mayor que cero.");
         }
-        return servicioDAO.eliminar(id);
+        return servicioDAO.eliminar(id, modifiedBy);
     }
 
     @Override
@@ -55,6 +60,11 @@ public class ServicioBOImpl implements IServicioBO {
 
     @Override
     public int deshabilitar(int id) throws Exception {
+        return deshabilitar(id, 0);
+    }
+
+    @Override
+    public int deshabilitar(int id, int modifiedBy) throws Exception {
         if (id <= 0) {
             throw new Exception("El id del servicio debe ser mayor que cero.");
         }
@@ -65,7 +75,7 @@ public class ServicioBOImpl implements IServicioBO {
         if (!servicio.isActivo()) {
             throw new Exception("El servicio ya se encuentra deshabilitado.");
         }
-        return servicioDAO.deshabilitar(id);
+        return servicioDAO.deshabilitar(id, modifiedBy);
     }
 
     @Override

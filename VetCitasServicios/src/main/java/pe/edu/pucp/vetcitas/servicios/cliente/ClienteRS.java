@@ -48,9 +48,15 @@ public class ClienteRS {
     @DELETE
     @Path("eliminar/{id}")
     public int eliminar(@PathParam("id") int id) {
+        return eliminar(id, 0);
+    }
+
+    @DELETE
+    @Path("eliminar/{id}/{modifiedBy}")
+    public int eliminar(@PathParam("id") int id, @PathParam("modifiedBy") int modifiedBy) {
         int resultado = 0;
         try {
-            resultado = clienteBO.eliminar(id);
+            resultado = clienteBO.eliminar(id, modifiedBy);
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
         }

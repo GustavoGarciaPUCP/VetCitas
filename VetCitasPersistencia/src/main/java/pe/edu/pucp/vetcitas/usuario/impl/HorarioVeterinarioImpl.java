@@ -113,6 +113,10 @@ public class HorarioVeterinarioImpl implements IHorarioVeterinarioDAO {
 
     @Override
     public int eliminar(int id) {
+        return eliminar(id, 0);
+    }
+
+    public int eliminar(int id, int modifiedBy) {
         int resultado = 0;
         Connection con = null;
         CallableStatement cs = null;
@@ -120,7 +124,11 @@ public class HorarioVeterinarioImpl implements IHorarioVeterinarioDAO {
             con = DBManager.getInstance().getConnection();
             cs = con.prepareCall("{CALL eliminar_horario_veterinario(?, ?)}");
             cs.setInt(1, id);
-            cs.setNull(2, Types.INTEGER);
+            if (modifiedBy > 0) {
+                cs.setInt(2, modifiedBy);
+            } else {
+                cs.setNull(2, Types.INTEGER);
+            }
             resultado = cs.executeUpdate();
 
         } catch (Exception ex) {

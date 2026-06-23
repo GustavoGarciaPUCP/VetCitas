@@ -146,8 +146,8 @@ BEGIN
         p_telefono,
         p_email,
         1,
-        NOW(),
-        NOW(),
+        DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR),
+        DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR),
         p_modified_by
     );
 
@@ -249,7 +249,7 @@ BEGIN
     END IF;
 
     UPDATE usuario
-    SET activo = 0, modified_on = NOW(), modified_by = p_modified_by
+    SET activo = 0, modified_on = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR), modified_by = p_modified_by
     WHERE id_usuario = p_id_usuario;
 END $$
 
@@ -271,7 +271,7 @@ BEGIN
         telefono = p_telefono,
         email = p_email,
         activo = p_activo,
-        modified_on = NOW(),
+        modified_on = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR),
         modified_by = p_modified_by
     WHERE id_usuario = p_id_usuario;
 END $$
@@ -353,7 +353,7 @@ BEGIN
         telefono = p_telefono,
         email = p_email,
         activo = p_activo,
-        modified_on = NOW(),
+        modified_on = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR),
         modified_by = p_modified_by
     WHERE id_usuario = p_id_administrador;
 
@@ -470,7 +470,7 @@ BEGIN
         telefono = p_telefono,
         email = p_email,
         activo = p_activo,
-        modified_on = NOW(),
+        modified_on = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR),
         modified_by = p_modified_by
     WHERE id_usuario = p_id_veterinario;
 
@@ -570,7 +570,7 @@ BEGIN
         telefono = p_telefono,
         email = p_email,
         activo = p_activo,
-        modified_on = NOW(),
+        modified_on = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR),
         modified_by = p_modified_by
     WHERE id_usuario = p_id_recepcionista;
 
@@ -694,7 +694,7 @@ BEGIN
     INNER JOIN mascota m ON m.id_mascota = c.id_mascota
     WHERE m.id_cliente = p_id_cliente
       AND c.estado = 'CONFIRMADA'
-      AND c.fecha_hora_inicio > NOW();
+      AND c.fecha_hora_inicio > DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR);
 
     IF v_confirmadas > 0 THEN
         SIGNAL SQLSTATE '45000'
@@ -918,6 +918,8 @@ CREATE PROCEDURE insertar_servicio(
     IN p_precio_referencial DECIMAL(10,2),
     IN p_activo TINYINT(1),
     IN p_created_on DATETIME,
+    IN p_modified_on DATETIME,
+    IN p_modified_by INT,
     OUT p_id_generado INT
 )
 BEGIN
@@ -928,7 +930,9 @@ BEGIN
         duracion_minutos,
         precio_referencial,
         activo,
-        created_on
+        created_on,
+        modified_on,
+        modified_by
     )
     VALUES(
         p_nombre,
@@ -937,7 +941,9 @@ BEGIN
         p_duracion_minutos,
         p_precio_referencial,
         p_activo,
-        p_created_on
+        p_created_on,
+        p_modified_on,
+        p_modified_by
     );
 
     SET p_id_generado = LAST_INSERT_ID();
@@ -1019,7 +1025,7 @@ CREATE PROCEDURE insertar_horario_veterinario(
 )
 BEGIN
     INSERT INTO horario_veterinario(id_veterinario, dia_semana, hora_inicio, hora_fin, hora_descanso_inicio, hora_descanso_fin, activo, created_on, modified_on, modified_by)
-    VALUES(p_id_veterinario, p_dia_semana, p_hora_inicio, p_hora_fin, p_hora_descanso_inicio, p_hora_descanso_fin, 1, NOW(), NOW(), p_modified_by);
+    VALUES(p_id_veterinario, p_dia_semana, p_hora_inicio, p_hora_fin, p_hora_descanso_inicio, p_hora_descanso_fin, 1, DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR), DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR), p_modified_by);
     SET p_id_generado = LAST_INSERT_ID();
 END $$
 
@@ -1034,14 +1040,14 @@ BEGIN
     SET id_veterinario = p_id_veterinario, dia_semana = p_dia_semana,
         hora_inicio = p_hora_inicio, hora_fin = p_hora_fin,
         hora_descanso_inicio = p_hora_descanso_inicio, hora_descanso_fin = p_hora_descanso_fin,
-        activo = p_activo, modified_on = NOW(), modified_by = p_modified_by
+        activo = p_activo, modified_on = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR), modified_by = p_modified_by
     WHERE id_horario = p_id_horario;
 END $$
 
 CREATE PROCEDURE eliminar_horario_veterinario(IN p_id_horario INT, IN p_modified_by INT)
 BEGIN
     UPDATE horario_veterinario
-    SET activo = 0, modified_on = NOW(), modified_by = p_modified_by
+    SET activo = 0, modified_on = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR), modified_by = p_modified_by
     WHERE id_horario = p_id_horario;
 END $$
 
@@ -1211,7 +1217,8 @@ END $$
 
 CREATE PROCEDURE insertar_cita(
     IN p_fecha_hora_inicio DATETIME, IN p_estado VARCHAR(20), IN p_id_mascota INT,
-    IN p_id_veterinario INT, IN p_id_servicio INT, IN p_created_on DATETIME, OUT p_id_generado INT
+    IN p_id_veterinario INT, IN p_id_servicio INT, IN p_created_on DATETIME,
+    IN p_modified_by INT, OUT p_id_generado INT
 )
 BEGIN
     DECLARE v_duracion INT;
@@ -1222,8 +1229,8 @@ BEGIN
     SELECT duracion_minutos INTO v_duracion FROM servicio WHERE id_servicio = p_id_servicio;
     SET v_fecha_hora_fin = DATE_ADD(p_fecha_hora_inicio, INTERVAL v_duracion MINUTE);
 
-    INSERT INTO cita(fecha_hora_inicio, fecha_hora_fin, estado, id_mascota, id_veterinario, id_servicio, created_on)
-    VALUES(p_fecha_hora_inicio, v_fecha_hora_fin, p_estado, p_id_mascota, p_id_veterinario, p_id_servicio, p_created_on);
+    INSERT INTO cita(fecha_hora_inicio, fecha_hora_fin, estado, id_mascota, id_veterinario, id_servicio, created_on, modified_on, modified_by)
+    VALUES(p_fecha_hora_inicio, v_fecha_hora_fin, p_estado, p_id_mascota, p_id_veterinario, p_id_servicio, p_created_on, p_created_on, p_modified_by);
 
     SET p_id_generado = LAST_INSERT_ID();
 END $$
@@ -1257,9 +1264,9 @@ BEGIN
     UPDATE cita
     SET estado = 'CANCELADA',
         motivo_cancelacion = p_motivo_cancelacion,
-        fecha_cancelacion = NOW(),
+        fecha_cancelacion = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR),
         id_usuario_cancelacion = p_modified_by,
-        modified_on = NOW(),
+        modified_on = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR),
         modified_by = p_modified_by
     WHERE id_cita = p_id_cita
       AND estado IN ('PENDIENTE', 'CONFIRMADA', 'EN_CONSULTA');
@@ -1273,7 +1280,7 @@ CREATE PROCEDURE confirmar_cita(IN p_id_cita INT, IN p_modified_by INT)
 BEGIN
     UPDATE cita
     SET estado = 'CONFIRMADA',
-        modified_on = NOW(),
+        modified_on = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR),
         modified_by = p_modified_by
     WHERE id_cita = p_id_cita
       AND estado = 'PENDIENTE';
@@ -1290,7 +1297,7 @@ CREATE PROCEDURE marcar_cita_en_consulta(
 BEGIN
     UPDATE cita
     SET estado = 'EN_CONSULTA',
-        modified_on = NOW(),
+        modified_on = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR),
         modified_by = p_modified_by
     WHERE id_cita = p_id_cita
       AND estado = 'CONFIRMADA';
@@ -1307,7 +1314,7 @@ CREATE PROCEDURE marcar_cita_atendida(
 BEGIN
     UPDATE cita
     SET estado = 'ATENDIDA',
-        modified_on = NOW(),
+        modified_on = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR),
         modified_by = p_modified_by
     WHERE id_cita = p_id_cita
       AND estado = 'EN_CONSULTA';
@@ -1321,7 +1328,7 @@ CREATE PROCEDURE marcar_cita_no_asistio(IN p_id_cita INT, IN p_modified_by INT)
 BEGIN
     UPDATE cita
     SET estado = 'NO_ASISTIO',
-        modified_on = NOW(),
+        modified_on = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR),
         modified_by = p_modified_by
     WHERE id_cita = p_id_cita
       AND estado IN ('PENDIENTE', 'CONFIRMADA');
@@ -1355,6 +1362,8 @@ BEGIN
         c.id_servicio,
 
         m.nombre AS nombre_mascota,
+        m.especie AS especie_mascota,
+        m.raza AS raza_mascota,
         m.peso AS peso_mascota,
 
         s.nombre AS nombre_servicio,
@@ -1387,6 +1396,8 @@ BEGIN
         c.id_veterinario,
         c.id_servicio,
         m.nombre AS nombre_mascota,
+        m.especie AS especie_mascota,
+        m.raza AS raza_mascota,
         m.peso AS peso_mascota,
         s.nombre AS nombre_servicio,
         s.descripcion AS descripcion_servicio
@@ -1421,6 +1432,8 @@ BEGIN
         c.id_veterinario,
         c.id_servicio,
         m.nombre AS nombre_mascota,
+        m.especie AS especie_mascota,
+        m.raza AS raza_mascota,
         m.peso AS peso_mascota,
         cl.nombres AS cliente_nombres,
         cl.apellidos AS cliente_apellidos,
@@ -1604,7 +1617,7 @@ BEGIN
       AND estado_seguimiento = 'PENDIENTE';
 
     INSERT INTO recordatorio(fecha_programada, canal, estado_seguimiento, mensaje, id_cita, created_on, modified_on, modified_by)
-    VALUES(p_fecha_programada, p_canal, p_estado_seguimiento, p_mensaje, p_id_cita, NOW(), NOW(), p_modified_by);
+    VALUES(p_fecha_programada, p_canal, p_estado_seguimiento, p_mensaje, p_id_cita, DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR), DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR), p_modified_by);
     SET p_id_generado = LAST_INSERT_ID();
 END $$
 
@@ -1628,7 +1641,7 @@ BEGIN
 
     UPDATE recordatorio
     SET fecha_programada = p_fecha_programada, canal = p_canal, estado_seguimiento = p_estado_seguimiento,
-        mensaje = p_mensaje, id_cita = p_id_cita, modified_on = NOW(), modified_by = p_modified_by
+        mensaje = p_mensaje, id_cita = p_id_cita, modified_on = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR), modified_by = p_modified_by
     WHERE id_recordatorio = p_id_recordatorio;
 END $$
 
@@ -1780,7 +1793,7 @@ BEGIN
         m.raza,
         m.fecha_nacimiento,
         m.peso,
-        TIMESTAMPDIFF(YEAR, m.fecha_nacimiento, CURDATE()) AS edad_aprox,
+        TIMESTAMPDIFF(YEAR, m.fecha_nacimiento, DATE(DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR))) AS edad_aprox,
         m.esterilizado,
         m.activo,
         c.id_cliente,
@@ -1858,6 +1871,8 @@ BEGIN
         ci.id_cita,
         m.id_mascota,
         m.nombre AS nombre_mascota,
+        m.especie AS especie_mascota,
+        m.raza AS raza_mascota,
         m.peso AS peso_mascota,
         c.id_cliente,
         c.nombres AS nombres_cliente,
@@ -1895,6 +1910,8 @@ BEGIN
         r.mensaje,
         ci.id_cita,
         m.nombre AS nombre_mascota,
+        m.especie AS especie_mascota,
+        m.raza AS raza_mascota,
         m.peso AS peso_mascota,
         c.nombres AS nombres_cliente,
         c.apellidos AS apellidos_cliente
@@ -1960,6 +1977,8 @@ BEGIN
 
         m.id_mascota,
         m.nombre AS nombre_mascota,
+        m.especie AS especie_mascota,
+        m.raza AS raza_mascota,
         m.peso AS peso_mascota,
 
         c.id_cliente,
@@ -2208,6 +2227,8 @@ BEGIN
 
         m.id_mascota,
         m.nombre AS nombre_mascota,
+        m.especie AS especie_mascota,
+        m.raza AS raza_mascota,
         m.peso AS peso_mascota,
 
         c.id_cliente,
@@ -2326,7 +2347,7 @@ CREATE PROCEDURE restablecer_contrasena_usuario(
 BEGIN
     UPDATE usuario
     SET contrasena_hash = p_nueva_contrasena_hash,
-        modified_on = NOW(),
+        modified_on = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR),
         modified_by = p_id_admin
     WHERE id_usuario = p_id_usuario_objetivo
       AND activo = 1;
@@ -2442,7 +2463,7 @@ BEGIN
     SET fecha_hora_inicio = p_fecha_hora_inicio,
         fecha_hora_fin = v_fecha_hora_fin,
         motivo_reprogramacion = p_motivo_reprogramacion,
-        modified_on = NOW(),
+        modified_on = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR),
         modified_by = p_modified_by
     WHERE id_cita = p_id_cita
       AND estado IN ('PENDIENTE', 'CONFIRMADA');
@@ -2475,7 +2496,7 @@ BEGIN
 
     UPDATE cita
     SET id_veterinario = p_id_nuevo_veterinario,
-        modified_on = NOW(),
+        modified_on = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR),
         modified_by = p_modified_by
     WHERE id_cita = p_id_cita
       AND estado IN ('PENDIENTE', 'CONFIRMADA');
@@ -2492,7 +2513,7 @@ CREATE PROCEDURE marcar_recordatorio_enviado(
 BEGIN
     UPDATE recordatorio
     SET estado_seguimiento = 'ENVIADO',
-        modified_on = NOW(),
+        modified_on = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR),
         modified_by = p_modified_by
     WHERE id_recordatorio = p_id_recordatorio
       AND estado_seguimiento = 'PENDIENTE';
@@ -2587,7 +2608,7 @@ CREATE PROCEDURE cambiar_contrasena_usuario(
 BEGIN
     UPDATE usuario
     SET contrasena_hash = p_nueva_contrasena_hash,
-        modified_on = NOW(),
+        modified_on = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR),
         modified_by = p_id_usuario
     WHERE id_usuario = p_id_usuario
       AND contrasena_hash = p_contrasena_actual_hash
@@ -2637,6 +2658,8 @@ BEGIN
 
         m.id_mascota,
         m.nombre AS nombre_mascota,
+        m.especie AS especie_mascota,
+        m.raza AS raza_mascota,
         m.peso AS peso_mascota,
 
         c.id_cliente,

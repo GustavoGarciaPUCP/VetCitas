@@ -246,8 +246,8 @@ VALUES(
     '999999999',
     'superadmin@vetcitas.com',
     1,
-    NOW(),
-    NOW(),
+    DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR),
+    DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR),
     NULL
 );
 

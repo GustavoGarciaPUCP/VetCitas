@@ -3,6 +3,7 @@ package pe.edu.pucp.vetcitas.cliente.impl;
 import pe.edu.pucp.vetcitas.cliente.dao.MascotaDAO;
 import pe.edu.pucp.vetcitas.cliente.model.Mascota;
 import pe.edu.pucp.vetcitas.common.enums.TipoEspecie;
+import pe.edu.pucp.vetcitas.common.util.AuditClock;
 import pe.edu.pucp.vetcitas.config.DBManager;
 import pe.edu.pucp.vetcitas.cliente.model.Cliente;
 
@@ -39,7 +40,7 @@ public class MascotaImpl implements MascotaDAO {
             cs.setInt(8, mascota.getCliente().getId());
 
             // El servidor genera las marcas de auditoría (no dependemos del cliente)
-            Timestamp ahora = Timestamp.valueOf(java.time.LocalDateTime.now());
+            Timestamp ahora = AuditClock.timestampNow();
             cs.setTimestamp(9, ahora);   // created_on
             cs.setTimestamp(10, ahora);  // modified_on
 
@@ -98,7 +99,7 @@ public class MascotaImpl implements MascotaDAO {
             cs.setInt(9, mascota.getCliente().getId());
 
             // El servidor sella la fecha de modificación
-            cs.setTimestamp(10, Timestamp.valueOf(java.time.LocalDateTime.now()));
+            cs.setTimestamp(10, AuditClock.timestampNow());
 
             if (mascota.getModifiedBy() != null) {
                 cs.setInt(11, mascota.getModifiedBy().getId());
@@ -123,6 +124,10 @@ public class MascotaImpl implements MascotaDAO {
 
     @Override
     public int eliminar(int idMascota) {
+        return eliminar(idMascota, 0);
+    }
+
+    public int eliminar(int idMascota, int modifiedBy) {
         int resultado = 0;
         Connection con = null;
         CallableStatement cs = null;
@@ -132,8 +137,12 @@ public class MascotaImpl implements MascotaDAO {
             cs = con.prepareCall(sql);
 
             cs.setInt(1, idMascota);
-            cs.setTimestamp(2, java.sql.Timestamp.valueOf(java.time.LocalDateTime.now()));
-            cs.setNull(3, java.sql.Types.INTEGER);
+            cs.setTimestamp(2, AuditClock.timestampNow());
+            if (modifiedBy > 0) {
+                cs.setInt(3, modifiedBy);
+            } else {
+                cs.setNull(3, java.sql.Types.INTEGER);
+            }
 
             resultado = cs.executeUpdate();
 

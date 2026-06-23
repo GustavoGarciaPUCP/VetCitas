@@ -2,6 +2,7 @@ package pe.edu.pucp.vetcitas.cliente.impl;
 
 import pe.edu.pucp.vetcitas.cliente.dao.ClienteDAO;
 import pe.edu.pucp.vetcitas.cliente.model.Cliente;
+import pe.edu.pucp.vetcitas.common.util.AuditClock;
 import pe.edu.pucp.vetcitas.config.DBManager;
 
 import java.sql.CallableStatement;
@@ -38,7 +39,7 @@ public class ClienteImpl implements ClienteDAO {
             cs.setBoolean(7, cliente.isActivo());
 
             // El servidor genera las marcas de auditoría (no dependemos del cliente)
-            java.sql.Timestamp ahora = java.sql.Timestamp.valueOf(java.time.LocalDateTime.now());
+            java.sql.Timestamp ahora = AuditClock.timestampNow();
             cs.setTimestamp(8, ahora);   // created_on
             cs.setTimestamp(9, ahora);   // modified_on
 
@@ -96,7 +97,7 @@ public class ClienteImpl implements ClienteDAO {
             cs.setBoolean(8, cliente.isActivo());
 
             // El servidor sella la fecha de modificación
-            cs.setTimestamp(9, java.sql.Timestamp.valueOf(java.time.LocalDateTime.now()));
+            cs.setTimestamp(9, AuditClock.timestampNow());
 
             if (cliente.getModifiedBy() != null) {
                 cs.setInt(10, cliente.getModifiedBy().getId());
@@ -121,6 +122,10 @@ public class ClienteImpl implements ClienteDAO {
 
     @Override
     public int eliminar(int idCliente) {
+        return eliminar(idCliente, 0);
+    }
+
+    public int eliminar(int idCliente, int modifiedBy) {
         int resultado = 0;
         Connection con = null;
         CallableStatement cs = null;
@@ -130,8 +135,12 @@ public class ClienteImpl implements ClienteDAO {
             cs = con.prepareCall(sql);
 
             cs.setInt(1, idCliente);
-            cs.setTimestamp(2, java.sql.Timestamp.valueOf(java.time.LocalDateTime.now()));
-            cs.setNull(3, java.sql.Types.INTEGER);
+            cs.setTimestamp(2, AuditClock.timestampNow());
+            if (modifiedBy > 0) {
+                cs.setInt(3, modifiedBy);
+            } else {
+                cs.setNull(3, java.sql.Types.INTEGER);
+            }
 
             cs.executeUpdate();
             // El procedure ejecuta varios UPDATE; si no hubo excepción, fue correcto.

@@ -28,10 +28,15 @@ public class ClienteBOImpl implements IClienteBO {
 
     @Override
     public int eliminar(int id) throws Exception {
+        return eliminar(id, 0);
+    }
+
+    @Override
+    public int eliminar(int id, int modifiedBy) throws Exception {
         if (id <= 0) {
             throw new Exception("El id del cliente debe ser mayor que cero.");
         }
-        return clienteDAO.eliminar(id);
+        return clienteDAO.eliminar(id, modifiedBy);
     }
 
     @Override

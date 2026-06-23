@@ -9,6 +9,8 @@ import java.util.List;
 
 public interface IServicioBO extends IBaseBO<Servicio> {
     int deshabilitar(int id) throws Exception;
+    int deshabilitar(int id, int modifiedBy) throws Exception;
+    int eliminar(int id, int modifiedBy) throws Exception;
     List<Servicio> listarPorNombreOTipo(String texto) throws Exception;
     List<Servicio> listarPorEstado(boolean activo) throws Exception;
     List<ServicioAtencionResumen> topNMasDemandados(
