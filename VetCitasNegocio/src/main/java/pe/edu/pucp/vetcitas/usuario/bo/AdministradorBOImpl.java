@@ -130,11 +130,14 @@ public class AdministradorBOImpl implements IAdministradorBO {
             throw new Exception("El username '" + usuario.getUsername() + "' ya está ocupado por otro usuario.");
         }
 
-        if (!usuario.isActivo()) {
-            Administrador admin = administradorDAO.buscarPorId(usuario.getId());
-            if (admin != null && admin.isEsSuperAdmin()) {
-                throw new Exception("Operación denegada: No se puede inactivar al Super Administrador.");
-            }
+        // Un SuperAdmin solo puede ser editado por si mismo: otro administrador no puede modificarlo.
+        Administrador objetivo = administradorDAO.buscarPorId(usuario.getId());
+        if (objetivo != null && objetivo.isEsSuperAdmin() && usuario.getId() != modifiedBy) {
+            throw new Exception("Operación denegada: solo el Super Administrador puede editar su propia cuenta.");
+        }
+
+        if (!usuario.isActivo() && objetivo != null && objetivo.isEsSuperAdmin()) {
+            throw new Exception("Operación denegada: No se puede inactivar al Super Administrador.");
         }
 
         return administradorDAO.modificarUsuarioBasico(usuario, modifiedBy);

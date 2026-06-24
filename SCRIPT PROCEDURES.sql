@@ -2595,19 +2595,93 @@ CREATE PROCEDURE autenticar_usuario(
     IN p_contrasena_hash CHAR(64)
 )
 BEGIN
-    SELECT
-        id_usuario,
-        username,
-        contrasena_hash,
-        nombres,
-        apellidos,
-        telefono,
-        email,
-        activo
+    -- Estado devuelto en la primera columna:
+    --   0 = credenciales invalidas (mensaje generico)
+    --   1 = autenticacion correcta (incluye los datos del usuario)
+    --   2 = cuenta bloqueada temporalmente por demasiados intentos
+    DECLARE v_id INT DEFAULT NULL;
+    DECLARE v_hash CHAR(64);
+    DECLARE v_activo TINYINT DEFAULT 0;
+    DECLARE v_bloqueado_hasta DATETIME DEFAULT NULL;
+    DECLARE v_intentos INT DEFAULT 0;
+    DECLARE v_ahora DATETIME;
+    DECLARE v_estado INT DEFAULT 0;
+    DECLARE v_restantes INT DEFAULT NULL;
+
+    DECLARE v_max_intentos INT DEFAULT 5;
+    DECLARE v_minutos_bloqueo INT DEFAULT 15;
+
+    SET v_ahora = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR);
+
+    SELECT id_usuario, contrasena_hash, activo, bloqueado_hasta, COALESCE(intentos_fallidos, 0)
+      INTO v_id, v_hash, v_activo, v_bloqueado_hasta, v_intentos
     FROM usuario
     WHERE username = p_username
-      AND contrasena_hash = p_contrasena_hash
-      AND activo = 1;
+    LIMIT 1;
+
+    IF v_id IS NULL THEN
+        -- Usuario inexistente: no se revela, estado generico invalido.
+        SET v_estado = 0;
+    ELSEIF v_bloqueado_hasta IS NOT NULL AND v_bloqueado_hasta > v_ahora THEN
+        SET v_estado = 2;
+        SET v_restantes = 0;
+    ELSEIF v_hash = p_contrasena_hash THEN
+        IF v_activo = 1 THEN
+            -- Credenciales correctas: se reinicia el contador.
+            UPDATE usuario
+               SET intentos_fallidos = 0, bloqueado_hasta = NULL
+             WHERE id_usuario = v_id;
+            SET v_estado = 1;
+        ELSE
+            -- Clave correcta pero cuenta inactiva: invalido generico, sin contar intento.
+            SET v_estado = 0;
+        END IF;
+    ELSE
+        -- Contrasena incorrecta: se cuenta el intento.
+        SET v_intentos = v_intentos + 1;
+        IF v_intentos >= v_max_intentos THEN
+            UPDATE usuario
+               SET intentos_fallidos = 0,
+                   bloqueado_hasta = DATE_ADD(v_ahora, INTERVAL v_minutos_bloqueo MINUTE)
+             WHERE id_usuario = v_id;
+            SET v_estado = 2;
+            SET v_restantes = 0;
+        ELSE
+            UPDATE usuario
+               SET intentos_fallidos = v_intentos
+             WHERE id_usuario = v_id;
+            SET v_estado = 0;
+            SET v_restantes = v_max_intentos - v_intentos;
+        END IF;
+    END IF;
+
+    IF v_estado = 1 THEN
+        SELECT
+            1 AS estado,
+            NULL AS intentos_restantes,
+            u.id_usuario,
+            u.username,
+            u.contrasena_hash,
+            u.nombres,
+            u.apellidos,
+            u.telefono,
+            u.email,
+            u.activo
+        FROM usuario u
+        WHERE u.id_usuario = v_id;
+    ELSE
+        SELECT
+            v_estado AS estado,
+            v_restantes AS intentos_restantes,
+            NULL AS id_usuario,
+            NULL AS username,
+            NULL AS contrasena_hash,
+            NULL AS nombres,
+            NULL AS apellidos,
+            NULL AS telefono,
+            NULL AS email,
+            NULL AS activo;
+    END IF;
 END $$
 
 CREATE PROCEDURE cambiar_contrasena_usuario(

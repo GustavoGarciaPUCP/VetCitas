@@ -1,6 +1,8 @@
 package pe.edu.pucp.vetcitas.usuario.impl;
 
 import pe.edu.pucp.vetcitas.config.DBManager;
+import pe.edu.pucp.vetcitas.common.exception.CuentaBloqueadaException;
+import pe.edu.pucp.vetcitas.common.exception.CredencialesInvalidasException;
 import pe.edu.pucp.vetcitas.usuario.dao.IUsuarioDAO;
 import pe.edu.pucp.vetcitas.usuario.model.Usuario;
 
@@ -54,21 +56,46 @@ public class UsuarioImpl implements IUsuarioDAO {
             cs.setString(1, username);
             cs.setString(2, contrasenaHash);
 
-            rs = cs.executeQuery();
+            // El procedimiento hace UPDATEs antes del SELECT final; navegamos
+            // hasta el primer ResultSet para leer el estado de autenticacion.
+            boolean tieneResultados = cs.execute();
+            while (!tieneResultados && cs.getUpdateCount() != -1) {
+                tieneResultados = cs.getMoreResults();
+            }
+            rs = cs.getResultSet();
 
-            if (rs.next()) {
-                usuario = new Usuario();
-                usuario.setId(rs.getInt("id_usuario"));
-                usuario.setUsername(rs.getString("username"));
-                usuario.setContrasenaHash(rs.getString("contrasena_hash"));
-                usuario.setNombres(rs.getString("nombres"));
-                usuario.setApellidos(rs.getString("apellidos"));
-                usuario.setTelefono(rs.getString("telefono"));
-                usuario.setEmail(rs.getString("email"));
-                usuario.setActivo(rs.getBoolean("activo"));
-                usuario.setRoles(UsuarioPersistenciaHelper.cargarRolesDeUsuario(usuario.getId()));
+            if (rs != null && rs.next()) {
+                int estado = rs.getInt("estado");
+
+                if (estado == 2) {
+                    // Cuenta bloqueada temporalmente por demasiados intentos fallidos.
+                    throw new CuentaBloqueadaException(
+                            "Cuenta bloqueada temporalmente por demasiados intentos. Intenta de nuevo en unos minutos.");
+                }
+
+                if (estado == 0) {
+                    // Credenciales invalidas: se adjuntan los intentos restantes (puede ser null).
+                    Integer restantes = (Integer) rs.getObject("intentos_restantes");
+                    throw new CredencialesInvalidasException(restantes);
+                }
+
+                if (estado == 1) {
+                    usuario = new Usuario();
+                    usuario.setId(rs.getInt("id_usuario"));
+                    usuario.setUsername(rs.getString("username"));
+                    usuario.setContrasenaHash(rs.getString("contrasena_hash"));
+                    usuario.setNombres(rs.getString("nombres"));
+                    usuario.setApellidos(rs.getString("apellidos"));
+                    usuario.setTelefono(rs.getString("telefono"));
+                    usuario.setEmail(rs.getString("email"));
+                    usuario.setActivo(rs.getBoolean("activo"));
+                    usuario.setRoles(UsuarioPersistenciaHelper.cargarRolesDeUsuario(usuario.getId()));
+                }
             }
 
+        } catch (CuentaBloqueadaException | CredencialesInvalidasException ex) {
+            // Se propagan tal cual para que el mensaje llegue al usuario.
+            throw ex;
         } catch (Exception ex) {
             throw new RuntimeException("Error consultando credenciales de usuario.", ex);
         } finally {

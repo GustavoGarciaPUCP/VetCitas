@@ -7,6 +7,8 @@ import jakarta.ws.rs.core.Response;
 import pe.edu.pucp.vetcitas.usuario.model.Usuario;
 import pe.edu.pucp.vetcitas.usuario.bo.UsuarioBOImpl;
 import pe.edu.pucp.vetcitas.usuario.boi.IUsuarioBO;
+import pe.edu.pucp.vetcitas.common.exception.CuentaBloqueadaException;
+import pe.edu.pucp.vetcitas.common.exception.CredencialesInvalidasException;
 
 @Path("UsuarioRS")
 public class UsuarioRS {
@@ -35,6 +37,22 @@ public class UsuarioRS {
         try {
             Usuario usuario = usuarioBO.autenticar(username, contrasenaPlana);
             return Response.ok(usuario).build();
+        } catch (CuentaBloqueadaException ex) {
+            // 429 Too Many Requests: cuenta bloqueada temporalmente.
+            String respuesta = "{\"mensaje\":\"" + ex.getMessage() + "\"}";
+            return Response.status(429)
+                    .entity(respuesta)
+                    .type(MediaType.APPLICATION_JSON)
+                    .build();
+        } catch (CredencialesInvalidasException ex) {
+            // 401 con el numero de intentos restantes (cuando corresponde).
+            String respuesta = ex.getIntentosRestantes() != null
+                    ? "{\"mensaje\":\"Usuario o contrasena incorrectos.\",\"intentosRestantes\":" + ex.getIntentosRestantes() + "}"
+                    : "{\"mensaje\":\"Usuario o contrasena incorrectos.\"}";
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(respuesta)
+                    .type(MediaType.APPLICATION_JSON)
+                    .build();
         } catch (Exception ex) {
             String mensaje = ex.getMessage() == null ? "" : ex.getMessage().toLowerCase();
             boolean errorAutenticacion = mensaje.contains("credenciales")

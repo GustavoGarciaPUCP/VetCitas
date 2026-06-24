@@ -32,6 +32,8 @@ CREATE TABLE usuario (
     telefono VARCHAR(20),
     email VARCHAR(150) NOT NULL UNIQUE,
     activo TINYINT(1) NOT NULL DEFAULT 1,
+    intentos_fallidos INT NOT NULL DEFAULT 0,
+    bloqueado_hasta DATETIME NULL,
     created_on DATETIME,
     modified_on DATETIME,
     modified_by INT NULL
