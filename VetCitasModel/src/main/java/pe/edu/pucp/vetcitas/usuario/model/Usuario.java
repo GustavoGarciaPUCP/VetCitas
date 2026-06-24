@@ -16,6 +16,8 @@ public class Usuario extends EntidadAuditable {
     private String email;
     private boolean activo;
     private String telefono;
+    private int intentosFallidos;
+    private LocalDateTime bloqueadoHasta;
     private List<RolSistema> roles;
 
     public Usuario() {
@@ -28,6 +30,8 @@ public class Usuario extends EntidadAuditable {
         this.apellidos = "";
         this.activo = true;
         this.telefono = "";
+        this.intentosFallidos = 0;
+        this.bloqueadoHasta = null;
         this.roles = new ArrayList<>();
     }
 
@@ -44,6 +48,8 @@ public class Usuario extends EntidadAuditable {
         this.activo = activo;
         this.telefono = telefono;
         this.email = email;
+        this.intentosFallidos = 0;
+        this.bloqueadoHasta = null;
         this.roles = new ArrayList<>();
 
         if (roles != null) {
@@ -63,6 +69,8 @@ public class Usuario extends EntidadAuditable {
         this.apellidos = otro.apellidos;
         this.activo = otro.activo;
         this.telefono = otro.telefono;
+        this.intentosFallidos = otro.intentosFallidos;
+        this.bloqueadoHasta = otro.bloqueadoHasta;
         this.roles = new ArrayList<>();
 
         if (otro.roles != null) {
@@ -135,6 +143,22 @@ public class Usuario extends EntidadAuditable {
 
     public void setTelefono(String telefono) {
         this.telefono = telefono;
+    }
+
+    public int getIntentosFallidos() {
+        return intentosFallidos;
+    }
+
+    public void setIntentosFallidos(int intentosFallidos) {
+        this.intentosFallidos = intentosFallidos;
+    }
+
+    public LocalDateTime getBloqueadoHasta() {
+        return bloqueadoHasta;
+    }
+
+    public void setBloqueadoHasta(LocalDateTime bloqueadoHasta) {
+        this.bloqueadoHasta = bloqueadoHasta;
     }
 
     public List<RolSistema> getRoles() {

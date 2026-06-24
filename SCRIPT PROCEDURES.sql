@@ -1146,19 +1146,9 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La mascota ya tiene una cita en ese rango';
     END IF;
 
-    IF p_id_mascota IS NOT NULL AND EXISTS (
-        SELECT 1
-        FROM mascota m_nueva
-        INNER JOIN mascota m_existente ON m_existente.id_cliente = m_nueva.id_cliente
-        INNER JOIN cita c ON c.id_mascota = m_existente.id_mascota
-        WHERE m_nueva.id_mascota = p_id_mascota
-          AND c.estado IN ('PENDIENTE','CONFIRMADA','EN_CONSULTA')
-          AND (p_id_cita_excluir IS NULL OR c.id_cita <> p_id_cita_excluir)
-          AND p_fecha_hora_inicio < c.fecha_hora_fin
-          AND v_fecha_hora_fin > c.fecha_hora_inicio
-    ) THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El cliente ya tiene una cita en ese rango';
-    END IF;
+    -- NOTA: el cruce de horario del MISMO CLIENTE con OTRA mascota NO se bloquea aqui.
+    -- Es un caso permitido (un dueno puede estar presente en dos citas a la vez): el
+    -- frontend muestra una advertencia y permite continuar si el usuario lo confirma.
 END $$
 
 CREATE PROCEDURE listar_veterinarios_disponibles(
