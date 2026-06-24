@@ -248,6 +248,32 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede eliminar a un SuperAdmin';
     END IF;
 
+    IF EXISTS (
+        SELECT 1
+        FROM usuario_rol ur
+        INNER JOIN rol_sistema r ON r.id_rol = ur.id_rol
+        INNER JOIN cita c ON c.id_veterinario = ur.id_usuario
+        WHERE ur.id_usuario = p_id_usuario
+          AND r.codigo = 'VETERINARIO'
+          AND c.estado IN ('CONFIRMADA', 'EN_CONSULTA')
+          AND DATE(c.fecha_hora_inicio) >= DATE(DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR))
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede inactivar al veterinario porque tiene citas confirmadas o en consulta';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM usuario_rol ur
+        INNER JOIN rol_sistema r ON r.id_rol = ur.id_rol
+        INNER JOIN cita c ON c.id_veterinario = ur.id_usuario
+        WHERE ur.id_usuario = p_id_usuario
+          AND r.codigo = 'VETERINARIO'
+          AND c.estado = 'PENDIENTE'
+          AND DATE(c.fecha_hora_inicio) >= DATE(DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR))
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede inactivar al veterinario porque tiene citas pendientes';
+    END IF;
+
     UPDATE usuario
     SET activo = 0, modified_on = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR), modified_by = p_modified_by
     WHERE id_usuario = p_id_usuario;
@@ -264,6 +290,36 @@ CREATE PROCEDURE modificar_usuario_basico(
     IN p_modified_by INT
 )
 BEGIN
+    IF p_activo = 0 AND EXISTS (
+        SELECT 1
+        FROM usuario u
+        INNER JOIN usuario_rol ur ON ur.id_usuario = u.id_usuario
+        INNER JOIN rol_sistema r ON r.id_rol = ur.id_rol
+        INNER JOIN cita c ON c.id_veterinario = u.id_usuario
+        WHERE u.id_usuario = p_id_usuario
+          AND u.activo = 1
+          AND r.codigo = 'VETERINARIO'
+          AND c.estado IN ('CONFIRMADA', 'EN_CONSULTA')
+          AND DATE(c.fecha_hora_inicio) >= DATE(DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR))
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede inactivar al veterinario porque tiene citas confirmadas o en consulta';
+    END IF;
+
+    IF p_activo = 0 AND EXISTS (
+        SELECT 1
+        FROM usuario u
+        INNER JOIN usuario_rol ur ON ur.id_usuario = u.id_usuario
+        INNER JOIN rol_sistema r ON r.id_rol = ur.id_rol
+        INNER JOIN cita c ON c.id_veterinario = u.id_usuario
+        WHERE u.id_usuario = p_id_usuario
+          AND u.activo = 1
+          AND r.codigo = 'VETERINARIO'
+          AND c.estado = 'PENDIENTE'
+          AND DATE(c.fecha_hora_inicio) >= DATE(DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR))
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede inactivar al veterinario porque tiene citas pendientes';
+    END IF;
+
     UPDATE usuario
     SET username = p_username,
         nombres = p_nombres,
@@ -1024,6 +1080,15 @@ CREATE PROCEDURE insertar_horario_veterinario(
     IN p_hora_descanso_inicio TIME, IN p_hora_descanso_fin TIME, IN p_modified_by INT, OUT p_id_generado INT
 )
 BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM horario_veterinario
+        WHERE id_veterinario = p_id_veterinario
+          AND dia_semana = p_dia_semana
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El veterinario ya tiene un horario registrado para ese dia';
+    END IF;
+
     INSERT INTO horario_veterinario(id_veterinario, dia_semana, hora_inicio, hora_fin, hora_descanso_inicio, hora_descanso_fin, activo, created_on, modified_on, modified_by)
     VALUES(p_id_veterinario, p_dia_semana, p_hora_inicio, p_hora_fin, p_hora_descanso_inicio, p_hora_descanso_fin, 1, DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR), DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR), p_modified_by);
     SET p_id_generado = LAST_INSERT_ID();
@@ -1036,6 +1101,51 @@ CREATE PROCEDURE modificar_horario_veterinario(
     IN p_activo TINYINT, IN p_modified_by INT
 )
 BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM horario_veterinario
+        WHERE id_veterinario = p_id_veterinario
+          AND dia_semana = p_dia_semana
+          AND id_horario <> p_id_horario
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El veterinario ya tiene un horario registrado para ese dia';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM horario_veterinario hv
+        INNER JOIN cita c ON c.id_veterinario = hv.id_veterinario
+        WHERE hv.id_horario = p_id_horario
+          AND hv.activo = 1
+          AND (p_activo = 0 OR hv.id_veterinario <> p_id_veterinario OR hv.dia_semana <> p_dia_semana)
+          AND c.estado IN ('PENDIENTE', 'CONFIRMADA', 'EN_CONSULTA')
+          AND DATE(c.fecha_hora_inicio) >= DATE(DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR))
+          AND WEEKDAY(c.fecha_hora_inicio) + 1 = hv.dia_semana
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede desactivar o mover el horario porque tiene citas pendientes o confirmadas';
+    END IF;
+
+    IF p_activo = 1 AND EXISTS (
+        SELECT 1
+        FROM cita c
+        WHERE c.id_veterinario = p_id_veterinario
+          AND c.estado IN ('PENDIENTE', 'CONFIRMADA', 'EN_CONSULTA')
+          AND DATE(c.fecha_hora_inicio) >= DATE(DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR))
+          AND WEEKDAY(c.fecha_hora_inicio) + 1 = p_dia_semana
+          AND (
+              TIME(c.fecha_hora_inicio) < p_hora_inicio
+              OR TIME(c.fecha_hora_fin) > p_hora_fin
+              OR (
+                  p_hora_descanso_inicio IS NOT NULL
+                  AND p_hora_descanso_fin IS NOT NULL
+                  AND TIME(c.fecha_hora_inicio) < p_hora_descanso_fin
+                  AND TIME(c.fecha_hora_fin) > p_hora_descanso_inicio
+              )
+          )
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede modificar el horario porque deja citas fuera del rango disponible';
+    END IF;
+
     UPDATE horario_veterinario
     SET id_veterinario = p_id_veterinario, dia_semana = p_dia_semana,
         hora_inicio = p_hora_inicio, hora_fin = p_hora_fin,
@@ -1046,6 +1156,18 @@ END $$
 
 CREATE PROCEDURE eliminar_horario_veterinario(IN p_id_horario INT, IN p_modified_by INT)
 BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM horario_veterinario hv
+        INNER JOIN cita c ON c.id_veterinario = hv.id_veterinario
+        WHERE hv.id_horario = p_id_horario
+          AND c.estado IN ('PENDIENTE', 'CONFIRMADA', 'EN_CONSULTA')
+          AND DATE(c.fecha_hora_inicio) >= DATE(DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR))
+          AND WEEKDAY(c.fecha_hora_inicio) + 1 = hv.dia_semana
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede desactivar el horario porque tiene citas pendientes o confirmadas';
+    END IF;
+
     UPDATE horario_veterinario
     SET activo = 0, modified_on = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR), modified_by = p_modified_by
     WHERE id_horario = p_id_horario;
