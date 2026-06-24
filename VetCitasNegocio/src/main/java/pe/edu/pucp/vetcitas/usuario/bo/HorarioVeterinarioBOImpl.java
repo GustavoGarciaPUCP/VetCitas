@@ -18,6 +18,7 @@ public class HorarioVeterinarioBOImpl implements IHorarioVeterinarioBO {
     @Override
     public int insertar(HorarioVeterinario horario) throws Exception {
         validar(horario, false);
+        validarDiaUnico(horario);
         validarSinSolapamiento(horario);
         return horarioDAO.insertar(horario);
     }
@@ -25,6 +26,7 @@ public class HorarioVeterinarioBOImpl implements IHorarioVeterinarioBO {
     @Override
     public int modificar(HorarioVeterinario horario) throws Exception {
         validar(horario, true);
+        validarDiaUnico(horario);
         validarSinSolapamiento(horario);
         return horarioDAO.modificar(horario);
     }
@@ -135,6 +137,18 @@ public class HorarioVeterinarioBOImpl implements IHorarioVeterinarioBO {
             if (horario.getHoraInicio().isBefore(existente.getHoraFin())
                     && horario.getHoraFin().isAfter(existente.getHoraInicio())) {
                 throw new Exception("El horario se cruza con otro horario activo del veterinario.");
+            }
+        }
+    }
+
+    private void validarDiaUnico(HorarioVeterinario horario) throws Exception {
+        List<HorarioVeterinario> horarios = horarioDAO.listarPorVeterinario(horario.getVeterinario().getId());
+        for (HorarioVeterinario existente : horarios) {
+            if (existente.getId() == horario.getId()) {
+                continue;
+            }
+            if (existente.getDiaSemana() == horario.getDiaSemana()) {
+                throw new Exception("El veterinario ya tiene un horario registrado para ese dia. Edita o reactiva el horario existente.");
             }
         }
     }

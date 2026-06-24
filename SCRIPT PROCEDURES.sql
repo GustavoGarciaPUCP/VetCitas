@@ -1024,6 +1024,15 @@ CREATE PROCEDURE insertar_horario_veterinario(
     IN p_hora_descanso_inicio TIME, IN p_hora_descanso_fin TIME, IN p_modified_by INT, OUT p_id_generado INT
 )
 BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM horario_veterinario
+        WHERE id_veterinario = p_id_veterinario
+          AND dia_semana = p_dia_semana
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El veterinario ya tiene un horario registrado para ese dia';
+    END IF;
+
     INSERT INTO horario_veterinario(id_veterinario, dia_semana, hora_inicio, hora_fin, hora_descanso_inicio, hora_descanso_fin, activo, created_on, modified_on, modified_by)
     VALUES(p_id_veterinario, p_dia_semana, p_hora_inicio, p_hora_fin, p_hora_descanso_inicio, p_hora_descanso_fin, 1, DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR), DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR), p_modified_by);
     SET p_id_generado = LAST_INSERT_ID();
@@ -1036,6 +1045,16 @@ CREATE PROCEDURE modificar_horario_veterinario(
     IN p_activo TINYINT, IN p_modified_by INT
 )
 BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM horario_veterinario
+        WHERE id_veterinario = p_id_veterinario
+          AND dia_semana = p_dia_semana
+          AND id_horario <> p_id_horario
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El veterinario ya tiene un horario registrado para ese dia';
+    END IF;
+
     UPDATE horario_veterinario
     SET id_veterinario = p_id_veterinario, dia_semana = p_dia_semana,
         hora_inicio = p_hora_inicio, hora_fin = p_hora_fin,
