@@ -248,6 +248,32 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede eliminar a un SuperAdmin';
     END IF;
 
+    IF EXISTS (
+        SELECT 1
+        FROM usuario_rol ur
+        INNER JOIN rol_sistema r ON r.id_rol = ur.id_rol
+        INNER JOIN cita c ON c.id_veterinario = ur.id_usuario
+        WHERE ur.id_usuario = p_id_usuario
+          AND r.codigo = 'VETERINARIO'
+          AND c.estado IN ('CONFIRMADA', 'EN_CONSULTA')
+          AND DATE(c.fecha_hora_inicio) >= DATE(DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR))
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede inactivar al veterinario porque tiene citas confirmadas o en consulta';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM usuario_rol ur
+        INNER JOIN rol_sistema r ON r.id_rol = ur.id_rol
+        INNER JOIN cita c ON c.id_veterinario = ur.id_usuario
+        WHERE ur.id_usuario = p_id_usuario
+          AND r.codigo = 'VETERINARIO'
+          AND c.estado = 'PENDIENTE'
+          AND DATE(c.fecha_hora_inicio) >= DATE(DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR))
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede inactivar al veterinario porque tiene citas pendientes';
+    END IF;
+
     UPDATE usuario
     SET activo = 0, modified_on = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR), modified_by = p_modified_by
     WHERE id_usuario = p_id_usuario;
@@ -264,6 +290,36 @@ CREATE PROCEDURE modificar_usuario_basico(
     IN p_modified_by INT
 )
 BEGIN
+    IF p_activo = 0 AND EXISTS (
+        SELECT 1
+        FROM usuario u
+        INNER JOIN usuario_rol ur ON ur.id_usuario = u.id_usuario
+        INNER JOIN rol_sistema r ON r.id_rol = ur.id_rol
+        INNER JOIN cita c ON c.id_veterinario = u.id_usuario
+        WHERE u.id_usuario = p_id_usuario
+          AND u.activo = 1
+          AND r.codigo = 'VETERINARIO'
+          AND c.estado IN ('CONFIRMADA', 'EN_CONSULTA')
+          AND DATE(c.fecha_hora_inicio) >= DATE(DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR))
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede inactivar al veterinario porque tiene citas confirmadas o en consulta';
+    END IF;
+
+    IF p_activo = 0 AND EXISTS (
+        SELECT 1
+        FROM usuario u
+        INNER JOIN usuario_rol ur ON ur.id_usuario = u.id_usuario
+        INNER JOIN rol_sistema r ON r.id_rol = ur.id_rol
+        INNER JOIN cita c ON c.id_veterinario = u.id_usuario
+        WHERE u.id_usuario = p_id_usuario
+          AND u.activo = 1
+          AND r.codigo = 'VETERINARIO'
+          AND c.estado = 'PENDIENTE'
+          AND DATE(c.fecha_hora_inicio) >= DATE(DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR))
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede inactivar al veterinario porque tiene citas pendientes';
+    END IF;
+
     UPDATE usuario
     SET username = p_username,
         nombres = p_nombres,

@@ -1,6 +1,11 @@
 package pe.edu.pucp.vetcitas.usuario.bo;
 
+import pe.edu.pucp.vetcitas.cita.dao.ICitaDAO;
+import pe.edu.pucp.vetcitas.cita.impl.CitaImpl;
+import pe.edu.pucp.vetcitas.cita.model.Cita;
 import pe.edu.pucp.vetcitas.common.enums.CodigoRol;
+import pe.edu.pucp.vetcitas.common.enums.EstadoCita;
+import pe.edu.pucp.vetcitas.common.util.AuditClock;
 import pe.edu.pucp.vetcitas.usuario.boi.IAdministradorBO;
 import pe.edu.pucp.vetcitas.usuario.dao.IAdministradorDAO;
 import pe.edu.pucp.vetcitas.usuario.impl.AdministradorImpl;
@@ -14,9 +19,11 @@ import java.util.List;
 
 public class AdministradorBOImpl implements IAdministradorBO {
     private IAdministradorDAO administradorDAO;
+    private ICitaDAO citaDAO;
 
     public AdministradorBOImpl() {
         this.administradorDAO = new AdministradorImpl();
+        this.citaDAO = new CitaImpl();
     }
 
     @Override
@@ -140,6 +147,10 @@ public class AdministradorBOImpl implements IAdministradorBO {
             throw new Exception("Operación denegada: No se puede inactivar al Super Administrador.");
         }
 
+        if (!usuario.isActivo()) {
+            validarInactivacionUsuario(usuario.getId());
+        }
+
         return administradorDAO.modificarUsuarioBasico(usuario, modifiedBy);
     }
 
@@ -224,6 +235,61 @@ public class AdministradorBOImpl implements IAdministradorBO {
         usuario.setApellidos(usuario.getApellidos().trim());
         usuario.setEmail(usuario.getEmail().trim());
         usuario.setTelefono(usuario.getTelefono() == null ? "" : usuario.getTelefono().trim());
+    }
+
+    private void validarInactivacionUsuario(int idUsuario) throws Exception {
+        Usuario actual = buscarUsuarioEnListado(idUsuario);
+        if (actual != null && !actual.isActivo()) {
+            return;
+        }
+
+        if (!usuarioTieneRol(idUsuario, CodigoRol.VETERINARIO)) {
+            return;
+        }
+
+        List<Cita> citas = citaDAO.listarFiltradas(idUsuario, AuditClock.today(), null, "", "");
+        boolean tieneConfirmadas = false;
+        boolean tienePendientes = false;
+
+        for (Cita cita : citas) {
+            if (cita == null || cita.getEstado() == null) {
+                continue;
+            }
+            if (cita.getEstado() == EstadoCita.CONFIRMADA || cita.getEstado() == EstadoCita.EN_CONSULTA) {
+                tieneConfirmadas = true;
+            }
+            if (cita.getEstado() == EstadoCita.PENDIENTE) {
+                tienePendientes = true;
+            }
+        }
+
+        if (tieneConfirmadas) {
+            throw new Exception("No se puede inactivar al veterinario porque tiene citas confirmadas o en consulta. Cancela o reprograma esas citas desde recepcion.");
+        }
+
+        if (tienePendientes) {
+            throw new Exception("No se puede inactivar al veterinario porque tiene citas pendientes. Cancela o reprograma esas citas desde recepcion.");
+        }
+    }
+
+    private boolean usuarioTieneRol(int idUsuario, CodigoRol codigoRol) throws Exception {
+        List<RolSistema> roles = administradorDAO.listarRolesDeUsuario(idUsuario);
+        for (RolSistema rol : roles) {
+            if (rol.getCodigo() == codigoRol) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private Usuario buscarUsuarioEnListado(int idUsuario) throws Exception {
+        List<Usuario> usuarios = administradorDAO.listarUsuariosFiltrados("", "", null);
+        for (Usuario usuario : usuarios) {
+            if (usuario.getId() == idUsuario) {
+                return usuario;
+            }
+        }
+        return null;
     }
 
     private void validarEmailObligatorio(String email) throws Exception {
