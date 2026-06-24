@@ -1240,6 +1240,7 @@ BEGIN
       AND hv.activo = 1
       AND v_hora_inicio >= hv.hora_inicio
       AND v_hora_fin <= hv.hora_fin
+      AND v_hora_fin > v_hora_inicio
       AND (
           hv.hora_descanso_inicio IS NULL
           OR hv.hora_descanso_fin IS NULL
@@ -1311,6 +1312,7 @@ BEGIN
       AND hv.dia_semana = v_dia_semana
       AND v_hora_inicio >= hv.hora_inicio
       AND v_hora_fin <= hv.hora_fin
+      AND v_hora_fin > v_hora_inicio
       AND (
           hv.hora_descanso_inicio IS NULL
           OR hv.hora_descanso_fin IS NULL
@@ -2289,6 +2291,7 @@ BEGIN
       AND hv.activo = 1
       AND v_hora_inicio >= hv.hora_inicio
       AND v_hora_fin <= hv.hora_fin
+      AND v_hora_fin > v_hora_inicio
       AND (
           hv.hora_descanso_inicio IS NULL
           OR hv.hora_descanso_fin IS NULL
