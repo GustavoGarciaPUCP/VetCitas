@@ -17,6 +17,13 @@ public class UsuarioRS {
         this.usuarioBO = new UsuarioBOImpl();
     }
 
+    @GET
+    @Path("/estaActivo/{idUsuario}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public boolean estaActivo(@PathParam("idUsuario") int idUsuario) throws Exception {
+        return usuarioBO.estaActivo(idUsuario);
+    }
+
     @POST
     @Path("/autenticar")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)

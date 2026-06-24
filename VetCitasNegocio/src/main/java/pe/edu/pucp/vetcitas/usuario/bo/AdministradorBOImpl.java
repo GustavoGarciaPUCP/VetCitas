@@ -127,13 +127,13 @@ public class AdministradorBOImpl implements IAdministradorBO {
         }
 
         if (administradorDAO.existeUsername(usuario.getUsername(), usuario.getId())) {
-            throw new Exception("El username '" + usuario.getUsername() + "' ya estÃ¡ ocupado por otro usuario.");
+            throw new Exception("El username '" + usuario.getUsername() + "' ya está ocupado por otro usuario.");
         }
 
         if (!usuario.isActivo()) {
             Administrador admin = administradorDAO.buscarPorId(usuario.getId());
             if (admin != null && admin.isEsSuperAdmin()) {
-                throw new Exception("OperaciÃ³n denegada: No se puede inactivar al Super Administrador.");
+                throw new Exception("Operación denegada: No se puede inactivar al Super Administrador.");
             }
         }
 
@@ -157,6 +157,22 @@ public class AdministradorBOImpl implements IAdministradorBO {
         }
 
         return administradorDAO.listarUsuariosFiltrados(texto, codigoRol, activo);
+    }
+
+    @Override
+    public List<RolSistema> listarRolesDeUsuario(int idUsuario) throws Exception {
+        if (idUsuario <= 0) {
+            throw new Exception("El id del usuario debe ser mayor que cero.");
+        }
+        return administradorDAO.listarRolesDeUsuario(idUsuario);
+    }
+
+    @Override
+    public boolean existeUsername(String username) throws Exception {
+        if (username == null || username.trim().isEmpty()) {
+            return false;
+        }
+        return administradorDAO.existeUsername(username.trim(), null);
     }
 
     private void validar(Administrador admin, boolean esModificacion) throws Exception {

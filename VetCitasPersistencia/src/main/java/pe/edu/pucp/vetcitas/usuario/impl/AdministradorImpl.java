@@ -379,6 +379,11 @@ public class AdministradorImpl implements IAdministradorDAO {
             rs = cs.executeQuery();
 
             Map<Integer, Usuario> mapa = new LinkedHashMap<>();
+            // Los roles se acumulan en un mapa aparte porque Usuario.getRoles()
+            // devuelve una copia defensiva: mutar el resultado de getRoles() NO
+            // modifica la lista interna del usuario. Por eso se arma la lista aqui
+            // y se asigna con setRoles() al final.
+            Map<Integer, List<RolSistema>> rolesPorUsuario = new LinkedHashMap<>();
 
             while (rs.next()) {
                 int idUsuario = rs.getInt("id_usuario");
@@ -393,27 +398,34 @@ public class AdministradorImpl implements IAdministradorDAO {
                     usuario.setTelefono(rs.getString("telefono"));
                     usuario.setEmail(rs.getString("email"));
                     usuario.setActivo(rs.getBoolean("activo"));
-                    usuario.setRoles(new ArrayList<>());
                     mapa.put(idUsuario, usuario);
+                    rolesPorUsuario.put(idUsuario, new ArrayList<>());
                 }
 
                 if (rs.getObject("id_rol") != null) {
-                    RolSistema rol = new RolSistema();
-                    rol.setId(rs.getInt("id_rol"));
-                    rol.setCodigo(CodigoRol.valueOf(rs.getString("codigo_rol")));
-                    rol.setDescripcion(rs.getString("descripcion_rol"));
+                    int idRol = rs.getInt("id_rol");
+                    List<RolSistema> rolesActuales = rolesPorUsuario.get(idUsuario);
 
                     boolean existe = false;
-                    for (RolSistema r : usuario.getRoles()) {
-                        if (r.getId() == rol.getId()) {
+                    for (RolSistema r : rolesActuales) {
+                        if (r.getId() == idRol) {
                             existe = true;
                             break;
                         }
                     }
                     if (!existe) {
-                        usuario.getRoles().add(rol);
+                        RolSistema rol = new RolSistema();
+                        rol.setId(idRol);
+                        rol.setCodigo(CodigoRol.valueOf(rs.getString("codigo_rol")));
+                        rol.setDescripcion(rs.getString("descripcion_rol"));
+                        rolesActuales.add(rol);
                     }
                 }
+            }
+
+            // Asigna los roles acumulados a cada usuario antes de devolverlos.
+            for (Map.Entry<Integer, Usuario> entry : mapa.entrySet()) {
+                entry.getValue().setRoles(rolesPorUsuario.get(entry.getKey()));
             }
 
             usuarios.addAll(mapa.values());

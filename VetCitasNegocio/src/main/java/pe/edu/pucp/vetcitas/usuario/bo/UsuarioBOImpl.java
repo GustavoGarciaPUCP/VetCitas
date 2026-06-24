@@ -17,6 +17,14 @@ public class UsuarioBOImpl implements IUsuarioBO {
     }
 
     @Override
+    public boolean estaActivo(int idUsuario) throws Exception {
+        if (idUsuario <= 0) {
+            return false;
+        }
+        return usuarioDAO.estaActivo(idUsuario);
+    }
+
+    @Override
     public Usuario autenticar(String username, String contrasenaPlana) throws Exception {
         if (username == null || username.trim().isEmpty()) {
             throw new Exception("El username es obligatorio.");

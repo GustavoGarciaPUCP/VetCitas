@@ -6,10 +6,40 @@ import pe.edu.pucp.vetcitas.usuario.model.Usuario;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Types;
 
 public class UsuarioImpl implements IUsuarioDAO {
+    @Override
+    public boolean estaActivo(int idUsuario) {
+        Connection con = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            con = DBManager.getInstance().getConnection();
+            ps = con.prepareStatement("SELECT activo FROM usuario WHERE id_usuario = ?");
+            ps.setInt(1, idUsuario);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getBoolean("activo");
+            }
+            // Si el usuario no existe, se considera no activo.
+            return false;
+        } catch (Exception ex) {
+            throw new RuntimeException("Error consultando el estado del usuario.", ex);
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (ps != null) ps.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("ERROR cerrando recursos en estaActivo: " + ex.getMessage());
+            }
+        }
+    }
+
     @Override
     public Usuario autenticar(String username, String contrasenaHash) {
         Usuario usuario = null;

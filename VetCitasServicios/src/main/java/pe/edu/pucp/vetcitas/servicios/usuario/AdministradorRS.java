@@ -6,6 +6,7 @@ import java.util.List;
 
 import pe.edu.pucp.vetcitas.usuario.model.Administrador;
 import pe.edu.pucp.vetcitas.usuario.model.Usuario;
+import pe.edu.pucp.vetcitas.usuario.model.RolSistema;
 import pe.edu.pucp.vetcitas.usuario.bo.AdministradorBOImpl;
 import pe.edu.pucp.vetcitas.usuario.boi.IAdministradorBO;
 
@@ -87,5 +88,19 @@ public class AdministradorRS {
             @QueryParam("codigoRol") String codigoRol,
             @QueryParam("activo") Boolean activo) throws Exception {
         return administradorBO.listarUsuariosFiltrados(texto, codigoRol, activo);
+    }
+
+    @GET
+    @Path("/listarRolesDeUsuario/{idUsuario}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<RolSistema> listarRolesDeUsuario(@PathParam("idUsuario") int idUsuario) throws Exception {
+        return administradorBO.listarRolesDeUsuario(idUsuario);
+    }
+
+    @GET
+    @Path("/existeUsername")
+    @Produces(MediaType.APPLICATION_JSON)
+    public boolean existeUsername(@QueryParam("username") String username) throws Exception {
+        return administradorBO.existeUsername(username);
     }
 }

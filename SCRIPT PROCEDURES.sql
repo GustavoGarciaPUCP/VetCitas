@@ -2345,6 +2345,17 @@ CREATE PROCEDURE restablecer_contrasena_usuario(
     OUT p_actualizado INT
 )
 BEGIN
+    DECLARE v_es_super_admin TINYINT DEFAULT 0;
+
+    -- No se permite restablecer la contrasena del SuperAdmin.
+    SELECT COALESCE(es_super_admin, 0) INTO v_es_super_admin
+    FROM administrador
+    WHERE id_administrador = p_id_usuario_objetivo;
+
+    IF v_es_super_admin = 1 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede restablecer la contrasena del SuperAdmin';
+    END IF;
+
     UPDATE usuario
     SET contrasena_hash = p_nueva_contrasena_hash,
         modified_on = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR),
