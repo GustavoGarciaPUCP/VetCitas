@@ -33,12 +33,36 @@ public class ClienteRS {
         return resultado;
     }
 
+    @POST
+    @Path("insertarConMascotas")
+    public int insertarConMascotas(Cliente cliente) {
+        int resultado = 0;
+        try {
+            resultado = clienteBO.insertarConMascotas(cliente);
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+        return resultado;
+    }
+
     @PUT
     @Path("modificar")
     public int modificar(Cliente cliente) {
         int resultado = 0;
         try {
             resultado = clienteBO.modificar(cliente);
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+        return resultado;
+    }
+
+    @PUT
+    @Path("modificarConMascotas")
+    public int modificarConMascotas(Cliente cliente) {
+        int resultado = 0;
+        try {
+            resultado = clienteBO.modificarConMascotas(cliente);
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
         }

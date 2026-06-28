@@ -4,6 +4,8 @@ import pe.edu.pucp.vetcitas.cliente.boi.IClienteBO;
 import pe.edu.pucp.vetcitas.cliente.dao.ClienteDAO;
 import pe.edu.pucp.vetcitas.cliente.impl.ClienteImpl;
 import pe.edu.pucp.vetcitas.cliente.model.Cliente;
+import pe.edu.pucp.vetcitas.cliente.model.Mascota;
+import pe.edu.pucp.vetcitas.common.util.AuditClock;
 
 import java.util.List;
 
@@ -21,9 +23,23 @@ public class ClienteBOImpl implements IClienteBO {
     }
 
     @Override
+    public int insertarConMascotas(Cliente cliente) throws Exception {
+        validar(cliente, false);
+        prepararMascotasNuevas(cliente);
+        return clienteDAO.insertarConMascotas(cliente);
+    }
+
+    @Override
     public int modificar(Cliente cliente) throws Exception {
         validar(cliente, true);
         return clienteDAO.modificar(cliente);
+    }
+
+    @Override
+    public int modificarConMascotas(Cliente cliente) throws Exception {
+        validar(cliente, true);
+        prepararMascotasNuevas(cliente);
+        return clienteDAO.modificarConMascotas(cliente);
     }
 
     @Override
@@ -121,6 +137,39 @@ public class ClienteBOImpl implements IClienteBO {
             }
 
             cliente.setEmail(email);
+        }
+    }
+
+    private void prepararMascotasNuevas(Cliente cliente) throws Exception {
+        List<Mascota> mascotas = cliente.getMascotas();
+        if (mascotas == null || mascotas.isEmpty()) {
+            return;
+        }
+
+        for (Mascota mascota : mascotas) {
+            validarMascotaNueva(mascota);
+            if (mascota.getModifiedBy() == null && cliente.getModifiedBy() != null) {
+                mascota.setModifiedBy(cliente.getModifiedBy());
+            }
+        }
+        cliente.setMascotas(mascotas);
+    }
+
+    private void validarMascotaNueva(Mascota mascota) throws Exception {
+        if (mascota == null) {
+            throw new Exception("La mascota no puede ser nula.");
+        }
+        if (mascota.getNombre() == null || mascota.getNombre().trim().isEmpty()) {
+            throw new Exception("El nombre de la mascota es obligatorio.");
+        }
+        if (mascota.getEspecie() == null) {
+            throw new Exception("La especie es obligatoria.");
+        }
+        if (mascota.getFechaNacimiento() != null && mascota.getFechaNacimiento().isAfter(AuditClock.today())) {
+            throw new Exception("La fecha de nacimiento no puede ser futura.");
+        }
+        if (mascota.getPeso() <= 0) {
+            throw new Exception("El peso de la mascota debe ser mayor que cero.");
         }
     }
 }
