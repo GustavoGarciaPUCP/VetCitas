@@ -71,6 +71,46 @@ public class MascotaImpl implements MascotaDAO {
         return resultado;
     }
 
+    int insertar(Mascota mascota, Connection con) throws Exception {
+        String sql = "{CALL insertar_mascota(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
+        try (CallableStatement cs = con.prepareCall(sql)) {
+            cs.setString(1, mascota.getNombre());
+            cs.setString(2, mascota.getEspecie().name());
+            cs.setString(3, mascota.getRaza());
+
+            if (mascota.getFechaNacimiento() != null) {
+                cs.setDate(4, java.sql.Date.valueOf(mascota.getFechaNacimiento()));
+            } else {
+                cs.setNull(4, Types.DATE);
+            }
+
+            cs.setDouble(5, mascota.getPeso());
+            cs.setBoolean(6, mascota.isEsterilizado());
+            cs.setBoolean(7, mascota.isActivo());
+            cs.setInt(8, mascota.getCliente().getId());
+
+            Timestamp ahora = AuditClock.timestampNow();
+            cs.setTimestamp(9, ahora);
+            cs.setTimestamp(10, ahora);
+
+            if (mascota.getModifiedBy() != null) {
+                cs.setInt(11, mascota.getModifiedBy().getId());
+            } else {
+                cs.setNull(11, Types.INTEGER);
+            }
+
+            cs.registerOutParameter(12, Types.INTEGER);
+            cs.executeUpdate();
+
+            int idNuevo = cs.getInt(12);
+            if (idNuevo <= 0) {
+                throw new Exception("El procedimiento insertar_mascota no devolvio un id valido.");
+            }
+            mascota.setId(idNuevo);
+            return idNuevo;
+        }
+    }
+
     @Override
     public int modificar(Mascota mascota) {
         int resultado = 0;
