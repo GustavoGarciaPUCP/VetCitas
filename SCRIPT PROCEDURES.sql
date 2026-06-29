@@ -917,6 +917,31 @@ END $$
 
 CREATE PROCEDURE eliminar_mascota(IN p_id_mascota INT, IN p_modified_on DATETIME, IN p_modified_by INT)
 BEGIN
+    DECLARE v_confirmadas INT DEFAULT 0;
+
+    -- Bloqueo: no se puede eliminar si la mascota tiene una cita CONFIRMADA en el futuro
+    SELECT COUNT(*) INTO v_confirmadas
+    FROM cita c
+    WHERE c.id_mascota = p_id_mascota
+      AND c.estado = 'CONFIRMADA'
+      AND c.fecha_hora_inicio > DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 HOUR);
+
+    IF v_confirmadas > 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'No se puede eliminar: la mascota tiene una cita confirmada en el futuro.';
+    END IF;
+
+    -- Cancelar automáticamente las citas pendientes de la mascota
+    UPDATE cita c
+    SET c.estado = 'CANCELADA',
+        c.motivo_cancelacion = 'Mascota eliminada',
+        c.fecha_cancelacion = p_modified_on,
+        c.id_usuario_cancelacion = p_modified_by,
+        c.modified_on = p_modified_on,
+        c.modified_by = p_modified_by
+    WHERE c.id_mascota = p_id_mascota
+      AND c.estado = 'PENDIENTE';
+
     UPDATE mascota
     SET activo = 0, modified_on = p_modified_on, modified_by = p_modified_by
     WHERE id_mascota = p_id_mascota;

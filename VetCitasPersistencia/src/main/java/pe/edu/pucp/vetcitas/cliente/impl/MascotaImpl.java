@@ -184,10 +184,18 @@ public class MascotaImpl implements MascotaDAO {
                 cs.setNull(3, java.sql.Types.INTEGER);
             }
 
-            resultado = cs.executeUpdate();
+            cs.executeUpdate();
+            // El procedure ejecuta varios UPDATE; si no hubo excepcion, fue correcto.
+            resultado = 1;
 
         } catch (Exception ex) {
             System.out.println("ERROR: " + ex.getMessage());
+            // El procedure usa SIGNAL para bloquear cuando hay una cita confirmada futura
+            if (ex.getMessage() != null && ex.getMessage().contains("cita confirmada")) {
+                resultado = -1;
+            } else {
+                resultado = 0;
+            }
         } finally {
             try {
                 if (cs != null) cs.close();
