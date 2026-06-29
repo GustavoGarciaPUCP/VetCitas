@@ -179,6 +179,20 @@ BEGIN
     END IF;
 
     INSERT INTO usuario_rol(id_usuario, id_rol) VALUES(p_id_usuario, v_id_rol);
+
+    -- Asegura la fila de subtipo correspondiente para que el usuario aparezca en las
+    -- vistas especificas del rol (p. ej. selects de veterinario) y se le pueda asociar
+    -- horarios/citas. Los campos requeridos se crean vacios y se completan al editar.
+    IF p_codigo_rol = 'VETERINARIO'
+       AND NOT EXISTS (SELECT 1 FROM veterinario WHERE id_veterinario = p_id_usuario) THEN
+        INSERT INTO veterinario(id_veterinario, cmpv, especialidad) VALUES(p_id_usuario, '', '');
+    ELSEIF p_codigo_rol = 'ADMINISTRADOR'
+       AND NOT EXISTS (SELECT 1 FROM administrador WHERE id_administrador = p_id_usuario) THEN
+        INSERT INTO administrador(id_administrador, area, es_super_admin) VALUES(p_id_usuario, '', 0);
+    ELSEIF p_codigo_rol = 'RECEPCIONISTA'
+       AND NOT EXISTS (SELECT 1 FROM recepcionista WHERE id_recepcionista = p_id_usuario) THEN
+        INSERT INTO recepcionista(id_recepcionista, area) VALUES(p_id_usuario, '');
+    END IF;
 END $$
 
 CREATE PROCEDURE revocar_rol_de_usuario(IN p_id_usuario INT, IN p_codigo_rol VARCHAR(30))

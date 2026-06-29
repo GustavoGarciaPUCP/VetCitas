@@ -260,3 +260,18 @@ INSERT INTO usuario_rol(id_usuario, id_rol)
 SELECT u.id_usuario, r.id_rol
 FROM usuario u JOIN rol_sistema r ON r.codigo = 'ADMINISTRADOR'
 WHERE u.username = 'superadmin';
+
+-- El superadmin tambien tiene los roles VETERINARIO y RECEPCIONISTA.
+-- Se crean las filas de subtipo correspondientes (campos vacios, se completan
+-- al editar) y los vinculos en usuario_rol, replicando lo que hace el
+-- procedure asignar_rol_a_usuario.
+INSERT INTO veterinario(id_veterinario, cmpv, especialidad)
+SELECT id_usuario, '', '' FROM usuario WHERE username = 'superadmin';
+
+INSERT INTO recepcionista(id_recepcionista, area)
+SELECT id_usuario, '' FROM usuario WHERE username = 'superadmin';
+
+INSERT INTO usuario_rol(id_usuario, id_rol)
+SELECT u.id_usuario, r.id_rol
+FROM usuario u JOIN rol_sistema r ON r.codigo IN ('VETERINARIO', 'RECEPCIONISTA')
+WHERE u.username = 'superadmin';
